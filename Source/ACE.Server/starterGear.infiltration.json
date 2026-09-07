@@ -1,0 +1,3392 @@
+{
+  "skills": [
+    {
+      "id": "6",
+      "name": "Melee Defense"
+    },
+    {
+      "id": "7",
+      "name": "Missile Defense"
+    },
+    {
+      "id": "14",
+      "name": "Arcane Lore"
+    },
+    {
+      "id": "15",
+      "name": "Magic Defense"
+    },
+    {
+      "id": "16",
+      "name": "Mana Conversion"
+    },
+    {
+      "id": "18",
+      "name": "Item Tinkering"
+    },
+    {
+      "id": "20",
+      "name": "Deception"
+    },
+    {
+      "id": "21",
+      "name": "Healing",
+      "gear": [
+        {
+          "weenieId": "628",
+          "name": "Handy Healing Kit",
+          "stacksize": "1"
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "name": "Jump",
+      "gear": [
+        {
+          "weenieId": "273",
+          "name": "Pyreal",
+          "stacksize": "500"
+        },
+        {
+          "weenieId": "1077",
+          "name": "Welcome Letter",
+          "stacksize": "1"
+        },
+        {
+          "weenieId": "166",
+          "name": "Sack",
+          "stacksize": "1"
+        },
+        {
+          "weenieId": "5084",
+          "name": "Calling Stone",
+          "stacksize": "1"
+        }
+      ],
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "259",
+              "name": "Bread",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "261",
+              "name": "Cheese",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "258",
+              "name": "Apple",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "23",
+      "name": "Lockpick",
+      "gear": [
+        {
+          "weenieId": "511",
+          "name": "Crude Lockpick",
+          "stacksize": "1"
+        }
+      ]
+    },
+    {
+      "id": "24",
+      "name": "Run"
+    },
+    {
+      "id": "27",
+      "name": "Assess Creature"
+    },
+    {
+      "id": "28",
+      "name": "Weapon Tinkering"
+    },
+    {
+      "id": "29",
+      "name": "Armor Tinkering"
+    },
+    {
+      "id": "30",
+      "name": "Magic Item Tinkering"
+    },
+    {
+      "id": "31",
+      "name": "Creature Enchantment",
+      "gear": [
+        {
+          "weenieId": "691",
+          "name": "Lead Scarab",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "689",
+          "name": "Iron Scarab",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "774",
+          "name": "Hyssop",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "760",
+          "name": "Realgar",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "789",
+          "name": "Powdered Moonstone",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "749",
+          "name": "Poplar Talisman",
+          "stacksize": "3"
+        },
+        {
+          "weenieId": "626",
+          "name": "Powdered Hematite",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "750",
+          "name": "Rowan Talisman",
+          "stacksize": "3"
+        },
+        {
+          "weenieId": "754",
+          "name": "Cadmia",
+          "stacksize": "10",
+          "specializedOnly": "true"
+        },
+        {
+          "weenieId": "782",
+          "name": "Powdered Agate",
+          "stacksize": "10",
+          "specializedOnly": "true"
+        }
+      ],
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "4914",
+              "name": "Aluvian Wand",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "4916",
+              "name": "Gharu'ndim Wand",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "4915",
+              "name": "Sho Wand",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ],
+      "spells": [
+        {
+          "spellId": "298",
+          "name": "Axe Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "292",
+          "name": "Axe Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "304",
+          "name": "Axe Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "322",
+          "name": "Dagger Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "316",
+          "name": "Dagger Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "328",
+          "name": "Dagger Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "467",
+          "name": "Bow Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "461",
+          "name": "Bow Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "473",
+          "name": "Bow Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "491",
+          "name": "Crossbow Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "485",
+          "name": "Crossbow Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "497",
+          "name": "Crossbow Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "346",
+          "name": "Mace Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "340",
+          "name": "Mace Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "352",
+          "name": "Mace Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "370",
+          "name": "Spear Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "364",
+          "name": "Spear Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "376",
+          "name": "Spear Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "394",
+          "name": "Staff Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "388",
+          "name": "Staff Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "400",
+          "name": "Staff Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "418",
+          "name": "Sword Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "412",
+          "name": "Sword Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "424",
+          "name": "Sword Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "539",
+          "name": "Thrown Weapons Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "533",
+          "name": "Thrown Weapons Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "545",
+          "name": "Thrown Weapons Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "443",
+          "name": "Unarmed Combat Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "437",
+          "name": "Unarmed Combat Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "449",
+          "name": "Unarmed Combat Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1769",
+          "name": "Alchemy Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1757",
+          "name": "Alchemy Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1763",
+          "name": "Alchemy Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "690",
+          "name": "Arcane Benightedness",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "678",
+          "name": "Arcane Enlightenment",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "3506",
+          "name": "Arcanum Enlightenment I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "3499",
+          "name": "Arcanum Salvaging I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "708",
+          "name": "Armor Tinkering Expertise Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "702",
+          "name": "Armor Tinkering Expertise Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "720",
+          "name": "Armor Tinkering Ignorance",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1439",
+          "name": "Bafflement Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1391",
+          "name": "Clumsiness Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1721",
+          "name": "Cooking Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1709",
+          "name": "Cooking Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1715",
+          "name": "Cooking Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1379",
+          "name": "Coordination Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1373",
+          "name": "Coordination Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "569",
+          "name": "Creature Enchantment Ineptitude",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "563",
+          "name": "Creature Enchantment Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "557",
+          "name": "Creature Enchantment Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "868",
+          "name": "Deception Ineptitude",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "856",
+          "name": "Deception Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "850",
+          "name": "Deception Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "262",
+          "name": "Defenselessness",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5763",
+          "name": "Dirty Fighting Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5771",
+          "name": "Dirty Fighting Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5779",
+          "name": "Dirty Fighting Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5787",
+          "name": "Dual Wield Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5795",
+          "name": "Dual Wield Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5803",
+          "name": "Dual Wield Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1355",
+          "name": "Endurance Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1349",
+          "name": "Endurance Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "964",
+          "name": "Faithlessness",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "952",
+          "name": "Fealty Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "946",
+          "name": "Fealty Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1463",
+          "name": "Feeblemind Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1745",
+          "name": "Fletching Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1733",
+          "name": "Fletching Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1739",
+          "name": "Fletching Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1427",
+          "name": "Focus Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1421",
+          "name": "Focus Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1367",
+          "name": "Frailty Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "892",
+          "name": "Healing Ineptitude",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "880",
+          "name": "Healing Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "874",
+          "name": "Healing Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "250",
+          "name": "Impregnability Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "256",
+          "name": "Impregnability Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "17",
+          "name": "Invulnerability Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "18",
+          "name": "Invulnerability Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "593",
+          "name": "Item Enchantment Ineptitude",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "587",
+          "name": "Item Enchantment Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "581",
+          "name": "Item Enchantment Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "732",
+          "name": "Item Tinkering Expertise Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "726",
+          "name": "Item Tinkering Expertise Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "744",
+          "name": "Item Tinkering Ignorance",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1012",
+          "name": "Jumping Ineptitude",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "976",
+          "name": "Jumping Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "970",
+          "name": "Jumping Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1000",
+          "name": "Leaden Feet",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "916",
+          "name": "Leadership Ineptitude",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "904",
+          "name": "Leadership Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "898",
+          "name": "Leadership Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "623",
+          "name": "Life Magic Ineptitude",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "611",
+          "name": "Life Magic Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "605",
+          "name": "Life Magic Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "940",
+          "name": "Lockpick Ineptitude",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "928",
+          "name": "Lockpick Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "922",
+          "name": "Lockpick Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "756",
+          "name": "Magic Item Tinkering Expertise Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "750",
+          "name": "Magic Item Tinkering Expertise Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "768",
+          "name": "Magic Item Tinkering Ignorance",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "280",
+          "name": "Magic Yield Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "672",
+          "name": "Mana Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "659",
+          "name": "Mana Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "653",
+          "name": "Mana Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "804",
+          "name": "Monster Attunement Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "798",
+          "name": "Monster Attunement Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "817",
+          "name": "Monster Unfamiliarity",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "830",
+          "name": "Person Attunement Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "824",
+          "name": "Person Attunement Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "843",
+          "name": "Person Unfamiliarity",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1403",
+          "name": "Quickness Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1397",
+          "name": "Quickness Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5811",
+          "name": "Recklessness Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5819",
+          "name": "Recklessness Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5827",
+          "name": "Recklessness Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "268",
+          "name": "Resist Magic Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "274",
+          "name": "Resist Magic Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2",
+          "name": "Self Strength",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5835",
+          "name": "Shield Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5843",
+          "name": "Shield Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5851",
+          "name": "Shield Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1415",
+          "name": "Slowness Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5859",
+          "name": "Sneak Attack Ineptitude Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5867",
+          "name": "Sneak Attack Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5875",
+          "name": "Sneak Attack Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "988",
+          "name": "Sprint Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "982",
+          "name": "Sprint Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1",
+          "name": "Strength Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "15",
+          "name": "Vulnerability",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "647",
+          "name": "War Magic Ineptitude",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "635",
+          "name": "War Magic Mastery Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "629",
+          "name": "War Magic Mastery Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "3",
+          "name": "Weakness Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "780",
+          "name": "Weapon Tinkering Expertise Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "774",
+          "name": "Weapon Tinkering Expertise Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "792",
+          "name": "Weapon Tinkering Ignorance",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1451",
+          "name": "Willpower Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1445",
+          "name": "Willpower Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "299",
+          "name": "Axe Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "293",
+          "name": "Axe Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "305",
+          "name": "Axe Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "323",
+          "name": "Dagger Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "317",
+          "name": "Dagger Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "329",
+          "name": "Dagger Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "468",
+          "name": "Bow Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "462",
+          "name": "Bow Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "474",
+          "name": "Bow Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "492",
+          "name": "Crossbow Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "486",
+          "name": "Crossbow Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "498",
+          "name": "Crossbow Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "347",
+          "name": "Mace Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "341",
+          "name": "Mace Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "353",
+          "name": "Mace Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "371",
+          "name": "Spear Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "365",
+          "name": "Spear Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "377",
+          "name": "Spear Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "395",
+          "name": "Staff Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "389",
+          "name": "Staff Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "401",
+          "name": "Staff Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "419",
+          "name": "Sword Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "413",
+          "name": "Sword Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "425",
+          "name": "Sword Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "540",
+          "name": "Thrown Weapons Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "534",
+          "name": "Thrown Weapons Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "546",
+          "name": "Thrown Weapons Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "444",
+          "name": "Unarmed Combat Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "438",
+          "name": "Unarmed Combat Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "450",
+          "name": "Unarmed Combat Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1770",
+          "name": "Alchemy Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1758",
+          "name": "Alchemy Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1764",
+          "name": "Alchemy Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "691",
+          "name": "Arcane Benightedness Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "679",
+          "name": "Arcane Enlightenment Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "3507",
+          "name": "Arcanum Enlightenment II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "3500",
+          "name": "Arcanum Salvaging Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "709",
+          "name": "Armor Tinkering Expertise Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "703",
+          "name": "Armor Tinkering Expertise Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "721",
+          "name": "Armor Tinkering Ignorance Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1440",
+          "name": "Bafflement Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1392",
+          "name": "Clumsiness Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1722",
+          "name": "Cooking Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1710",
+          "name": "Cooking Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1716",
+          "name": "Cooking Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1380",
+          "name": "Coordination Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1374",
+          "name": "Coordination Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "570",
+          "name": "Creature Enchantment Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "564",
+          "name": "Creature Enchantment Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "558",
+          "name": "Creature Enchantment Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "869",
+          "name": "Deception Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "857",
+          "name": "Deception Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "851",
+          "name": "Deception Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "263",
+          "name": "Defenselessness Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5764",
+          "name": "Dirty Fighting Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5772",
+          "name": "Dirty Fighting Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5780",
+          "name": "Dirty Fighting Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5788",
+          "name": "Dual Wield Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5796",
+          "name": "Dual Wield Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5804",
+          "name": "Dual Wield Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1356",
+          "name": "Endurance Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1350",
+          "name": "Endurance Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "965",
+          "name": "Faithlessness Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "953",
+          "name": "Fealty Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "947",
+          "name": "Fealty Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1464",
+          "name": "Feeblemind Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1746",
+          "name": "Fletching Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1734",
+          "name": "Fletching Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1740",
+          "name": "Fletching Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1428",
+          "name": "Focus Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1422",
+          "name": "Focus Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1368",
+          "name": "Frailty Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "893",
+          "name": "Healing Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "881",
+          "name": "Healing Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "875",
+          "name": "Healing Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "251",
+          "name": "Impregnability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "257",
+          "name": "Impregnability Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "240",
+          "name": "Invulnerability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "245",
+          "name": "Invulnerability Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "594",
+          "name": "Item Enchantment Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "588",
+          "name": "Item Enchantment Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "582",
+          "name": "Item Enchantment Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "733",
+          "name": "Item Tinkering Expertise Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "727",
+          "name": "Item Tinkering Expertise Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "745",
+          "name": "Item Tinkering Ignorance Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1013",
+          "name": "Jumping Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "977",
+          "name": "Jumping Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "971",
+          "name": "Jumping Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1001",
+          "name": "Leaden Feet Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "917",
+          "name": "Leadership Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "905",
+          "name": "Leadership Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "899",
+          "name": "Leadership Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "624",
+          "name": "Life Magic Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "612",
+          "name": "Life Magic Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "606",
+          "name": "Life Magic Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "941",
+          "name": "Lockpick Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "929",
+          "name": "Lockpick Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "923",
+          "name": "Lockpick Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "757",
+          "name": "Magic Item Tinkering Expertise Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "751",
+          "name": "Magic Item Tinkering Expertise Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "769",
+          "name": "Magic Item Tinkering Ignorance Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "281",
+          "name": "Magic Yield Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "673",
+          "name": "Mana Conversion Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "660",
+          "name": "Mana Conversion Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "654",
+          "name": "Mana Conversion Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "805",
+          "name": "Monster Attunement Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "799",
+          "name": "Monster Attunement Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "818",
+          "name": "Monster Unfamiliarity Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "831",
+          "name": "Person Attunement Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "825",
+          "name": "Person Attunement Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "844",
+          "name": "Person Unfamiliarity Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1404",
+          "name": "Quickness Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1398",
+          "name": "Quickness Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5812",
+          "name": "Recklessness Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5820",
+          "name": "Recklessness Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5828",
+          "name": "Recklessness Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "269",
+          "name": "Magic Resistance Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "275",
+          "name": "Magic Resistance Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1328",
+          "name": "Strength Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5836",
+          "name": "Shield Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5844",
+          "name": "Shield Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5852",
+          "name": "Shield Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1416",
+          "name": "Slowness Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5860",
+          "name": "Sneak Attack Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5868",
+          "name": "Sneak Attack Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "5876",
+          "name": "Sneak Attack Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "989",
+          "name": "Sprint Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "983",
+          "name": "Sprint Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1333",
+          "name": "Strength Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "230",
+          "name": "Vulnerability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "648",
+          "name": "War Magic Ineptitude Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "636",
+          "name": "War Magic Mastery Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "630",
+          "name": "War Magic Mastery Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1339",
+          "name": "Weakness Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "781",
+          "name": "Weapon Tinkering Expertise Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "775",
+          "name": "Weapon Tinkering Expertise Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "793",
+          "name": "Weapon Tinkering Ignorance Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1452",
+          "name": "Willpower Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1446",
+          "name": "Willpower Self II",
+          "specializedOnly": "true"
+        }
+      ]
+    },
+    {
+      "id": "32",
+      "name": "Item Enchantment",
+      "gear": [
+        {
+          "weenieId": "691",
+          "name": "Lead Scarab",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "689",
+          "name": "Iron Scarab",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "774",
+          "name": "Hyssop",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "740",
+          "name": "Ashwood Talisman",
+          "stacksize": "3"
+        },
+        {
+          "weenieId": "759",
+          "name": "Quicksilver",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "792",
+          "name": "Powdered Turquoise",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "756",
+          "name": "Cobalt",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "790",
+          "name": "Powdered Onyx",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "761",
+          "name": "Stibnite",
+          "stacksize": "10",
+          "specializedOnly": "true"
+        }
+      ],
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "4914",
+              "name": "Aluvian Wand",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "4916",
+              "name": "Gharu'ndim Wand",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "4915",
+              "name": "Sho Wand",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ],
+      "spells": [
+        {
+          "spellId": "35",
+          "name": "Blood Drinker",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1599",
+          "name": "Defender",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1587",
+          "name": "Heartseeker",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1475",
+          "name": "Hermetic Link",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "3253",
+          "name": "Spirit Drinker",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "49",
+          "name": "Swift Killer",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1493",
+          "name": "Acid Bane",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1499",
+          "name": "Acid Lure",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "37",
+          "name": "Blade Bane",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "38",
+          "name": "Blade Lure",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "36",
+          "name": "Blood Loather",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1511",
+          "name": "Bludgeon Bane",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1505",
+          "name": "Bludgeon Lure",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1487",
+          "name": "Brittlemail",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1547",
+          "name": "Flame Bane",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1541",
+          "name": "Flame Lure",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1523",
+          "name": "Frost Bane",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1517",
+          "name": "Frost Lure",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1469",
+          "name": "Hermetic Void",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "51",
+          "name": "Impenetrability",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "50",
+          "name": "Leaden Weapon",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1535",
+          "name": "Lightning Bane",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1529",
+          "name": "Lightning Lure",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1606",
+          "name": "Lure Blade",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1569",
+          "name": "Piercing Bane",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1563",
+          "name": "Piercing Lure",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "3260",
+          "name": "Spirit Loather",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1575",
+          "name": "Strengthen Lock",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1593",
+          "name": "Turn Blade",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1581",
+          "name": "Weaken Lock",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1612",
+          "name": "Aura of Blood Drinker Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1601",
+          "name": "Aura of Defender Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1588",
+          "name": "Aura of Heart Seeker Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1476",
+          "name": "Aura of Hermetic Link Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "3254",
+          "name": "Aura of Spirit Drinker Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1623",
+          "name": "Aura of Swift Killer Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1494",
+          "name": "Acid Bane II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1500",
+          "name": "Acid Lure II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1558",
+          "name": "Blade Bane II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1553",
+          "name": "Blade Lure II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1617",
+          "name": "Blood Loather II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1512",
+          "name": "Bludgeon Bane II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1506",
+          "name": "Bludgeon Lure II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1488",
+          "name": "Brittlemail II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1548",
+          "name": "Flame Bane II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1542",
+          "name": "Flame Lure II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1524",
+          "name": "Frost Bane II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1518",
+          "name": "Frost Lure II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1470",
+          "name": "Hermetic Void II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1482",
+          "name": "Impenetrability II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1629",
+          "name": "Leaden Weapon II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1536",
+          "name": "Lightning Bane II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1530",
+          "name": "Lightning Lure II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1607",
+          "name": "Lure Blade II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1570",
+          "name": "Piercing Bane II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1564",
+          "name": "Piercing Lure II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "3261",
+          "name": "Spirit Loather II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1576",
+          "name": "Strengthen Lock II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1594",
+          "name": "Turn Blade II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1582",
+          "name": "Weaken Lock II",
+          "specializedOnly": "true"
+        }
+      ]
+    },
+    {
+      "id": "33",
+      "name": "Life Magic",
+      "gear": [
+        {
+          "weenieId": "691",
+          "name": "Lead Scarab",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "689",
+          "name": "Iron Scarab",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "780",
+          "name": "Wormwood",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "790",
+          "name": "Powdered Onyx",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "756",
+          "name": "Cobalt",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "744",
+          "name": "Ebony Talisman",
+          "stacksize": "3"
+        },
+        {
+          "weenieId": "774",
+          "name": "Hyssop",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "783",
+          "name": "Powdered Amber",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "757",
+          "name": "Colcothar",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "751",
+          "name": "Willow Talisman",
+          "stacksize": "3"
+        },
+        {
+          "weenieId": "776",
+          "name": "Mugwort",
+          "stacksize": "10",
+          "specializedOnly": "true"
+        },
+        {
+          "weenieId": "755",
+          "name": "Cinnabar",
+          "stacksize": "10",
+          "specializedOnly": "true"
+        },
+        {
+          "weenieId": "752",
+          "name": "Yew Talisman",
+          "stacksize": "3",
+          "specializedOnly": "true"
+        }
+      ],
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "4914",
+              "name": "Aluvian Wand",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "4916",
+              "name": "Gharu'ndim Wand",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "4915",
+              "name": "Sho Wand",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ],
+      "spells": [
+        {
+          "spellId": "509",
+          "name": "Acid Protection Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "515",
+          "name": "Acid Protection Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "521",
+          "name": "Acid Vulnerability Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "23",
+          "name": "Armor Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "24",
+          "name": "Armor Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1115",
+          "name": "Blade Protection Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1109",
+          "name": "Blade Protection Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1127",
+          "name": "Blade Vulnerability Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1024",
+          "name": "Bludgeon Protection Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1018",
+          "name": "Bludgeon Protection Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1048",
+          "name": "Bludgeoning Vulnerability Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1036",
+          "name": "Cold Protection Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1030",
+          "name": "Cold Protection Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1060",
+          "name": "Cold Vulnerability Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1237",
+          "name": "Drain Health Other I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1260",
+          "name": "Drain Mana",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1249",
+          "name": "Drain Stamina",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1195",
+          "name": "Enfeeble Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "194",
+          "name": "Exhaustion Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "171",
+          "name": "Fester Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "19",
+          "name": "Fire Protection Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "20",
+          "name": "Fire Protection Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "21",
+          "name": "Fire Vulnerability Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "7",
+          "name": "Harm Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "5",
+          "name": "Heal Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "6",
+          "name": "Heal Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1278",
+          "name": "Health to Mana Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1272",
+          "name": "Health to Stamina Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "25",
+          "name": "Imperil Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1225",
+          "name": "Infuse Health",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "9",
+          "name": "Infuse Mana",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1243",
+          "name": "Infuse Stamina",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1072",
+          "name": "Lightning Protection Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1066",
+          "name": "Lightning Protection Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1084",
+          "name": "Lightning Vulnerability Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "218",
+          "name": "Mana Depletion Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1219",
+          "name": "Mana Drain Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "206",
+          "name": "Mana Renewal Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "212",
+          "name": "Mana Renewal Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1284",
+          "name": "Mana to Health",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1296",
+          "name": "Mana to Stamina Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2774",
+          "name": "Martyr's Blight I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2760",
+          "name": "Martyr's Hecatomb I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2767",
+          "name": "Martyr's Tenacity I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1139",
+          "name": "Piercing Protection Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1133",
+          "name": "Piercing Protection Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1151",
+          "name": "Piercing Vulnerability Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "159",
+          "name": "Regenerate Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "165",
+          "name": "Regenerate Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "53",
+          "name": "Rejuvenate Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "54",
+          "name": "Rejuvenate Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1183",
+          "name": "Revitalize Other",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1177",
+          "name": "Revitalize Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1664",
+          "name": "Stamina to Health Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1676",
+          "name": "Stamina to Mana Self",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "510",
+          "name": "Acid Protection Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "516",
+          "name": "Acid Protection Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "522",
+          "name": "Acid Vulnerability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1313",
+          "name": "Armor Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1308",
+          "name": "Armor Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1116",
+          "name": "Blade Protection Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1110",
+          "name": "Blade Protection Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1128",
+          "name": "Blade Vulnerability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1025",
+          "name": "Bludgeoning Protection Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1019",
+          "name": "Bludgeoning Protection Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1049",
+          "name": "Bludgeoning Vulnerability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1037",
+          "name": "Cold Protection Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1031",
+          "name": "Cold Protection Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1061",
+          "name": "Cold Vulnerability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1238",
+          "name": "Drain Health Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1261",
+          "name": "Drain Mana Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1250",
+          "name": "Drain Stamina Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1196",
+          "name": "Enfeeble Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "195",
+          "name": "Exhaustion Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "172",
+          "name": "Fester Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "810",
+          "name": "Fire Protection Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1090",
+          "name": "Fire Protection Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1104",
+          "name": "Fire Vulnerability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1172",
+          "name": "Harm Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1162",
+          "name": "Heal Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1157",
+          "name": "Heal Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1279",
+          "name": "Health to Mana Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1273",
+          "name": "Health to Stamina Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1323",
+          "name": "Imperil Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1226",
+          "name": "Infuse Health Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1255",
+          "name": "Infuse Mana Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1244",
+          "name": "Infuse Stamina Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1073",
+          "name": "Lightning Protection Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1067",
+          "name": "Lightning Protection Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1085",
+          "name": "Lightning Vulnerability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "219",
+          "name": "Mana Depletion Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1220",
+          "name": "Mana Drain Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "207",
+          "name": "Mana Renewal Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "213",
+          "name": "Mana Renewal Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1285",
+          "name": "Mana to Health Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1297",
+          "name": "Mana to Stamina Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "2775",
+          "name": "Martyr's Blight II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "2761",
+          "name": "Martyr's Hecatomb II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "2768",
+          "name": "Martyr's Tenacity II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1140",
+          "name": "Piercing Protection Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1134",
+          "name": "Piercing Protection Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1152",
+          "name": "Piercing Vulnerability Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "160",
+          "name": "Regeneration Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "166",
+          "name": "Regeneration Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "184",
+          "name": "Rejuvenation Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "189",
+          "name": "Rejuvenation Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1184",
+          "name": "Revitalize Other II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1178",
+          "name": "Revitalize Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1665",
+          "name": "Stamina to Health Self II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1677",
+          "name": "Stamina to Mana Self II",
+          "specializedOnly": "true"
+        }
+      ]
+    },
+    {
+      "id": "34",
+      "name": "War Magic",
+      "gear": [
+        {
+          "weenieId": "691",
+          "name": "Lead Scarab",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "689",
+          "name": "Iron Scarab",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "772",
+          "name": "Hawthorn",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "790",
+          "name": "Powdered Onyx",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "741",
+          "name": "Birch Talisman",
+          "stacksize": "3"
+        },
+        {
+          "weenieId": "762",
+          "name": "Turpeth",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "760",
+          "name": "Realgar",
+          "stacksize": "10"
+        },
+        {
+          "weenieId": "756",
+          "name": "Cobalt",
+          "stacksize": "10",
+          "specializedOnly": "true"
+        }
+      ],
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "4914",
+              "name": "Aluvian Wand",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "4916",
+              "name": "Gharu'ndim Wand",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "4915",
+              "name": "Sho Wand",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ],
+      "spells": [
+        {
+          "spellId": "2711",
+          "name": "Acid Arc I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1790",
+          "name": "Acid Streak",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "58",
+          "name": "Acid Stream",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2753",
+          "name": "Blade Arc I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2739",
+          "name": "Flame Arc I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "27",
+          "name": "Flame Bolt",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1796",
+          "name": "Flame Streak",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2718",
+          "name": "Force Arc I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "86",
+          "name": "Force Bolt",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1802",
+          "name": "Force Streak",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2725",
+          "name": "Frost Arc I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "28",
+          "name": "Frost Bolt",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1808",
+          "name": "Frost Streak",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2732",
+          "name": "Lightning Arc I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "75",
+          "name": "Lightning Bolt",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1814",
+          "name": "Lightning Streak",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2746",
+          "name": "Shock Arc I",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "64",
+          "name": "Shock Wave",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1820",
+          "name": "Shock Wave Streak",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "92",
+          "name": "Whirling Blade",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "1826",
+          "name": "Whirling Blade Streak",
+          "specializedOnly": "false"
+        },
+        {
+          "spellId": "2712",
+          "name": "Acid Arc II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1791",
+          "name": "Acid Streak II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "59",
+          "name": "Acid Stream II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "2754",
+          "name": "Blade Arc II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "2740",
+          "name": "Flame Arc II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "81",
+          "name": "Flame Bolt II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1797",
+          "name": "Flame Streak II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "2719",
+          "name": "Force Arc II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "87",
+          "name": "Force Bolt II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1803",
+          "name": "Force Streak II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "2726",
+          "name": "Frost Arc II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "70",
+          "name": "Frost Bolt II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1809",
+          "name": "Frost Streak II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "2733",
+          "name": "Lightning Arc II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "76",
+          "name": "Lightning Bolt II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1815",
+          "name": "Lightning Streak II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "2747",
+          "name": "Shock Arc II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "65",
+          "name": "Shock Wave II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1821",
+          "name": "Shock Wave Streak II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "93",
+          "name": "Whirling Blade II",
+          "specializedOnly": "true"
+        },
+        {
+          "spellId": "1827",
+          "name": "Whirling Blade Streak II",
+          "specializedOnly": "true"
+        }
+      ]
+    },
+    {
+      "id": "35",
+      "name": "Leadership"
+    },
+    {
+      "id": "36",
+      "name": "Loyalty"
+    },
+    {
+      "id": "37",
+      "name": "Fletching",
+      "gear": [
+        {
+          "weenieId": "4586",
+          "name": "Bundle of Arrowheads",
+          "stacksize": "30"
+        },
+        {
+          "weenieId": "4585",
+          "name": "Bundle of Arrowshafts",
+          "stacksize": "30"
+        },
+        {
+          "weenieId": "5339",
+          "name": "Bundle of Quarrelshafts",
+          "stacksize": "30"
+        },
+        {
+          "weenieId": "15296",
+          "name": "Bundle of Atlatl Dart Shafts",
+          "stacksize": "30"
+        }
+      ]
+    },
+    {
+      "id": "38",
+      "name": "Alchemy",
+      "gear": [
+        {
+          "weenieId": "4751",
+          "name": "Mortar and Pestle",
+          "stacksize": "1"
+        },
+        {
+          "weenieId": "2414",
+          "name": "Azurite",
+          "stacksize": "1"
+        },
+        {
+          "weenieId": "2414",
+          "name": "Azurite",
+          "stacksize": "1"
+        },
+        {
+          "weenieId": "2414",
+          "name": "Azurite",
+          "stacksize": "1"
+        }
+      ]
+    },
+    {
+      "id": "39",
+      "name": "Cooking",
+      "gear": [
+        {
+          "weenieId": "4761",
+          "name": "Flour",
+          "stacksize": "6"
+        },
+        {
+          "weenieId": "4746",
+          "name": "Water",
+          "stacksize": "6"
+        }
+      ]
+    },
+    {
+      "id": "40",
+      "name": "Salvaging",
+      "gear": [
+        {
+          "weenieId": "20646",
+          "name": "Ust",
+          "stacksize": "1"
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "name": "Axe",
+      "gear": [
+        {
+          "weenieId": "12740",
+          "name": "Training Hand Axe",
+          "stacksize": "1"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Dagger",
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "527",
+              "name": "Starter Knife",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "523",
+              "name": "Starter Jambiya",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "527",
+              "name": "Starter Knife",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "name": "Mace",
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "520",
+              "name": "Starter Club",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "526",
+              "name": "Starter Kasrullah",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "524",
+              "name": "Starter Jitte",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "name": "Spear",
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "534",
+              "name": "Starter Spear",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "519",
+              "name": "Starter Budiaq",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "539",
+              "name": "Starter Yari",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "name": "Staff",
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "529",
+              "name": "Starter Quarter Staff",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "528",
+              "name": "Starter Nabut",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "525",
+              "name": "Starter Jo",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "name": "Sword",
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "535",
+              "name": "Starter Sword",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "533",
+              "name": "Starter Simi",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "538",
+              "name": "Starter Yaoji",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "name": "Unarmed Combat",
+      "gear": [
+        {
+          "weenieId": "12742",
+          "name": "Training Cestus",
+          "stacksize": "1"
+        }
+      ]
+    },
+    {
+      "id": "48",
+      "name": "Shield",
+      "gear": [
+        {
+          "weenieId": "44",
+          "name": "Buckler",
+          "stacksize": "1"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Bow",
+      "gear": [
+        {
+          "weenieId": "300",
+          "name": "Arrows",
+          "stacksize": "250"
+        }
+      ],
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "518",
+              "name": "Starter Short Bow",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "537",
+              "name": "Starter Yag",
+              "stacksize": "1"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "531",
+              "name": "Starter Shouyumi",
+              "stacksize": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Crossbow",
+      "gear": [
+        {
+          "weenieId": "12749",
+          "name": "Light Training Crossbow",
+          "stacksize": "1"
+        },
+        {
+          "weenieId": "305",
+          "name": "Bolts",
+          "stacksize": "250"
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "name": "Thrown Weapons",
+      "gear": [
+        {
+          "weenieId": "23109",
+          "name": "Starter Atlatl",
+          "stacksize": "1"
+        },
+        {
+          "weenieId": "12464",
+          "name": "Atlatl Darts",
+          "stacksize": "200"
+        }
+      ],
+      "heritage": [
+        {
+          "id": "1",
+          "name": "Aluvian",
+          "gear": [
+            {
+              "weenieId": "522",
+              "name": "Starter Darts",
+              "stacksize": "50"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "Gharu'ndim",
+          "gear": [
+            {
+              "weenieId": "522",
+              "name": "Starter Darts",
+              "stacksize": "50"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Sho",
+          "gear": [
+            {
+              "weenieId": "532",
+              "name": "Starter Shouken",
+              "stacksize": "50"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
