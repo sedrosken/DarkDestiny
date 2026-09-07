@@ -549,7 +549,7 @@ namespace ACE.Server.WorldObjects
             {
                 containerItems = Inventory.Values.Where(i => !i.UseBackpackSlot).ToList();
 
-                if (allowStacking && (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM || Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration) && worldObject.MaterialType == null && worldObject.MaxStackSize > 0 && worldObject.StackSize < worldObject.MaxStackSize)
+                if (allowStacking && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && worldObject.MaterialType == null && worldObject.MaxStackSize > 0 && worldObject.StackSize < worldObject.MaxStackSize)
                 {
                     var wo = worldObject;
                     // GameplayMode stack-compatibility enforcement disabled for now (not in active use) -- see disable-gameplaymode-checks.
