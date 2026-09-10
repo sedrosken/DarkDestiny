@@ -59,6 +59,14 @@ namespace ACE.Server.Network.Handlers
 
         public static void HandleLoginRequest(ClientPacket packet, Session session)
         {
+            if (!session.TryClaimLoginRequest())
+            {
+                // A LoginRequest for this session is already being processed (client sent a
+                // duplicate/retransmitted copy). Safe to drop - the first one is handling it.
+                log.DebugFormat("Duplicate LoginRequest for session {0} ignored, already processing.", session.EndPointC2S);
+                return;
+            }
+
             try
             {
                 PacketInboundLoginRequest loginRequest = new PacketInboundLoginRequest(packet);
