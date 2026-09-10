@@ -231,10 +231,7 @@ namespace ACE.Server.WorldObjects
             {
                 item.OnSpellsActivated();
 
-                // Stackable items (phials, etc.) shouldn't burn mana on wield -- a per-instance
-                // mana drain breaks stacking, since ACE requires matching state to re-merge a stack.
-                // Single-instance wearables (jewelry, wands, LeyLineAmulets) keep the original drain.
-                if (this is Player && item.MaxStackSize <= 1)
+                if(this is Player)
                     item.ItemCurMana--;
             }
 

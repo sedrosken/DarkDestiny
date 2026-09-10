@@ -59,44 +59,10 @@ namespace ACE.Server.Network.Handlers
 
         public static void HandleLoginRequest(ClientPacket packet, Session session)
         {
-            PacketInboundLoginRequest loginRequest;
-
             try
             {
-                loginRequest = new PacketInboundLoginRequest(packet);
-            }
-            catch (Exception ex)
-            {
-                log.ErrorFormat("Received LoginRequest from {0} that threw an exception.", session.EndPointC2S);
-                log.Error(ex);
-                return;
-            }
+                PacketInboundLoginRequest loginRequest = new PacketInboundLoginRequest(packet);
 
-            var claim = session.TryClaimLoginRequest(ComputeLoginFingerprint(loginRequest));
-
-            if (claim == LoginRequestClaimResult.DuplicatePacket)
-            {
-                // A LoginRequest for this session is already being processed, and this is a byte-for-byte
-                // retransmitted copy of it (client sent it twice). Safe to drop - the first one is handling it.
-                log.DebugFormat("Duplicate LoginRequest for session {0} ignored, already processing.", session.EndPointC2S);
-                return;
-            }
-
-            if (claim == LoginRequestClaimResult.SessionClash)
-            {
-                // A LoginRequest for this session is already being processed, and this one has DIFFERENT
-                // content (different account/password/version) - two distinct login attempts raced in on
-                // the same session concurrently. This is not a harmless duplicate, so don't silently drop
-                // it or let it race the in-flight attempt - terminate cleanly so the client gets a fast,
-                // unambiguous failure it can retry from.
-                log.Warn($"Session {session.EndPointC2S} received a second LoginRequest with different " +
-                         "content while the first was still processing. Terminating so the client can retry cleanly.");
-                session.Terminate(SessionTerminationReason.BadHandshake);
-                return;
-            }
-
-            try
-            {
                 if (loginRequest.Account.Length > 50)
                 {
                     NetworkManager.SendLoginRequestReject(session, CharacterError.AccountInvalid);
@@ -111,24 +77,6 @@ namespace ACE.Server.Network.Handlers
             {
                 log.ErrorFormat("Received LoginRequest from {0} that threw an exception.", session.EndPointC2S);
                 log.Error(ex);
-            }
-        }
-
-        /// <summary>
-        /// Builds a fingerprint of the semantically meaningful fields of a LoginRequest, used by
-        /// Session.TryClaimLoginRequest() to tell a genuine duplicate/retransmitted packet apart from a
-        /// different login attempt landing on the same session. Timestamp is deliberately excluded - it's
-        /// a client-side sequence number that can legitimately differ between two sends of an otherwise
-        /// identical request, and including it would make real duplicates fail to match.
-        /// </summary>
-        private static string ComputeLoginFingerprint(PacketInboundLoginRequest loginRequest)
-        {
-            var raw = $"{loginRequest.NetAuthType}|{loginRequest.Account}|{loginRequest.Password}|{loginRequest.GlsTicket}|{loginRequest.ClientVersion}";
-
-            using (var sha = System.Security.Cryptography.SHA256.Create())
-            {
-                var hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(raw));
-                return Convert.ToBase64String(hash);
             }
         }
 

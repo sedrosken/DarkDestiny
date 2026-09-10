@@ -35,37 +35,6 @@ namespace ACE.Server.Network
 
         public SessionState State { get; set; }
 
-        // Guards against a duplicate/retransmitted LoginRequest packet being processed concurrently
-        // with the first one. HandleLoginRequest() dispatches login work as a fire-and-forget Task,
-        // and session.State isn't updated until that work finishes, so without this guard two
-        // near-simultaneous LoginRequest packets can both pass CheckState() and race each other,
-        // with the loser hitting a null ConnectionData seed and self-terminating as "Bad handshake".
-        //
-        // Rather than just counting "has a LoginRequest been claimed", we store a fingerprint of the
-        // first request's content (account/password/version) and compare later arrivals against it.
-        // A matching fingerprint means it's genuinely the same request arriving twice (safe to drop).
-        // A non-matching fingerprint means two different login attempts landed on this session
-        // concurrently, which is not a harmless duplicate and should be surfaced distinctly rather
-        // than silently ignored or allowed to race.
-        private string loginRequestFingerprint;
-
-        /// <summary>
-        /// Attempts to claim this session for processing a LoginRequest with the given fingerprint.
-        /// The first caller wins the claim (returns LoginClaimed) and should proceed with login handling.
-        /// A later caller with a matching fingerprint gets DuplicatePacket (safe to silently drop - it's a
-        /// retransmitted copy of the same request). A later caller with a different fingerprint gets
-        /// SessionClash (a genuinely different login attempt raced in - should not be silently dropped).
-        /// </summary>
-        public LoginRequestClaimResult TryClaimLoginRequest(string fingerprint)
-        {
-            var existing = Interlocked.CompareExchange(ref loginRequestFingerprint, fingerprint, null);
-
-            if (existing == null)
-                return LoginRequestClaimResult.LoginClaimed;
-
-            return existing == fingerprint ? LoginRequestClaimResult.DuplicatePacket : LoginRequestClaimResult.SessionClash;
-        }
-
 
         public uint AccountId { get; private set; }
 
