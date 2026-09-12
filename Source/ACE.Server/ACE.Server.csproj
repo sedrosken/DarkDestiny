@@ -1,3 +1,4 @@
+<!-- ACE.Server/ACE.Server.csproj — full file -->
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -31,6 +32,16 @@
     <PackageIconUrl />
     <ApplicationIcon>images\ace_retro_icon_2.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <!-- Only exclude files inside a Mods subfolder (a mod with its own .csproj,
+       like CustomClothingBase) — NOT the loader infrastructure files that
+       live directly in Mods\ itself (ModManager.cs, ModContainer.cs, etc.),
+       which ACE.Server's own Program.cs/ServerManager.cs depend on. -->
+  <ItemGroup>
+    <Compile Remove="Mods\*\**\*.cs" />
+    <EmbeddedResource Remove="Mods\*\**\*" />
+    <None Remove="Mods\*\**\*" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Entity\Mutations\ArmorLevel\armor_level_extremity.txt" />
@@ -505,6 +516,21 @@
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="if exist &quot;$(ProjectDir)Config.js&quot; copy &quot;$(ProjectDir)Config.js&quot; &quot;$(TargetDir)Config.js&quot;&#xD;&#xA;if not exist &quot;$(ProjectDir)log4net.config&quot; if exist &quot;$(TargetDir)log4net.config&quot; copy &quot;$(TargetDir)log4net.config&quot; &quot;$(ProjectDir)log4net.config&quot;&#xD;&#xA;if exist &quot;$(ProjectDir)log4net.config&quot; copy &quot;$(ProjectDir)log4net.config&quot; &quot;$(TargetDir)log4net.config&quot;" Condition="'$(OS)' == 'Windows_NT'" />
     <Exec Command="if [ -f &quot;$(ProjectDir)Config.js&quot; ] ; then cp &quot;$(ProjectDir)Config.js&quot; &quot;$(TargetDir)Config.js&quot; ; fi&#xD;&#xA;if [ ! -f &quot;$(ProjectDir)log4net.config&quot; ] &amp;&amp; [ -f &quot;$(TargetDir)log4net.config&quot; ] ; then cp &quot;$(TargetDir)log4net.config&quot; &quot;$(ProjectDir)log4net.config&quot; ; fi&#xD;&#xA;if [ -f &quot;$(ProjectDir)log4net.config&quot; ] ; then cp &quot;$(ProjectDir)log4net.config&quot; &quot;$(TargetDir)log4net.config&quot; ; fi" Condition="'$(OS)' != 'Windows_NT'" />
+  </Target>
+
+  <!-- Builds every Mods\*\*.csproj after ACE.Server finishes, so a full
+       ACE.Server compile also produces the mod DLL. See CustomClothingBase's
+       Reference/HintPath entries — they resolve against this project's own
+       output, so this project must finish first, which AfterTargets="Build"
+       guarantees. -->
+  <Target Name="BuildMods" AfterTargets="Build">
+    <ItemGroup>
+      <ModProjects Include="Mods\**\*.csproj" />
+    </ItemGroup>
+    <Message Text="Building mod: %(ModProjects.Identity)" Importance="high" Condition="'@(ModProjects)' != ''" />
+    <MSBuild Projects="@(ModProjects)"
+             Properties="Configuration=$(Configuration);Platform=x64"
+             Condition="'@(ModProjects)' != ''" />
   </Target>
 
 </Project>

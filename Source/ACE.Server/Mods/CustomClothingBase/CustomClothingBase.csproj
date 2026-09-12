@@ -1,3 +1,4 @@
+<!-- ACE.Server/Mods/CustomClothingBase/CustomClothingBase.csproj — full file, paths for THIS location -->
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
@@ -5,24 +6,29 @@
 		<NoWarn>0436;1073;8509</NoWarn>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<OutputPath>C:\ACE\Mods\$(AssemblyName)</OutputPath>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<PlatformTarget>x64</PlatformTarget>
+		<!-- Resolves relative to this project file (now back under
+		     ACE.Server\Mods\CustomClothingBase\), landing next to ACE.Server's
+		     own build output under a Mods\<AssemblyName> folder — where
+		     McMaster.NETCore.Plugins (used by ACE.Server.csproj) expects plugins. -->
+		<AceModsOutputRoot Condition="'$(AceModsOutputRoot)' == ''">$(MSBuildThisFileDirectory)../../bin/x64/$(Configuration)/net8.0/Mods</AceModsOutputRoot>
+		<OutputPath>$(AceModsOutputRoot)/$(AssemblyName)/</OutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove=".template.config\**" />
-		<EmbeddedResource Remove=".template.config\**" />
-		<None Remove=".template.config\**" />
+		<Compile Remove=".template.config/**" />
+		<EmbeddedResource Remove=".template.config/**" />
+		<None Remove=".template.config/**" />
 	</ItemGroup>
 
 	<PropertyGroup>
 		<PublicizerClearCacheOnClean>true</PublicizerClearCacheOnClean>
-		<BaseOutputPath>C:\ace\mods\CustomClothingBase\</BaseOutputPath>
 	</PropertyGroup>
-    <ItemGroup>
+
+	<ItemGroup>
 		<Publicize Include="ACE.Server" />
 		<Publicize Include="ACE.DatLoader" />
 		<Publicize Include="ACE.Database" />
@@ -36,58 +42,60 @@
 		</PackageReference>
 	</ItemGroup>
 
-    <ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="JsonNet.ContractResolvers" Version="2.0.0" />
 		<PackageReference Include="Lib.Harmony" Version="2.3.6" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="System.Text.Json" Version="8.0.5" />
-		<!--<PackageReference Include="System.Text.Json" Version="7.0.0" Aliases="Json" />-->
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Relative to ACE.Server\Mods\CustomClothingBase\ — one level up
+		     twice gets to ACE.Server\, where ACE.Server.csproj's own bin\
+		     output lands. Build ACE.Server first (or use the BuildMods target
+		     added to ACE.Server.csproj, which handles that automatically). -->
 		<Reference Include="ACE.Adapter">
-			<HintPath>D:\Source\ACE\Source\ACE.Server\bin\x64\Debug\net8.0\ACE.Adapter.dll</HintPath>
+			<HintPath>../../bin/x64/$(Configuration)/net8.0/ACE.Adapter.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="ACE.Common">
-			<HintPath>D:\Source\ACE\Source\ACE.Server\bin\x64\Debug\net8.0\ACE.Common.dll</HintPath>
+			<HintPath>../../bin/x64/$(Configuration)/net8.0/ACE.Common.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="ACE.Database">
-			<HintPath>D:\Source\ACE\Source\ACE.Server\bin\x64\Debug\net8.0\ACE.Database.dll</HintPath>
+			<HintPath>../../bin/x64/$(Configuration)/net8.0/ACE.Database.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="ACE.DatLoader">
-			<HintPath>D:\Source\ACE\Source\ACE.Server\bin\x64\Debug\net8.0\ACE.DatLoader.dll</HintPath>
+			<HintPath>../../bin/x64/$(Configuration)/net8.0/ACE.DatLoader.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="ACE.Entity">
-			<HintPath>D:\Source\ACE\Source\ACE.Server\bin\x64\Debug\net8.0\ACE.Entity.dll</HintPath>
+			<HintPath>../../bin/x64/$(Configuration)/net8.0/ACE.Entity.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="ACE.Server">
-			<HintPath>D:\Source\ACE\Source\ACE.Server\bin\x64\Debug\net8.0\ACE.Server.dll</HintPath>
+			<HintPath>../../bin/x64/$(Configuration)/net8.0/ACE.Server.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.EntityFrameworkCore">
-			<HintPath>D:\Source\ACE\Source\ACE.Server\bin\x64\Debug\net8.0\Microsoft.EntityFrameworkCore.dll</HintPath>
+			<HintPath>../../bin/x64/$(Configuration)/net8.0/Microsoft.EntityFrameworkCore.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.EntityFrameworkCore.Abstractions">
-		  <HintPath>D:\Source\ACE\Source\ACE.Server\bin\x64\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll</HintPath>
+			<HintPath>../../bin/x64/$(Configuration)/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll</HintPath>
 		</Reference>
 		<Reference Include="Microsoft.EntityFrameworkCore.Relational">
-		  <HintPath>D:\Source\ACE\Source\ACE.Server\bin\x64\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll</HintPath>
+			<HintPath>../../bin/x64/$(Configuration)/net8.0/Microsoft.EntityFrameworkCore.Relational.dll</HintPath>
 		</Reference>
 	</ItemGroup>
-    
+
 	<ItemGroup>
 		<None Update="Meta.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
-	<!--Get rid of assemblies that should be present in ACE-->
 	<Target Name="CleanupFiles" AfterTargets="PostBuildEvent">
 		<ItemGroup>
 			<FilesToDelete Include="$(OutDir)0Harmony.dll" />
@@ -105,13 +113,12 @@
 		<Message Text="Files deleted: @(FilesDeleted)" />
 	</Target>
 
-	<!--More cleanup in Release mode?-->
-	<Target Name="CleanupFilesRelease" AfterTargets="CleanupFiles" Condition="$(ConfigurationName) == Release">
+	<Target Name="CleanupFilesRelease" AfterTargets="CleanupFiles" Condition="'$(ConfigurationName)' == 'Release'">
 		<ItemGroup>
 			<FilesToDelete Include="$(OutDir)*.deps.json" />
 			<FilesToDelete Include="$(OutDir)*runtimeconfig.json" />
 			<FilesToDelete Include="$(OutDir)*.pdb" />
-			<FilesToDelete Include="$(OutDir)runtimes\**\*.*" />
+			<FilesToDelete Include="$(OutDir)runtimes/**/*.*" />
 			<FoldersToDelete Include="$(OutDir)runtimes" />
 		</ItemGroup>
 		<Message Text="Deleting Files @(FilesToDelete)" />
@@ -121,8 +128,8 @@
 		<Message Text="Files deleted: @(FilesDeleted)" />
 		<RemoveDir Directories="@(FoldersToDelete)" />
 	</Target>
-	<!--Zip if in Release mod-->
-	<Target Name="ZipOutputPath" AfterTargets="CleanupFiles" Condition="$(ConfigurationName) == Release">
-		<ZipDirectory SourceDirectory="$(OutputPath)" DestinationFile="$(OutputPath)..\$(ProjectName).zip" Overwrite="true" />
+
+	<Target Name="ZipOutputPath" AfterTargets="CleanupFiles" Condition="'$(ConfigurationName)' == 'Release'">
+		<ZipDirectory SourceDirectory="$(OutputPath)" DestinationFile="$(OutputPath)../$(ProjectName).zip" Overwrite="true" />
 	</Target>
 </Project>
