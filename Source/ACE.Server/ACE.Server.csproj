@@ -518,19 +518,24 @@
     <Exec Command="if [ -f &quot;$(ProjectDir)Config.js&quot; ] ; then cp &quot;$(ProjectDir)Config.js&quot; &quot;$(TargetDir)Config.js&quot; ; fi&#xD;&#xA;if [ ! -f &quot;$(ProjectDir)log4net.config&quot; ] &amp;&amp; [ -f &quot;$(TargetDir)log4net.config&quot; ] ; then cp &quot;$(TargetDir)log4net.config&quot; &quot;$(ProjectDir)log4net.config&quot; ; fi&#xD;&#xA;if [ -f &quot;$(ProjectDir)log4net.config&quot; ] ; then cp &quot;$(ProjectDir)log4net.config&quot; &quot;$(TargetDir)log4net.config&quot; ; fi" Condition="'$(OS)' != 'Windows_NT'" />
   </Target>
 
-  <!-- Builds every Mods\*\*.csproj after ACE.Server finishes, so a full
-       ACE.Server compile also produces the mod DLL. See CustomClothingBase's
-       Reference/HintPath entries — they resolve against this project's own
-       output, so this project must finish first, which AfterTargets="Build"
-       guarantees. -->
-  <Target Name="BuildMods" AfterTargets="Build">
-    <ItemGroup>
-      <ModProjects Include="Mods\**\*.csproj" />
-    </ItemGroup>
-    <Message Text="Building mod: %(ModProjects.Identity)" Importance="high" Condition="'@(ModProjects)' != ''" />
-    <MSBuild Projects="@(ModProjects)"
-             Properties="Configuration=$(Configuration);Platform=x64"
-             Condition="'@(ModProjects)' != ''" />
-  </Target>
+<!-- ACE.Server.csproj — replace BuildMods target with this -->
+<Target Name="BuildMods" AfterTargets="Build">
+  <ItemGroup>
+    <ModProjects Include="Mods\**\*.csproj" />
+  </ItemGroup>
+
+  <!-- Separate OS process per step (not the <MSBuild> task) — required so
+       each dotnet invocation does a fresh project evaluation. A single
+       MSBuild engine process caches evaluated projects (including which
+       Exists()-conditioned Imports resolved) per project+properties; reusing
+       it via <MSBuild> means restore's newly-written obj/*.nuget.g.targets
+       (which imports Krafs.Publicizer.targets) is invisible to any build
+       call in the same process, even a later one. A new process re-reads
+       obj/ from disk and picks it up correctly. -->
+  <Exec Command="dotnet restore &quot;%(ModProjects.Identity)&quot;"
+        Condition="'@(ModProjects)' != ''" />
+  <Exec Command="dotnet build &quot;%(ModProjects.Identity)&quot; -c $(Configuration) -p:Platform=x64"
+        Condition="'@(ModProjects)' != ''" />
+</Target>
 
 </Project>
