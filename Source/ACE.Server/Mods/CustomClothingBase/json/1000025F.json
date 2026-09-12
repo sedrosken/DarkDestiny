@@ -1,0 +1,191 @@
+{
+  "ClothingBaseEffects": {
+    "0x2000964": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x00000001",
+          "ModelId": "0x01001EB1",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05001A2E",
+              "NewTexture": "0x05001A2D"
+            },
+            {
+              "OldTexture": "0x05001A2B",
+              "NewTexture": "0x05001A2A"
+            }
+          ]
+        },
+        {
+          "Index": "0x00000002",
+          "ModelId": "0x01001EAA",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05001A29",
+              "NewTexture": "0x05001A28"
+            }
+          ]
+        },
+        {
+          "Index": "0x00000005",
+          "ModelId": "0x01001EAE",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05001A29",
+              "NewTexture": "0x05001A28"
+            }
+          ]
+        },
+        {
+          "Index": "0x00000003",
+          "ModelId": "0x01001EA7",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05001A25",
+              "NewTexture": "0x05001A27"
+            }
+          ]
+        },
+        {
+          "Index": "0x00000006",
+          "ModelId": "0x01001EA7",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05001A25",
+              "NewTexture": "0x05001A27"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001EC0",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05001A36",
+              "NewTexture": "0x05001A35"
+            },
+            {
+              "OldTexture": "0x05001A33",
+              "NewTexture": "0x05001A31"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ClothingSubPalEffects": {
+    "64": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000137"
+        }
+      ]
+    },
+    "67": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F0006E0"
+        }
+      ]
+    },
+    "39": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F0001DA"
+        }
+      ]
+    },
+    "76": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000137"
+        }
+      ]
+    },
+    "14": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000139"
+        }
+      ]
+    },
+    "20": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F00013A"
+        }
+      ]
+    },
+    "53": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000135"
+        }
+      ]
+    },
+    "21": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000136"
+        }
+      ]
+    }
+  },
+  "Id": "0x1000025F"
+}

@@ -1,0 +1,108 @@
+{
+  "ClothingBaseEffects": {
+    "0x20014A0": {
+      "CloObjectEffects": []
+    }
+  },
+  "ClothingSubPalEffects": {
+    "64": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000ACF"
+        }
+      ]
+    },
+    "2": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000AD1"
+        }
+      ]
+    },
+    "8": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000ACE"
+        }
+      ]
+    },
+    "9": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000AD0"
+        }
+      ]
+    },
+    "10": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000ACC"
+        }
+      ]
+    },
+    "14": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000ACD"
+        }
+      ]
+    },
+    "82": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F000AD2"
+        }
+      ]
+    }
+  },
+  "Id": "0x10000639"
+}

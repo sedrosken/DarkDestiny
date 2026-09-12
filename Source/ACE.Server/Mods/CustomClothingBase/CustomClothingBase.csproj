@@ -1,4 +1,4 @@
-<!-- ACE.Server/Mods/CustomClothingBase/CustomClothingBase.csproj — full file, paths for THIS location -->
+<!-- ACE.Server/Mods/CustomClothingBase/CustomClothingBase.csproj — full file -->
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
@@ -10,10 +10,10 @@
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<PlatformTarget>x64</PlatformTarget>
-		<!-- Resolves relative to this project file (now back under
-		     ACE.Server\Mods\CustomClothingBase\), landing next to ACE.Server's
-		     own build output under a Mods\<AssemblyName> folder — where
-		     McMaster.NETCore.Plugins (used by ACE.Server.csproj) expects plugins. -->
+		<!-- Resolves relative to this project file (ACE.Server\Mods\CustomClothingBase\),
+		     landing next to ACE.Server's own build output under a
+		     Mods\<AssemblyName> folder — where McMaster.NETCore.Plugins (used by
+		     ACE.Server.csproj) expects plugins. -->
 		<AceModsOutputRoot Condition="'$(AceModsOutputRoot)' == ''">$(MSBuildThisFileDirectory)../../bin/x64/$(Configuration)/net8.0/Mods</AceModsOutputRoot>
 		<OutputPath>$(AceModsOutputRoot)/$(AssemblyName)/</OutputPath>
 	</PropertyGroup>
@@ -53,7 +53,7 @@
 		<!-- Relative to ACE.Server\Mods\CustomClothingBase\ — one level up
 		     twice gets to ACE.Server\, where ACE.Server.csproj's own bin\
 		     output lands. Build ACE.Server first (or use the BuildMods target
-		     added to ACE.Server.csproj, which handles that automatically). -->
+		     in ACE.Server.csproj, which handles that automatically). -->
 		<Reference Include="ACE.Adapter">
 			<HintPath>../../bin/x64/$(Configuration)/net8.0/ACE.Adapter.dll</HintPath>
 			<Private>False</Private>
@@ -92,6 +92,17 @@
 
 	<ItemGroup>
 		<None Update="Meta.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<!-- Copies the whole Json\ folder tree from the project directory into the
+	     mod's output (…/Mods/CustomClothingBase/Json/...), preserving
+	     subfolder structure. Confirm "Json" matches your actual folder
+	     name/casing exactly — this build runs on Linux, which is
+	     case-sensitive. -->
+	<ItemGroup>
+		<None Include="json\**\*.*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
