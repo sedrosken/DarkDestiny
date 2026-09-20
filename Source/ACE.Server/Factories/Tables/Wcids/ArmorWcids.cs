@@ -14,9 +14,12 @@ namespace ACE.Server.Factories.Tables.Wcids
         private static ChanceTable<WeenieClassName> LeatherWcids = new ChanceTable<WeenieClassName>()
         {
             ( WeenieClassName.buckler,                 0.07f ),
-            ( WeenieClassName.capleather,              0.02f ),
-            ( WeenieClassName.cowlleathernew,          0.02f ),
-            ( WeenieClassName.basinetleathernew,       0.03f ),
+            //( WeenieClassName.capleather,              0.02f ),
+            //( WeenieClassName.cowlleathernew,          0.02f ),
+            //( WeenieClassName.basinetleathernew,       0.03f ),
+            ( WeenieClassName.helmhorned,              0.02f ),
+            ( WeenieClassName.helmet,                  0.03f ),
+            ( WeenieClassName.kabuton,                 0.02f ),
             ( WeenieClassName.bootsleathernew,         0.06f ),
             ( WeenieClassName.bracersleathernew,       0.06f ),
             ( WeenieClassName.breastplateleathernew,   0.06f ),
@@ -39,8 +42,11 @@ namespace ACE.Server.Factories.Tables.Wcids
         {
             ( WeenieClassName.shieldkite,                0.04f ),
             ( WeenieClassName.shieldround,               0.04f ),
-            ( WeenieClassName.cowlstuddedleather,        0.04f ),
-            ( WeenieClassName.basinetstuddedleather,     0.04f ),
+            //( WeenieClassName.cowlstuddedleather,        0.04f ),
+            //( WeenieClassName.basinetstuddedleather,     0.04f ),
+            ( WeenieClassName.helmhorned,                0.03f ),
+            ( WeenieClassName.helmet,                    0.03f ),
+            ( WeenieClassName.kabuton,                   0.02f ),
             ( WeenieClassName.bootsreinforcedleather,    0.08f ),
             ( WeenieClassName.bracersstuddedleather,     0.07f ),
             ( WeenieClassName.breastplatestuddedleather, 0.07f ),
@@ -60,10 +66,13 @@ namespace ACE.Server.Factories.Tables.Wcids
         {
             ( WeenieClassName.shieldkitelarge,      0.04f ),
             ( WeenieClassName.shieldroundlarge,     0.04f ),
-            ( WeenieClassName.capmetal,             0.02f ),
-            ( WeenieClassName.mailcoif,             0.02f ),
-            ( WeenieClassName.coifscale,            0.02f ),
-            ( WeenieClassName.basinetchainmail,     0.02f ),
+            //( WeenieClassName.capmetal,             0.02f ),
+            //( WeenieClassName.mailcoif,             0.02f ),
+            //( WeenieClassName.coifscale,            0.02f ),
+            //( WeenieClassName.basinetchainmail,     0.02f ),
+            ( WeenieClassName.helmhorned,           0.03f ),
+            ( WeenieClassName.helmet,               0.03f ),
+            ( WeenieClassName.kabuton,              0.02f ),
             ( WeenieClassName.bootssteeltoe,        0.08f ),
             ( WeenieClassName.bracerschainmail,     0.07f ),
             ( WeenieClassName.breastplatechainmail, 0.07f ),
@@ -81,12 +90,13 @@ namespace ACE.Server.Factories.Tables.Wcids
         // platemail - aluvian
         private static ChanceTable<WeenieClassName> PlatemailWcids = new ChanceTable<WeenieClassName>()
         {
-            ( WeenieClassName.shieldtower,          0.08f ),
+            ( WeenieClassName.shieldtower,          0.07f ),
             ( WeenieClassName.helmhorned,           0.02f ),
             ( WeenieClassName.helmet,               0.02f ),
             ( WeenieClassName.armet,                0.02f ),
             ( WeenieClassName.heaumenew,            0.02f ),
-            ( WeenieClassName.sollerets,            0.08f ),
+            ( WeenieClassName.heaumeold,            0.02f ),
+            ( WeenieClassName.sollerets,            0.07f ),
             ( WeenieClassName.vambracesplatemail,   0.06f ),
             ( WeenieClassName.breastplateplatemail, 0.08f ),
             ( WeenieClassName.cuirassplatemail,     0.08f ),
@@ -104,11 +114,13 @@ namespace ACE.Server.Factories.Tables.Wcids
         private static ChanceTable<WeenieClassName> ScalemailWcids = new ChanceTable<WeenieClassName>()
         {
             ( WeenieClassName.shieldtower,          0.07f ),
-            ( WeenieClassName.baigha,               0.02f ),
-            ( WeenieClassName.helmet,               0.02f ),
+            //( WeenieClassName.baigha,               0.02f ),
+            ( WeenieClassName.helmet,               0.03f ),
             ( WeenieClassName.armet,                0.02f ),
             ( WeenieClassName.heaumenew,            0.02f ),
-            ( WeenieClassName.basinetscalemail,     0.01f ),
+            ( WeenieClassName.heaumeold,            0.02f ),
+            ( WeenieClassName.kabuton,              0.02f ),
+            //( WeenieClassName.basinetscalemail,     0.01f ),
             ( WeenieClassName.sollerets,            0.07f ),
             ( WeenieClassName.bracersscalemail,     0.07f ),
             ( WeenieClassName.breastplatescalemail, 0.06f ),
@@ -132,6 +144,7 @@ namespace ACE.Server.Factories.Tables.Wcids
             ( WeenieClassName.helmet,             0.02f ),
             ( WeenieClassName.armet,              0.02f ),
             ( WeenieClassName.heaumenew,          0.02f ),
+            ( WeenieClassName.heaumeold,            0.02f ),
             ( WeenieClassName.sollerets,          0.08f ),
             ( WeenieClassName.kote,               0.08f ),
             ( WeenieClassName.breastplateyoroi,   0.08f ),
@@ -228,6 +241,7 @@ namespace ACE.Server.Factories.Tables.Wcids
             ( WeenieClassName.helmet,             0.02f ),
             ( WeenieClassName.armet,              0.02f ),
             ( WeenieClassName.heaumenew,          0.02f ),
+            ( WeenieClassName.heaumeold,            0.02f ),
             ( WeenieClassName.solleretsdiforsa,   0.04f ),
             ( WeenieClassName.sollerets,          0.04f ),
             ( WeenieClassName.bracersdiforsa,     0.06f ),
@@ -640,9 +654,12 @@ namespace ACE.Server.Factories.Tables.Wcids
                 {
                     ( WeenieClassName.buckler,                 1.0f ),
 
-                    ( WeenieClassName.capleather,              1.0f ),
-                    ( WeenieClassName.cowlleathernew,          1.0f ),
-                    ( WeenieClassName.basinetleathernew,       1.0f ),
+                    //( WeenieClassName.capleather,              1.0f ),
+                    //( WeenieClassName.cowlleathernew,          1.0f ),
+                    //( WeenieClassName.basinetleathernew,       1.0f ),
+                    ( WeenieClassName.helmhorned,              1.0f ),
+                    ( WeenieClassName.helmet,                  1.0f ),
+                    ( WeenieClassName.kabuton,                 1.0f ),
 
                     ( WeenieClassName.gauntletsleathernew,     2.0f ),
                     ( WeenieClassName.longgauntletsleathernew, 2.0f ),
@@ -671,8 +688,10 @@ namespace ACE.Server.Factories.Tables.Wcids
                     ( WeenieClassName.shieldkite,                1.0f ),
                     ( WeenieClassName.shieldround,               1.0f ),
 
-                    ( WeenieClassName.cowlstuddedleather,        1.0f ),
-                    ( WeenieClassName.basinetstuddedleather,     1.0f ),
+                    //( WeenieClassName.cowlstuddedleather,        1.0f ),
+                    //( WeenieClassName.basinetstuddedleather,     1.0f ),
+                    ( WeenieClassName.helmet,                    1.0f ),
+                    ( WeenieClassName.kabuton,                   1.0f ),
 
                     ( WeenieClassName.gauntletsstuddedleather,   2.0f ),
                     ( WeenieClassName.bootsreinforcedleather,    2.0f ),
@@ -698,9 +717,12 @@ namespace ACE.Server.Factories.Tables.Wcids
                     ( WeenieClassName.shieldkitelarge,      1.0f ),
                     ( WeenieClassName.shieldroundlarge,     1.0f ),
 
-                    ( WeenieClassName.capmetal,             1.0f ),
-                    ( WeenieClassName.mailcoif,             1.0f ),
-                    ( WeenieClassName.basinetchainmail,     1.0f ),
+                    //( WeenieClassName.capmetal,             1.0f ),
+                    //( WeenieClassName.mailcoif,             1.0f ),
+                    //( WeenieClassName.basinetchainmail,     1.0f ),
+                    ( WeenieClassName.helmhorned,            1.0f ),
+                    ( WeenieClassName.helmet,                1.0f ),
+                    ( WeenieClassName.kabuton,               1.0f ),
 
                     ( WeenieClassName.gauntletschainmail,   2.0f ),
                     ( WeenieClassName.bootssteeltoe,        2.0f ),
@@ -729,6 +751,7 @@ namespace ACE.Server.Factories.Tables.Wcids
                     ( WeenieClassName.helmet,               1.0f ),
                     ( WeenieClassName.armet,                1.0f ),
                     ( WeenieClassName.heaumenew,            1.0f ),
+                    ( WeenieClassName.heaumeold,            1.0f ),
 
                     ( WeenieClassName.gauntletsplatemail,   2.0f ),
                     ( WeenieClassName.sollerets,            2.0f ),
@@ -753,12 +776,15 @@ namespace ACE.Server.Factories.Tables.Wcids
                 {
                     ( WeenieClassName.shieldtower,          1.0f ),
 
-                    ( WeenieClassName.baigha,               1.0f ),
-                    ( WeenieClassName.helmet,               1.0f ),
+                    //( WeenieClassName.baigha,               1.0f ),
+                    ( WeenieClassName.helmet,               2.0f ),
+                    ( WeenieClassName.helmhorned,           1.0f ),
+                    ( WeenieClassName.kabuton,              1.0f ),
                     ( WeenieClassName.armet,                1.0f ),
                     ( WeenieClassName.heaumenew,            1.0f ),
-                    ( WeenieClassName.basinetscalemail,     1.0f ),
-                    ( WeenieClassName.coifscale,            1.0f ),
+                    ( WeenieClassName.heaumeold,            1.0f ),
+                    //( WeenieClassName.basinetscalemail,     1.0f ),
+                    //( WeenieClassName.coifscale,            1.0f ),
 
                     ( WeenieClassName.gauntletsscalemail,   2.0f ),
                     ( WeenieClassName.sollerets,            2.0f ),
@@ -788,6 +814,8 @@ namespace ACE.Server.Factories.Tables.Wcids
                     ( WeenieClassName.helmet,             1.0f ),
                     ( WeenieClassName.armet,              1.0f ),
                     ( WeenieClassName.heaumenew,          1.0f ),
+                    ( WeenieClassName.heaumeold,          1.0f ),
+
 
                     ( WeenieClassName.gauntletsplatemail, 2.0f ),
                     ( WeenieClassName.sollerets,          2.0f ),
@@ -900,10 +928,13 @@ namespace ACE.Server.Factories.Tables.Wcids
                 {
                     ( WeenieClassName.buckler,                 2.0f ),
 
-                    ( WeenieClassName.capleather,              1.0f ),
+                    //( WeenieClassName.capleather,              1.0f ),
 
-                    ( WeenieClassName.cowlleather,             1.0f ),
-                    ( WeenieClassName.basinetleather,          1.0f ),
+                    //( WeenieClassName.cowlleather,             1.0f ),
+                    //( WeenieClassName.basinetleather,          1.0f ),
+                    ( WeenieClassName.helmhorned,              1.0f ),
+                    ( WeenieClassName.helmet,                  1.0f ),
+                    ( WeenieClassName.kabuton,                 1.0f ),
 
                     ( WeenieClassName.gauntletsleather,        2.0f ),
                     ( WeenieClassName.bootsleather,            2.0f ),
@@ -923,8 +954,10 @@ namespace ACE.Server.Factories.Tables.Wcids
                     ( WeenieClassName.pauldronsleather,        1.0f ),
                     ( WeenieClassName.bracersleather,          1.0f ),
 
-                    ( WeenieClassName.cowlleathernew,          1.0f ),
-                    ( WeenieClassName.basinetleathernew,       1.0f ),
+                    //( WeenieClassName.cowlleathernew,          1.0f ),
+                    //( WeenieClassName.basinetleathernew,       1.0f ),
+                    ( WeenieClassName.helmhorned,              1.0f ),
+                    ( WeenieClassName.helmet,                  1.0f ),
 
                     ( WeenieClassName.gauntletsleathernew,     2.0f ),
                     ( WeenieClassName.longgauntletsleathernew, 2.0f ),
@@ -953,8 +986,10 @@ namespace ACE.Server.Factories.Tables.Wcids
                     ( WeenieClassName.shieldkite,                1.0f ),
                     ( WeenieClassName.shieldround,               1.0f ),
 
-                    ( WeenieClassName.cowlstuddedleather,        1.0f ),
-                    ( WeenieClassName.basinetstuddedleather,     1.0f ),
+                    //( WeenieClassName.cowlstuddedleather,        1.0f ),
+                    //( WeenieClassName.basinetstuddedleather,     1.0f ),
+                    ( WeenieClassName.helmhorned,                1.0f ),
+                    ( WeenieClassName.helmet,                    1.0f ),
 
                     ( WeenieClassName.gauntletsstuddedleather,   2.0f ),
                     ( WeenieClassName.bootsreinforcedleather,    2.0f ),
@@ -980,9 +1015,12 @@ namespace ACE.Server.Factories.Tables.Wcids
                     ( WeenieClassName.shieldkitelarge,      1.0f ),
                     ( WeenieClassName.shieldroundlarge,     1.0f ),
 
-                    ( WeenieClassName.capmetal,             1.0f ),
-                    ( WeenieClassName.mailcoif,             1.0f ),
-                    ( WeenieClassName.basinetchainmail,     1.0f ),
+                    //( WeenieClassName.capmetal,             1.0f ),
+                    //( WeenieClassName.mailcoif,             1.0f ),
+                    //( WeenieClassName.basinetchainmail,     1.0f ),
+                    ( WeenieClassName.helmhorned,           1.0f ),
+                    ( WeenieClassName.helmet,               1.0f ),
+                    ( WeenieClassName.kabuton,              1.0f ),
 
                     ( WeenieClassName.gauntletschainmail,   2.0f ),
                     ( WeenieClassName.bootssteeltoe,        2.0f ),
@@ -1018,6 +1056,7 @@ namespace ACE.Server.Factories.Tables.Wcids
                     ( WeenieClassName.armet,                1.0f ),
                     ( WeenieClassName.heaume,               1.0f ),
                     ( WeenieClassName.heaumenew,            1.0f ),
+                    ( WeenieClassName.heaumeold,            1.0f ),
 
                     ( WeenieClassName.gauntletsplatemail,   2.0f ),
                     ( WeenieClassName.sollerets,            2.0f ),
@@ -1047,9 +1086,12 @@ namespace ACE.Server.Factories.Tables.Wcids
                     ( WeenieClassName.shieldroundlarge,     0.2f ),
                     ( WeenieClassName.shieldtower,          0.2f ),
 
-                    ( WeenieClassName.baigha,               1.0f ),
-                    ( WeenieClassName.basinetscalemail,     1.0f ),
-                    ( WeenieClassName.coifscale,            1.0f ),
+                    //( WeenieClassName.baigha,               1.0f ),
+                    //( WeenieClassName.basinetscalemail,     1.0f ),
+                    //( WeenieClassName.coifscale,            1.0f ),
+                    ( WeenieClassName.helmhorned,             1.0f ),
+                    ( WeenieClassName.helmet,                 1.0f ),
+                    ( WeenieClassName.kabuton,                1.0f ),
 
                     ( WeenieClassName.gauntletsscalemail,   2.0f ),
                     ( WeenieClassName.sollerets,            2.0f ),

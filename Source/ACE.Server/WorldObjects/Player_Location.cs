@@ -844,7 +844,8 @@ namespace ACE.Server.WorldObjects
             // appearance, so it comes back exactly as it was. Destroying the old instance
             // first avoids leaving a ghost pet behind on the previous landblock.
             var activePet = CurrentActivePet as Pet;
-            if (activePet != null && activePet.P_PetDevice != null && activePet.P_PetDevice.PetClass != null)
+            if (activePet != null && activePet.P_PetDevice != null && activePet.P_PetDevice.PetClass != null
+                && activePet.Mode != Pet.PetMode.Stay)   // "/pet stay" means stay -- don't drag it through the portal
             {
                 var petDevice = activePet.P_PetDevice;
                 var petWcid = (uint)petDevice.PetClass;

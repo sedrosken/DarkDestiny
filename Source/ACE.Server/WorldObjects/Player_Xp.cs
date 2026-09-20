@@ -376,6 +376,11 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            // creature pet system: admin XP grants (/grantxp, which uses XpType.Admin) also
+            // feed the currently summoned pet, so pets can be leveled for testing.
+            if (xpType == XpType.Admin)
+                GrantPetXP(amount);
+
             if (Fellowship != null && Fellowship.ShareXP && shareType.HasFlag(ShareType.Fellowship))
             {
                 // this will divy up the XP, and re-call this function
@@ -830,6 +835,23 @@ namespace ACE.Server.WorldObjects
 
                 // play level up effect
                 PlayParticleEffect(PlayScript.LevelUp, Guid);
+                // Prestige medal: award one per level gained (WCID 9870917, stackable)
+                var prestigeCount = (Level ?? 1) - (startingLevel ?? 1);
+                if (prestigeCount > 0)
+                {
+                    var medal = WorldObjectFactory.CreateNewWorldObject(9870917);
+                    if (medal != null)
+                    {
+                        if (prestigeCount > 1)
+                            medal.SetStackSize(prestigeCount);
+
+                        if (!TryCreateInInventoryWithNetworking(medal))
+                        {
+                            medal.Destroy();
+                            Session.Network.EnqueueSend(new GameMessageSystemChat("Your pack is full -- a prestige medal could not be awarded.", ChatMessageType.Broadcast));
+                        }
+                    }
+                }
 
                 VerifyWieldedLevelRequirements();
 

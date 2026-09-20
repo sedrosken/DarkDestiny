@@ -158,11 +158,20 @@ namespace ACE.Server.WorldObjects
             if (IsMovingToHome)
                 PendingEndMoveToHome = true;
 
+            // Grant-passage completion must run on EVERY ruleset. An idle monster that steps
+            // aside to let a creature (e.g. a charging pet) collide-past it relies on this
+            // aside-move finishing to flag the grant as done. This flag-set used to live inside
+            // the CustomDM-only block below, so on Infiltration the step-aside completed but the
+            // grant never ended: IsGrantingPassage / AwakeJustToGrantPassage stayed true forever
+            // and Monster_Tick returned at the grant-passage block every tick -- the monster
+            // froze after stepping ~2 steps aside and never fought, chased, or went home.
+            // (Grant passage is triggered by Creature.OnCollideObject, which is not ruleset-gated,
+            // so it fires on Infiltration; only its completion was gated. That mismatch was the freeze.)
+            if (IsGrantingPassage)
+                PendingEndGrantPassage = true;
+
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
-                if (IsGrantingPassage)
-                    PendingEndGrantPassage = true;
-
                 if (IsWandering)
                     PendingEndWandering = true;
 

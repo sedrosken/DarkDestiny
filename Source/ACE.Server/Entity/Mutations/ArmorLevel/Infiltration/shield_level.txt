@@ -6,16 +6,16 @@ Tier chances: 1, 0, 0, 0, 0, 0
         ArmorLevel += 10
 
     - Chance 20%:
-        ArmorLevel += 20
+        ArmorLevel += 15
 
     - Chance 40%:
-        ArmorLevel += 30
+        ArmorLevel += 20
 
     - Chance 20%:
-        ArmorLevel += 40
+        ArmorLevel += 25
 
     - Chance 10%:
-        ArmorLevel += 50
+        ArmorLevel += 30
 
     - Chance 100%:
         ArmorLevel += Random(-5, 5)
@@ -28,22 +28,22 @@ Tier chances: 0, 1, 0, 0, 0, 0
         ArmorLevel += 20
 
     - Chance 10%:
+        ArmorLevel += 25
+
+    - Chance 20%:
         ArmorLevel += 30
+
+    - Chance 30%:
+        ArmorLevel += 35
 
     - Chance 20%:
         ArmorLevel += 40
 
-    - Chance 30%:
-        ArmorLevel += 50
-
-    - Chance 20%:
-        ArmorLevel += 60
-
     - Chance 10%:
-        ArmorLevel += 70
+        ArmorLevel += 45
 
     - Chance 5%:
-        ArmorLevel += 80
+        ArmorLevel += 50
 
     - Chance 100%:
         ArmorLevel += Random(-5, 5)
@@ -59,19 +59,19 @@ Tier chances: 0, 0, 1, 0, 0, 0
         ArmorLevel += 40
 
     - Chance 20%:
-        ArmorLevel += 50
+        ArmorLevel += 45
 
     - Chance 30%:
-        ArmorLevel += 60
+        ArmorLevel += 50
 
     - Chance 20%:
-        ArmorLevel += 70
+        ArmorLevel += 55
 
     - Chance 10%:
-        ArmorLevel += 80
+        ArmorLevel += 60
 
     - Chance 5%:
-        ArmorLevel += 90
+        ArmorLevel += 65
 
     - Chance 100%:
         ArmorLevel += Random(-5, 5)
@@ -81,25 +81,25 @@ Shield Mutation #4:
 Tier chances: 0, 0, 0, 1, 0, 0
 
     - Chance 5%:
-        ArmorLevel += 40
+        ArmorLevel += 45
 
     - Chance 10%:
         ArmorLevel += 50
 
     - Chance 20%:
-        ArmorLevel += 60
+        ArmorLevel += 55
 
     - Chance 30%:
-        ArmorLevel += 70
+        ArmorLevel += 60
 
     - Chance 20%:
-        ArmorLevel += 80
+        ArmorLevel += 65
 
     - Chance 10%:
-        ArmorLevel += 90
+        ArmorLevel += 70
 
     - Chance 5%:
-        ArmorLevel += 100
+        ArmorLevel += 75
 
     - Chance 100%:
         ArmorLevel += Random(-5, 5)
@@ -112,22 +112,22 @@ Tier chances: 0, 0, 0, 0, 1, 0
         ArmorLevel += 50
 
     - Chance 10%:
+        ArmorLevel += 55
+
+    - Chance 20%:
         ArmorLevel += 60
+
+    - Chance 30%:
+        ArmorLevel += 65
 
     - Chance 20%:
         ArmorLevel += 70
 
-    - Chance 30%:
+    - Chance 10%:
         ArmorLevel += 80
 
-    - Chance 20%:
-        ArmorLevel += 90
-
-    - Chance 10%:
-        ArmorLevel += 100
-
     - Chance 5%:
-        ArmorLevel += 110
+        ArmorLevel += 90
 
     - Chance 100%:
         ArmorLevel += Random(-5, 5)
@@ -149,13 +149,13 @@ Tier chances: 0, 0, 0, 0, 0, 1
         ArmorLevel += 90
 
     - Chance 20%:
-        ArmorLevel += 100
+        ArmorLevel += 95
 
     - Chance 10%:
-        ArmorLevel += 110
+        ArmorLevel += 100
 
     - Chance 5%:
-        ArmorLevel += 120
+        ArmorLevel += 105
 
     - Chance 100%:
         ArmorLevel += Random(-5, 5)

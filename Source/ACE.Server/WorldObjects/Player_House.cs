@@ -170,7 +170,7 @@ namespace ACE.Server.WorldObjects
 
             SetHouseOwner(slumlord);
 
-            GiveDeed(slumlord);
+            //GiveDeed(slumlord);
         }
 
         public void GiveDeed(SlumLord slumLord)

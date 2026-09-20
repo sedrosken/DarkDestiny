@@ -106,6 +106,32 @@ namespace ACE.Server.WorldObjects
             if (CombatTable == null)
                 GetCombatTable();
 
+            // creature pet system: "/pet magic" / "/pet melee" override the normal attack roll.
+            if (this is CombatPet petStyle)
+            {
+                switch (petStyle.CombatStyle)
+                {
+                    case ACE.Server.WorldObjects.Pet.PetCombatStyle.Magic:
+                        // Prefer spells: force-select one of the pet's known spells and cast it.
+                        // We deliberately bypass the per-spell probability roll ("focus on magic"),
+                        // but MUST set CurrentSpell ourselves -- GetMaxRange() and the cast path read
+                        // it, so returning Magic with no spell selected NullReferences. Fall through
+                        // to a physical attack when it can't cast right now (on cooldown / no book).
+                        if (HasKnownSpells && SpellCastReady()
+                            && Biota.PropertiesSpellBook != null && Biota.PropertiesSpellBook.Count > 0)
+                        {
+                            var idx = ThreadSafeRandom.Next(0, Biota.PropertiesSpellBook.Count - 1);
+                            CurrentSpell = new Spell(Biota.PropertiesSpellBook.ElementAt(idx).Key);
+                            return CombatType.Magic;
+                        }
+                        break;
+                    case ACE.Server.WorldObjects.Pet.PetCombatStyle.Melee:
+                        // never cast: go straight to a physical attack
+                        return IsRanged ? CombatType.Missile : CombatType.Melee;
+                    // Auto: fall through to stock behavior
+                }
+            }
+
             // if caster, roll for spellcasting chance
             if (HasKnownSpells && SpellCastReady() && TryRollSpell())
                 return CombatType.Magic;

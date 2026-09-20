@@ -77,6 +77,40 @@ namespace ACE.Server.WorldObjects
         // the hatched creature's real (full) scale, remembered so in-place level-ups size correctly
         private float petFullScale = 1.0f;
 
+        // ---- player command modes ------------------------------------------
+        // A summoned combat pet obeys simple chat commands (/pet attack|follow|stay|stop|come).
+        // The mode is ephemeral state on the live pet (not saved on the egg) -- a fresh summon
+        // always starts in Follow, the normal "tag along and grab nearby monsters" behavior.
+        //   Follow : walk after the owner and auto-acquire nearby monsters (default)
+        //   Stay   : hold position -- don't follow, don't proactively grab targets. Still
+        //            defends itself if something attacks it.
+        public enum PetMode
+        {
+            Follow = 0,
+            Stay   = 1,
+        }
+
+        public PetMode Mode = PetMode.Follow;
+
+        // How a combat pet chooses between casting and swinging each attack:
+        //   Auto  : stock behavior -- roll the creature's normal spellcast chance (default)
+        //   Magic : prefer spells -- cast whenever able, fall back to melee only when it can't
+        //   Melee : never cast -- always make a physical attack
+        // Ephemeral like Mode: a fresh summon resets to Auto.
+        public enum PetCombatStyle
+        {
+            Auto  = 0,
+            Magic = 1,
+            Melee = 2,
+        }
+
+        public PetCombatStyle CombatStyle = PetCombatStyle.Auto;
+
+        // A target the owner explicitly ordered via "/pet attack". While it is alive and
+        // reachable the pet commits to it and the idle scan won't yank the pet onto something
+        // closer. Cleared automatically when the target dies or goes out of range.
+        public Creature CommandedTarget;
+
         // --- combat power scaling ------------------------------------------
         // A hatched pet is a scaled clone of the creature it came from. Its melee output is
         // multiplied, and incoming damage divided, by PetPowerFactor(): level / PetPowerLevelFull.
@@ -91,6 +125,20 @@ namespace ACE.Server.WorldObjects
 
         // How long after dying before the pet automatically resummons at its owner.
         private const double PetResummonDelay = 20.0;
+
+        // How aggressively an idle pet looks for something nearby to attack (squared meters).
+        private const float PetAcquireRangeSq = 25f * 25f;
+
+        // How far from the OWNER a pet will roam to pick a fight. Keeps it near you instead of
+        // bolting across the zone after a distant mob. (Applies to auto-acquire only -- an
+        // explicit "/pet attack" order ignores the leash.)
+        public const float PetLeashFromOwner = 30f;
+        private const float PetLeashFromOwnerSq = PetLeashFromOwner * PetLeashFromOwner;
+
+        // If an idle pet ends up further than this from its owner (or on a different
+        // landblock, e.g. after a portal/recall), it is warped back to the owner instead of
+        // walking. Kept generous so ordinary following is walked, not teleported.
+        public const float PetWarpDistance = 25f;
 
         // Cumulative XP required to BE at each pet level (index = level; level 1 = 0).
         // Per-level costs: L2 1k, L3 +2k, L4 +10k, L5 +100k, L6 +500k, L7 +1M, L8 +5M,
@@ -177,6 +225,273 @@ namespace ACE.Server.WorldObjects
                 if (award > 0)
                     owner.GrantPetXP(award);
             }
+        }
+
+        // Throttle for the idle target scan below. The scan raycasts (IsDirectVisible) against
+        // every visible creature, so running it on every monster tick is a lag source with many
+        // pets in a busy area -- ~2x/sec is plenty responsive. DO NOT REMOVE (removing it was
+        // the cause of the sudden pet-lag). Any smarter acquire logic must live behind it.
+        private double NextPetAcquireTime;
+        public static double PetAcquireInterval = 1.0;
+
+        /// <summary>Points the pet at a target and wakes it. Shared by the idle scan and /pet attack.</summary>
+        private void EngageTarget(Creature target)
+        {
+            AttackTarget = target;
+            if (MonsterState == State.Idle)
+                MonsterState = State.Awake;
+            IsAwake = true;
+        }
+
+        /// <summary>
+        /// Actively scan for the nearest attackable monster nearby and lock onto it. Ignores
+        /// the parent creature's (often tiny) natural awareness range, so a pet standing next
+        /// to something reliably engages it. Returns true if a target was found.
+        ///
+        /// Respects player commands: a Stay pet never proactively acquires, and a pet given an
+        /// explicit "/pet attack" target sticks with that target until it dies / leaves range
+        /// instead of being pulled onto whatever is closest.
+        /// </summary>
+        public bool PetTryAcquireTarget()
+        {
+            if (PhysicsObj?.ObjMaint == null)
+                return false;
+
+            // Stay: hold position, don't go looking for a fight (still defends if hit).
+            if (Mode == PetMode.Stay)
+                return false;
+
+            // A commanded target takes priority while it's alive and in range -- don't let the
+            // idle scan re-target something closer out from under the owner's order.
+            if (CommandedTarget != null)
+            {
+                if (!CommandedTarget.IsDead && CommandedTarget.Attackable && IsDirectVisible(CommandedTarget))
+                {
+                    var cdsq = (float)PhysicsObj.get_distance_sq_to_object(CommandedTarget.PhysicsObj, true);
+                    if (cdsq <= PetAcquireRangeSq)
+                    {
+                        EngageTarget(CommandedTarget);
+                        return true;
+                    }
+                }
+                CommandedTarget = null;   // dead or out of range -- order fulfilled/abandoned
+            }
+
+            // throttle -- do not remove (see NextPetAcquireTime above)
+            var now = Time.GetUnixTime();
+            if (now < NextPetAcquireTime)
+                return false;
+            NextPetAcquireTime = now + PetAcquireInterval;
+
+            // What is the owner currently fighting? An idle pet prefers to pile onto the
+            // owner's selected target (the "my pet helps me" feeling) over grabbing something
+            // random. Only applied here, at acquire time, so it never yanks the pet off a fight.
+            var ownerTargetGuid = P_PetOwner?.HealthQueryTarget ?? 0;
+            var ownerPhysics = P_PetOwner?.PhysicsObj;
+
+            // Cheap pass first: pick candidates by DISTANCE only. Raycasts (IsDirectVisible)
+            // are the expensive part, so we do NOT raycast here -- we raycast just the one we
+            // actually choose, below. (Raycasting every monster in range every scan, times
+            // every pet, was the lag.)
+            Creature nearest = null;
+            var nearestSq = float.MaxValue;
+            Creature ownerTarget = null;
+
+            foreach (var c in PhysicsObj.ObjMaint.GetVisibleTargetsValuesOfTypeCreature())
+            {
+                if (c == null || c.IsDead || !c.Attackable)
+                    continue;
+                if (c is Player || c is Pet)
+                    continue;
+
+                var dsq = (float)PhysicsObj.get_distance_sq_to_object(c.PhysicsObj, true);
+                if (dsq > PetAcquireRangeSq)
+                    continue;
+
+                // owner leash: don't wander off to grab something far from the owner
+                if (ownerPhysics != null)
+                {
+                    var ownerDsq = (float)ownerPhysics.get_distance_sq_to_object(c.PhysicsObj, true);
+                    if (ownerDsq > PetLeashFromOwnerSq)
+                        continue;
+                }
+
+                // is this the monster the owner is fighting?
+                if (ownerTargetGuid != 0 && c.Guid.Full == ownerTargetGuid)
+                    ownerTarget = c;
+
+                if (dsq < nearestSq)
+                {
+                    nearestSq = dsq;
+                    nearest = c;
+                }
+            }
+
+            // priority: the owner's current target, else the nearest valid monster.
+            // Raycast ONLY the pick (at most two checks), not every candidate.
+            if (ownerTarget != null && IsDirectVisible(ownerTarget))
+            {
+                EngageTarget(ownerTarget);
+                return true;
+            }
+            if (nearest != null && IsDirectVisible(nearest))
+            {
+                EngageTarget(nearest);
+                return true;
+            }
+            return false;
+        }
+
+        // ---- player commands (called from PetCommands.cs) ------------------
+        // These only touch the pet's own state; the tick path (Monster_Tick +
+        // PetTryAcquireTarget) reads Mode / CommandedTarget and acts accordingly.
+
+        /// <summary>"/pet attack" -- order the pet onto a specific monster. Returns a player-facing
+        /// result string ("" = success message handled by caller).</summary>
+        public bool CommandAttack(Creature target, out string error)
+        {
+            error = null;
+
+            if (target == null)
+            {
+                error = "You must select a target first.";
+                return false;
+            }
+            if (target is Player || target is Pet)
+            {
+                error = "Your pet won't attack that.";
+                return false;
+            }
+            if (target.IsDead || !target.Attackable)
+            {
+                error = "That target can't be attacked.";
+                return false;
+            }
+
+            Mode = PetMode.Follow;      // so it will chase the target and resume following after
+            CommandedTarget = target;
+            EngageTarget(target);
+            return true;
+        }
+
+        /// <summary>"/pet stay" -- hold position: stop following and stop grabbing targets.</summary>
+        public void CommandStay()
+        {
+            Mode = PetMode.Stay;
+            CommandedTarget = null;
+            AttackTarget = null;
+            CurrentAttackType = null;
+            IsMoving = false;
+        }
+
+        /// <summary>"/pet follow" -- resume the default tag-along + auto-acquire behavior.</summary>
+        public void CommandFollow()
+        {
+            Mode = PetMode.Follow;
+        }
+
+        /// <summary>"/pet stop" -- disengage the current fight but keep following the owner.</summary>
+        public void CommandStop()
+        {
+            Mode = PetMode.Follow;
+            CommandedTarget = null;
+            AttackTarget = null;
+            CurrentAttackType = null;
+        }
+
+        /// <summary>"/pet come" -- return to the owner immediately.</summary>
+        public void CommandCome(Player owner)
+        {
+            Mode = PetMode.Follow;
+            PetWarpToOwner(owner);
+        }
+
+        /// <summary>"/pet magic | melee | auto" -- bias how a combat pet picks its attacks.</summary>
+        public void CommandCombatStyle(PetCombatStyle style)
+        {
+            CombatStyle = style;
+            CurrentAttackType = null;   // re-pick on the next swing so the change takes effect now
+        }
+
+        /// <summary>"/pet status" -- a one-line readout for the owner.</summary>
+        public string CommandStatus()
+        {
+            var level = P_PetDevice != null ? GetPetLevel(P_PetDevice) : GetPetLevel(0);
+            var modeText = Mode == PetMode.Stay ? "staying" : "following";
+            var styleText = CombatStyle == PetCombatStyle.Magic ? ", magic-focused"
+                          : CombatStyle == PetCombatStyle.Melee ? ", melee-only" : "";
+            var targetText = AttackTarget is Creature t && !t.IsDead ? $", attacking {t.Name}" : "";
+            var rating = P_PetDevice != null ? GetPetRatingType(P_PetDevice) : PetRatingType.None;
+            var ratingText = rating != PetRatingType.None ? $" | grants +{level} {PetRatingName(rating)}" : "";
+            return $"Level {level}/{MaxPetLevel}, {modeText}{styleText}{targetText}{ratingText}.";
+        }
+
+        /// <summary>
+        /// Instantly return the pet to its owner (used for portals/recalls and when an idle
+        /// pet drifts too far). Rebuilds it at the owner via the egg, which also lands it on
+        /// the owner's current landblock -- the one reliable cross-landblock reposition.
+        /// </summary>
+        public void PetWarpToOwner(Player owner)
+        {
+            var egg = P_PetDevice;
+            var shellWcid = egg?.PetClass != null ? (uint)egg.PetClass.Value : 0u;
+            if (owner == null || egg == null || shellWcid == 0)
+                return;
+
+            if (owner.CurrentActivePet == this)
+                owner.CurrentActivePet = null;
+
+            var chain = new ActionChain();
+            chain.AddAction(owner, () =>
+            {
+                if (owner.CurrentActivePet != null) return;
+                if (owner.PhysicsObj == null) return;
+                if (owner.GetInventoryItem(egg.Guid.Full) == null) return;
+
+                egg.SummonCreature(owner, shellWcid);
+            });
+            chain.EnqueueChain();
+
+            Destroy();
+        }
+
+        /// <summary>
+        /// A pet removed because its LANDBLOCK unloaded -- left behind on a landblock the owner
+        /// isn't standing on, or a quest/portal/instance transition -- would otherwise vanish for
+        /// good, because plain Destroy() doesn't run Die()'s auto-resummon. If the owner is still
+        /// in-world and holding the egg, bring the pet back at the owner. Follow pets only: a
+        /// "/pet stay" pet is meant to hold its spot, so it is NOT dragged to the owner (it just
+        /// despawns with its landblock, as before). Called from WorldObject.Destroy when
+        /// fromLandblockUnload is true, BEFORE CurrentActivePet is cleared.
+        /// </summary>
+        public void TrySummonAfterLandblockUnload()
+        {
+            var owner = P_PetOwner;
+            var egg = P_PetDevice;
+
+            // already replaced (a teleport re-summon repointed it) or dismissed/dead -> nothing to do
+            if (owner?.CurrentActivePet != this)
+                return;
+            if (owner.PhysicsObj == null || egg?.PetClass == null)
+                return;
+            if (Mode == PetMode.Stay)   // a staying pet holds its spot; don't teleport it to the owner
+                return;
+            if (owner.GetInventoryItem(egg.Guid.Full) == null)
+                return;
+
+            var shellWcid = (uint)egg.PetClass;
+
+            var chain = new ActionChain();
+            chain.AddDelaySeconds(1.0);   // let the unload settle before respawning at the owner
+            chain.AddAction(owner, () =>
+            {
+                if (owner.CurrentActivePet != null) return;   // don't stack a second pet
+                if (owner.PhysicsObj == null) return;
+                if (owner.GetInventoryItem(egg.Guid.Full) == null) return;
+
+                egg.SummonCreature(owner, shellWcid);
+            });
+            chain.EnqueueChain();
         }
 
         // ---- owner rating buff ---------------------------------------------
@@ -514,6 +829,9 @@ namespace ACE.Server.WorldObjects
             Level = newLevel;
             EnqueueBroadcast(new GameMessagePublicUpdatePropertyInt(this, PropertyInt.Level, newLevel));
 
+            // rescale attributes + skills for the new level (rebuilds vital maxima + heals)
+            ApplyPetStatScaling(newLevel);
+
             ObjScale = ScaleForLevel(newLevel, petFullScale);
 
             // best-effort live resize
@@ -565,6 +883,152 @@ namespace ACE.Server.WorldObjects
             var f = level / (float)PetPowerLevelFull;
             if (f < 0.05f) f = 0.05f;   // guard against divide-by-near-zero on incoming damage
             return f;
+        }
+
+        // ---- level-based attribute & skill scaling -------------------------
+        // An imprinted pet is a clone of its parent creature, built from that creature's OWN
+        // weenie (see PetDevice.SummonCreature), so at summon its attributes and skills are the
+        // parent's NATIVE values. We scale both by level / PetPowerLevelFull: ~1/7 of native at
+        // level 1, EXACTLY native at level 7 (parity with the parent), and above native at 8-10.
+        // Scaling attributes scales melee/missile damage, health/stamina/mana, and attack/defense
+        // naturally; scaling skills scales cast reliability + defenses too.
+        //
+        // Each summon builds a FRESH clone (= native, unscaled), so we snapshot the native bases
+        // the first time we scale and rescale from that snapshot on in-place level-ups -- never
+        // from an already-scaled value.
+
+        private static readonly PropertyAttribute[] PetScaledAttributes =
+        {
+            PropertyAttribute.Strength, PropertyAttribute.Endurance, PropertyAttribute.Coordination,
+            PropertyAttribute.Quickness, PropertyAttribute.Focus, PropertyAttribute.Self,
+        };
+
+        private readonly Dictionary<PropertyAttribute, uint> nativeAttrStart = new Dictionary<PropertyAttribute, uint>();
+        private readonly Dictionary<Skill, uint> nativeSkillInit = new Dictionary<Skill, uint>();
+        private bool petStatsCaptured;
+
+        // Optional: also scale each vital's FLAT innate bonus (Health/Stamina/Mana StartingValue).
+        // Attribute-driven vital growth already scales via Endurance/Self, so this only matters for
+        // monsters given a big flat hp/stam/mana bonus directly on the weenie. OFF by default to
+        // keep scope to attributes + skills; flip to true if a creature's pet is too tanky early
+        // (or not tanky enough) at low levels.
+        private const bool ScalePetVitals = false;
+        private uint nativeHealthStart, nativeStaminaStart, nativeManaStart;
+
+        /// <summary>
+        /// Records the parent creature's native attribute/skill bases the first time scaling runs
+        /// on a freshly-summoned clone, so every rescale works from the true native values.
+        /// </summary>
+        private void CaptureNativePetStats()
+        {
+            if (petStatsCaptured) return;
+            petStatsCaptured = true;
+
+            foreach (var attr in PetScaledAttributes)
+                nativeAttrStart[attr] = Attributes[attr].StartingValue;
+
+            foreach (var kvp in Biota.PropertiesSkill)
+                nativeSkillInit[kvp.Key] = kvp.Value.InitLevel;
+
+            if (ScalePetVitals)
+            {
+                nativeHealthStart  = Health.StartingValue;
+                nativeStaminaStart = Stamina.StartingValue;
+                nativeManaStart    = Mana.StartingValue;
+            }
+        }
+
+        /// <summary>
+        /// Scales the pet's attributes and skill InitLevels to (level / PetPowerLevelFull) of the
+        /// captured native values, then refreshes Health/Stamina/Mana to the new maxima. Only
+        /// applies to imprinted CombatPets (the ones built from the parent creature's weenie);
+        /// legacy shell pets are left alone.
+        /// </summary>
+        public void ApplyPetStatScaling(int level)
+        {
+            if (!(this is CombatPet)) return;   // only imprinted clones carry the parent's stats
+
+            CaptureNativePetStats();
+
+            var k = level / (float)PetPowerLevelFull;
+            if (k < 0.01f) k = 0.01f;
+
+            // Attributes: for a monster Ranks == 0, so Base == StartingValue == Current base;
+            // setting StartingValue scales the attribute (and everything derived from it).
+            foreach (var attr in PetScaledAttributes)
+            {
+                if (!nativeAttrStart.TryGetValue(attr, out var native)) continue;
+                var scaled = (uint)Math.Round(native * k);
+                if (scaled < 1) scaled = 1;   // attributes floor at 1
+                Attributes[attr].StartingValue = scaled;
+            }
+
+            // Skills: Base = AttributeFormula(attributes) + InitLevel + Ranks. The attribute
+            // portion already scaled via the attributes above, so we scale the flat InitLevel by
+            // the same factor -- the whole skill Base then lands at k x native.
+            foreach (var kvp in nativeSkillInit)
+                GetCreatureSkill(kvp.Key).InitLevel = (uint)Math.Round(kvp.Value * k);
+
+            if (ScalePetVitals)
+            {
+                Health.StartingValue  = (uint)Math.Round(nativeHealthStart  * k);
+                Stamina.StartingValue = (uint)Math.Round(nativeStaminaStart * k);
+                Mana.StartingValue    = (uint)Math.Round(nativeManaStart    * k);
+            }
+
+            // recompute the vital maxima from the new attributes and refill (a level-up also heals)
+            SetMaxVitals();
+        }
+
+        // ---- "/pet damage" combat readout ----------------------------------
+        // Owners can toggle a chat line for every hit their pet lands (melee + spells), like the
+        // EoR summoner "/pet damage" command. The toggle is session-scoped (a set of owner GUIDs),
+        // so it clears on relog / server restart -- no DB column, no Player-file edit. The two
+        // damage sites (Monster_Melee for melee, SpellProjectile for spells) each call
+        // TryReportPetDamage, which is a no-op unless the pet's owner has it switched on.
+        private static readonly HashSet<uint> PetDamageMsgOwners = new HashSet<uint>();
+
+        /// <summary>Flip "/pet damage" for this owner. Returns the new state (true = on).</summary>
+        public static bool TogglePetDamageMessages(Player owner)
+        {
+            if (owner == null)
+                return false;
+
+            if (PetDamageMsgOwners.Contains(owner.Guid.Full))
+            {
+                PetDamageMsgOwners.Remove(owner.Guid.Full);
+                return false;
+            }
+
+            PetDamageMsgOwners.Add(owner.Guid.Full);
+            return true;
+        }
+
+        public static bool PetDamageMessagesOn(Player owner)
+            => owner != null && PetDamageMsgOwners.Contains(owner.Guid.Full);
+
+        /// <summary>
+        /// If the attacker is a pet whose owner has "/pet damage" on, shows the owner a combat
+        /// line for the hit. Safe to call for any attacker/amount -- it self-filters.
+        /// </summary>
+        public static void TryReportPetDamage(WorldObject attacker, Creature target, float amount, DamageType damageType)
+        {
+            if (!(attacker is Pet pet) || target == null || amount <= 0)
+                return;
+
+            var owner = pet.P_PetOwner;
+            if (owner?.Session == null || !PetDamageMsgOwners.Contains(owner.Guid.Full))
+                return;
+
+            // trim the "<owner>'s " prefix so it reads "Fluffy hits ..." not "Bob's Fluffy hits ..."
+            var petName = pet.Name ?? "Your pet";
+            var prefix = owner.Name + "'s ";
+            if (petName.StartsWith(prefix))
+                petName = petName.Substring(prefix.Length);
+
+            owner.Session.Network.EnqueueSend(new GameMessageSystemChat(
+                $"{petName} hits {target.Name} for {(int)Math.Round(amount)} points of {damageType.GetName().ToLower()} damage.",
+                ChatMessageType.CombatSelf));
         }
 
         /// <summary>
@@ -651,6 +1115,11 @@ namespace ACE.Server.WorldObjects
             else
             {
                 Location = player.Location.InFrontOf(spawnDist, false);
+
+                // combat pets must NOT rot: a dynamic-guid creature with no generator and no
+                // TimeToRot is decayable, so Decay() would delete it after DefaultTimeToRot
+                // (5 min) -- the "pet vanished while I stood around / whole group at once" bug.
+                TimeToRot = -1;
             }
 
             Location.LandblockId = new LandblockId(Location.GetCell());
@@ -750,6 +1219,10 @@ namespace ACE.Server.WorldObjects
                 petFullScale = fullScale;
                 ObjScale = ScaleForLevel(petLevel, fullScale);
             }
+            // scale attributes + skills to this level (native at 7, weaker below, stronger at 8-10).
+            // Must run before EnterWorld so the pet spawns with the correct vitals. No-op for
+            // legacy shell pets (guarded inside ApplyPetStatScaling).
+            ApplyPetStatScaling(petLevel);
             // ===== end creature pet system ====================================
 
             var success = EnterWorld();
@@ -765,6 +1238,8 @@ namespace ACE.Server.WorldObjects
             Level = petLevel;
             EnqueueBroadcast(new GameMessagePublicUpdatePropertyInt(this, PropertyInt.Level, petLevel));
 
+            // evict any stray duplicate for this owner, then take ownership (one pet per owner)
+            ClaimSoleActivePet(player);
             player.CurrentActivePet = this;
 
             petDevice.Pet = Guid.Full;
@@ -775,6 +1250,30 @@ namespace ACE.Server.WorldObjects
                 nextSlowTickTime = Time.GetUnixTime();
 
             return true;
+        }
+
+        // One-pet-per-owner guard. The several resummon paths (warp/come, death, hatch, teleport,
+        // landblock-unload) each bring up a pet independently, and mashing commands can race two
+        // into existence -- leaving an orphaned duplicate that no longer answers to the owner. This
+        // registry makes the NEWEST summon authoritative: when a pet claims its owner it destroys
+        // any other still-live pet registered to that owner, so at most one ever survives. A stale
+        // (already-destroyed) entry is harmless -- it's skipped and overwritten on the next claim.
+        private static readonly Dictionary<uint, Pet> ActivePets = new Dictionary<uint, Pet>();
+
+        private void ClaimSoleActivePet(Player player)
+        {
+            // Locked: landblocks tick on parallel threads, and an unsynchronized shared dictionary
+            // touched from two of them at once can corrupt or throw inside the tick loop.
+            lock (ActivePets)
+            {
+                if (ActivePets.TryGetValue(player.Guid.Full, out var existing)
+                    && existing != null && existing != this && !existing.IsDestroyed)
+                {
+                    existing.Destroy();   // evict the stray duplicate (plain Destroy: no resummon)
+                }
+
+                ActivePets[player.Guid.Full] = this;
+            }
         }
 
         public bool? HandleCurrentActivePet(Player player)

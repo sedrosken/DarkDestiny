@@ -199,7 +199,10 @@ namespace ACE.Server.WorldObjects
             if (IsMoveToHomePending)
                 return;
 
-            HandleFindTarget();
+            // Combat pets have their own throttled target logic (PetTryAcquireTarget below);
+            // the stock scan runs every tick (~5x/sec) and is redundant for pets, so skip it.
+            if (!(this is CombatPet))
+                HandleFindTarget();
 
             // a combat pet never goes home -- home is wherever its owner is (handled below)
             if (IsMoveToHomePending && !(this is CombatPet))
@@ -207,9 +210,13 @@ namespace ACE.Server.WorldObjects
 
             if (AttackTarget == null)
             {
-                // nothing to fight: a pet walks after its owner, everything else goes home
+                // nothing to fight: a pet grabs the nearest monster if one is close, else
+                // walks after its owner; everything else goes home
                 if (this is CombatPet)
                 {
+                    if (((Pet)this).PetTryAcquireTarget())
+                        return;   // engage it next tick
+
                     PetFollowOwner_Move(currentUnixTime);
                     return;
                 }
@@ -218,7 +225,9 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (creatureTarget != null && (creatureTarget.IsDead || (combatPet == null && !IsVisibleTarget(creatureTarget))) || (playerTarget != null && playerTarget.IsSneaking))
+            // A dismissed/removed pet is IsDestroyed but NOT IsDead, so without the IsDestroyed
+            // check the mob keeps pointing at a gone object and stalls. Re-find on destroyed too.
+            if (creatureTarget != null && (creatureTarget.IsDead || creatureTarget.IsDestroyed || (combatPet == null && !IsVisibleTarget(creatureTarget))) || (playerTarget != null && playerTarget.IsSneaking))
             {
                 FindNextTarget();
                 return;
@@ -596,7 +605,8 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         private void PetFollowOwner_Move(double currentUnixTime)
         {
-            var owner = (this as Pet)?.P_PetOwner;
+            var petSelf = this as Pet;
+            var owner = petSelf?.P_PetOwner;
 
             if (owner?.PhysicsObj == null || owner.Location == null)
             {
@@ -604,12 +614,26 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            // "/pet stay": hold position -- don't walk after the owner. (It still fights back
+            // if attacked; it just won't tag along or chase.)
+            if (petSelf.Mode == Pet.PetMode.Stay)
+                return;
+
             // FindNextTarget() queues a trip home whenever it sees nothing to attack -- undo it
             IsMoveToHomePending = false;
             IsMovingToHome = false;
             PendingEndMoveToHome = false;
 
             var dist = GetCylinderDistance(owner);
+
+            // portal/recall (different landblock) or a big idle drift -> warp back to owner
+            var diffLandblock = Location == null || owner.Location == null
+                || Location.LandblockId.Landblock != owner.Location.LandblockId.Landblock;
+            if (diffLandblock || dist > Pet.PetWarpDistance)
+            {
+                ((Pet)this).PetWarpToOwner(owner);
+                return;
+            }
 
             // NOTE: the old "if (dist > PetFollowMaxDistance) Destroy();" was removed on
             // purpose. A combat pet now follows its owner through portals/recalls/teleports
