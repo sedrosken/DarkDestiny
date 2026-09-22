@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 using log4net;
 using log4net.Config;
@@ -50,6 +51,13 @@ namespace ACE.Server
             Console.Title = consoleTitle;
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            // Add alongside line 52-53 in Main(), before any network/engine init
+            TaskScheduler.UnobservedTaskException += (sender, e) =>
+            {
+                log.Error("Unobserved task exception", e.Exception);
+                LogManager.Flush(5000);
+                e.SetObserved();
+            };
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
 
             // Typically, you wouldn't force the current culture on an entire application unless you know sure your application is used in a specific region (which ACE is not)
@@ -354,9 +362,17 @@ namespace ACE.Server
             }
         }
 
+        // ACE.Server/Program.cs, line 357
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             log.Error(e.ExceptionObject);
+
+            // The RollingFileAppender is wrapped in Log4Net.Async.AsyncForwardingAppender,
+            // which buffers writes on a background thread. On a fatal exception the process
+            // terminates immediately after this handler returns, so without an explicit
+            // flush the queued event never reaches the file - only the CLR's own stderr
+            // crash dump (which you see in console) gets written in time.
+            LogManager.Flush(5000);
         }
 
         private static void OnProcessExit(object sender, EventArgs e)
