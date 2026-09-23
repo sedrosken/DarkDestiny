@@ -23,7 +23,7 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The maximum # of fellowship members
         /// </summary>
-        public static int MaxFellows = 9;
+        public static int MaxFellows = 10;
 
         public string FellowshipName;
         public uint FellowshipLeaderGuid;
@@ -689,7 +689,8 @@ namespace ACE.Server.Entity
                     return .35;
                 case 9:
                     return .3;
-                    // TODO: handle fellowship mods with > 9 players?
+                case 10:
+                    return .25;
             }
             return 1.0;
         }
