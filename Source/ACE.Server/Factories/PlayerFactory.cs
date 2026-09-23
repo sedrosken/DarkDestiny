@@ -228,10 +228,14 @@ namespace ACE.Server.Factories
                         if (skillGroup.SkillNum == i)
                         {
                             trainedCost = skillGroup.NormalCost;
-                            specializedCost = skillGroup.PrimaryCost - skillGroup.NormalCost; // was: skillGroup.PrimaryCost
+                            specializedCost = skillGroup.PrimaryCost - skillGroup.NormalCost; // total -> incremental upgrade cost
                             break;
                         }
                     }
+
+                    // Arcane Lore is granted free to all characters -- only the upgrade to Specialized costs credits.
+                    if ((Skill)i == Skill.ArcaneLore)
+                        trainedCost = 0;
 
                     if (sac == SkillAdvancementClass.Specialized)
                     {
