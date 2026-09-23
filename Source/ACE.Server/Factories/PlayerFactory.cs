@@ -228,7 +228,7 @@ namespace ACE.Server.Factories
                         if (skillGroup.SkillNum == i)
                         {
                             trainedCost = skillGroup.NormalCost;
-                            specializedCost = skillGroup.PrimaryCost;
+                            specializedCost = skillGroup.PrimaryCost - skillGroup.NormalCost; // was: skillGroup.PrimaryCost
                             break;
                         }
                     }
