@@ -7,7 +7,7 @@ namespace ACE.Server.Network.GameMessages.Messages
     public class GameMessagePrivateUpdateSkill : GameMessage
     {
         public GameMessagePrivateUpdateSkill(WorldObject worldObject, CreatureSkill creatureSkill)
-            : base(GameMessageOpcode.PrivateUpdateSkill, GameMessageGroup.UIQueue, 37)
+        : base(GameMessageOpcode.PrivateUpdateSkill, GameMessageGroup.UIQueue, 37)
         {
             Writer.Write(worldObject.Sequences.GetNextSequence(Sequence.SequenceType.UpdateSkill, creatureSkill.Skill));
 
@@ -20,13 +20,15 @@ namespace ACE.Server.Network.GameMessages.Messages
             Writer.Write(creatureSkill.ExperienceSpent);
 
             // Client rebuilds the displayed skill from attributes + InitLevel + Ranks.
-            // Armor-type set bonuses only exist in CreatureSkill.Current on the server,
-            // so fold them into the InitLevel sent on the wire so the skill panel matches combat.
+            // Armor-type set bonuses, gear bonuses, and the Melee/Missile/Magic mastery
+            // augmentations only exist in CreatureSkill.Current on the server, so fold
+            // them into the InitLevel sent on the wire so the skill panel matches combat.
             var initLevel = creatureSkill.InitLevel;
             if (worldObject is Player player)
             {
                 initLevel += (uint)GetArmorTypeSkillBonus(player, creatureSkill.Skill);
                 initLevel += (uint)GetGearSkillBonus(player, creatureSkill.Skill);
+                initLevel += (uint)GetSkilledMasteryBonus(player, creatureSkill.Skill);
             }
 
             Writer.Write(initLevel);
@@ -77,6 +79,20 @@ namespace ACE.Server.Network.GameMessages.Messages
                 default:
                     return 0;
             }
+        }
+
+        // Mirrors CreatureSkill.GetAugBonus_Base()'s Melee/Missile/Magic branch (+10 per stack),
+        // so the client-displayed skill matches the Current value used in DamageEvent combat math.
+        private static int GetSkilledMasteryBonus(Player player, Skill skill)
+        {
+            if (player.AugmentationSkilledMelee > 0 && Player.MeleeSkills.Contains(skill))
+                return player.AugmentationSkilledMelee * 10;
+            if (player.AugmentationSkilledMissile > 0 && Player.MissileSkills.Contains(skill))
+                return player.AugmentationSkilledMissile * 10;
+            if (player.AugmentationSkilledMagic > 0 && Player.MagicSkills.Contains(skill))
+                return player.AugmentationSkilledMagic * 10;
+
+            return 0;
         }
     }
 }

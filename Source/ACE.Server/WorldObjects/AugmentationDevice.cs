@@ -122,6 +122,23 @@ namespace ACE.Server.WorldObjects
                 var capacity = player.GetEncumbranceCapacity();
                 player.Session.Network.EnqueueSend(new GameMessagePrivateUpdatePropertyInt(player, PropertyInt.EncumbranceCapacity, capacity));
             }
+            else if (type == AugmentationType.Melee || type == AugmentationType.Missile || type == AugmentationType.Magic)
+            {
+                // These grant a flat +10 to a whole skill family (Player.MeleeSkills / MissileSkills / MagicSkills)
+                // via CreatureSkill.GetAugBonus_Base(), which GameMessagePrivateUpdateSkill now folds into the
+                // wire InitLevel. Push a fresh update for every affected skill so the client panel reflects it
+                // immediately, instead of waiting for a relog or the next natural skill-update event.
+                var skillSet = type == AugmentationType.Melee ? Player.MeleeSkills
+                : type == AugmentationType.Missile ? Player.MissileSkills
+                : Player.MagicSkills;
+
+                foreach (var skill in skillSet)
+                {
+                    var playerSkill = player.GetCreatureSkill(skill, false);
+                    if (playerSkill != null && playerSkill.AdvancementClass != SkillAdvancementClass.Untrained)
+                        player.Session.Network.EnqueueSend(new GameMessagePrivateUpdateSkill(player, playerSkill));
+                }
+            }
 
             // consume xp
             player.AvailableExperience -= AugmentationCost;
