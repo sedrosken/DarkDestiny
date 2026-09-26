@@ -2116,5 +2116,123 @@ namespace ACE.Server.Command.Handlers
 
             session.Player.FixStuckEquippedItemIcon(EquipMask.Shield);
         }
+
+        [CommandHandler("fcmd", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, 1,
+            "Manage your fellowship without using the recruit button (works around the client's 9-member UI lockout).",
+            "<add|remove|list> [character name]")]
+        public static void HandleFellow(Session session, params string[] parameters)
+        {
+            var player = session.Player;
+            var subCommand = parameters[0].ToLower();
+
+            switch (subCommand)
+            {
+                case "add":
+                    {
+                        Player target;
+
+                        if (parameters.Length < 2)
+                        {
+                            // no name given -- fall back to whoever you last appraised
+                            var appraised = CommandHandlerHelper.GetLastAppraisedObject(session);
+
+                            if (!(appraised is Player appraisedPlayer))
+                            {
+                                player.SendMessage("Usage: /fcmd add <character name>, or appraise a player first and run /fcmd add with no name.");
+                                return;
+                            }
+
+                            target = appraisedPlayer;
+                        }
+                        else
+                        {
+                            var targetName = string.Join(" ", parameters.Skip(1));
+                            target = PlayerManager.GetOnlinePlayer(targetName);
+
+                            if (target == null)
+                            {
+                                player.SendMessage($"{targetName} is not online.");
+                                return;
+                            }
+                        }
+
+                        if (target == player)
+                        {
+                            player.SendMessage("You can't add yourself to your own fellowship.");
+                            return;
+                        }
+
+                        // FellowshipRecruit() silently no-ops if the player has no fellowship yet,
+                        // so create one first (mirrors what the client does when you click 'Create Fellowship').
+                        if (player.Fellowship == null)
+                        {
+                            var shareXP = player.GetCharacterOption(CharacterOption.ShareFellowshipExpAndLuminance);
+                            player.FellowshipCreate($"{player.Name}'s Fellowship", shareXP);
+                        }
+
+                        player.FellowshipRecruit(target);
+                        break;
+                    }
+
+                case "remove":
+                    {
+                        if (parameters.Length < 2)
+                        {
+                            // no name given -- treat as leaving your own fellowship
+                            player.FellowshipQuit(false);
+                            return;
+                        }
+
+                        var targetName = string.Join(" ", parameters.Skip(1));
+
+                        if (targetName.Equals(player.Name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            player.FellowshipQuit(false);
+                            return;
+                        }
+
+                        if (player.Fellowship == null)
+                        {
+                            player.SendMessage("You are not in a fellowship.");
+                            return;
+                        }
+
+                        var target = PlayerManager.GetOnlinePlayer(targetName);
+
+                        if (target == null)
+                        {
+                            player.SendMessage($"{targetName} is not online.");
+                            return;
+                        }
+
+                        player.FellowshipDismissPlayer(target.Guid.Full);
+                        break;
+                    }
+
+                case "list":
+                    {
+                        if (player.Fellowship == null)
+                        {
+                            player.SendMessage("You are not in a fellowship.");
+                            return;
+                        }
+
+                        var members = player.Fellowship.GetFellowshipMembers();
+
+                        player.SendMessage($"{player.Fellowship.FellowshipName} ({members.Count}/{Fellowship.MaxFellows}):");
+
+                        foreach (var member in members.Values)
+                        {
+                            var tag = member.Guid.Full == player.Fellowship.FellowshipLeaderGuid ? " (Leader)" : "";
+                            player.SendMessage($"  {member.Name}{tag}");
+                        }
+                        break;
+                    }
+
+                default:
+                    player.SendMessage("Usage: /fcmd <add|remove|list> [character name]");
+                    break;
+            }
+        }
     }
 }

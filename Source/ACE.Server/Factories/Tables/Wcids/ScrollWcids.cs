@@ -460,26 +460,6 @@ namespace ACE.Server.Factories.Tables.Wcids
                 creatureSpells.Remove(SpellId.SummoningMasteryOther1);
                 creatureSpells.Remove(SpellId.SummoningIneptitudeOther1);
 
-                creatureSpells.Remove(SpellId.DualWieldMasterySelf1);
-                creatureSpells.Remove(SpellId.DualWieldMasteryOther1);
-                creatureSpells.Remove(SpellId.DualWieldIneptitudeOther1);
-
-                creatureSpells.Remove(SpellId.DirtyFightingMasterySelf1);
-                creatureSpells.Remove(SpellId.DirtyFightingMasteryOther1);
-                creatureSpells.Remove(SpellId.DirtyFightingIneptitudeOther1);
-
-                creatureSpells.Remove(SpellId.RecklessnessMasterySelf1);
-                creatureSpells.Remove(SpellId.RecklessnessMasteryOther1);
-                creatureSpells.Remove(SpellId.RecklessnessIneptitudeOther1);
-
-                creatureSpells.Remove(SpellId.SneakAttackMasterySelf1);
-                creatureSpells.Remove(SpellId.SneakAttackMasteryOther1);
-                creatureSpells.Remove(SpellId.SneakAttackIneptitudeOther1);
-
-                creatureSpells.Remove(SpellId.ShieldMasterySelf1);
-                creatureSpells.Remove(SpellId.ShieldMasteryOther1);
-                creatureSpells.Remove(SpellId.ShieldIneptitudeOther1);
-
                 itemSpells.Remove(SpellId.BloodDrinkerOther1);
                 itemSpells.Remove(SpellId.HeartSeekerOther1);
                 itemSpells.Remove(SpellId.SwiftKillerOther1);
