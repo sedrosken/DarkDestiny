@@ -321,7 +321,7 @@ namespace ACE.Server.WorldObjects
             var healingSkill = healer.GetCreatureSkill(Skill.Healing);
             var trainedMod = healingSkill.AdvancementClass == SkillAdvancementClass.Specialized ? 1.5f : 1.1f;
 
-            var combatMod = healer.CombatMode == CombatMode.NonCombat ? 1.0f : 1.1f;
+            var combatMod = (healer.CombatMode == CombatMode.NonCombat || healingSkill.AdvancementClass == SkillAdvancementClass.Specialized) ? 1.0f : 1.1f;
 
             var effectiveSkill = (int)Math.Round((healingSkill.Current + BoostValue) * trainedMod);
             difficulty = (int)Math.Round(missingVital * 2 * combatMod);
