@@ -904,9 +904,9 @@ namespace ACE.Server.WorldObjects
             // check windup move distance cap
             var dist = StartPos.Distance(PhysicsObj.Position);
 
-            // only PKs affected by these caps?
-            //if (dist > Windup_MaxMove && PlayerKillerStatus != PlayerKillerStatus.NPK)
-            if (dist > PropertyManager.GetDouble("pk_cast_radius").Item && PlayerKillerStatus != PlayerKillerStatus.NPK)
+            // applies to all players, PK and NPK alike
+            //if (dist > Windup_MaxMove)
+            if (dist > PropertyManager.GetDouble("pk_cast_radius").Item)
             {
                 //player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.YouHaveMovedTooFar));
                 Session.Network.EnqueueSend(new GameMessageSystemChat("Your movement disrupted spell casting!", ChatMessageType.Magic));
@@ -1511,7 +1511,7 @@ namespace ACE.Server.WorldObjects
             {
                 var dist = StartPos.Distance(PhysicsObj.Position);
 
-                if (dist > Windup_MaxMove && PlayerKillerStatus != PlayerKillerStatus.NPK)
+                if (dist > Windup_MaxMove)
                 {
                     FailCast();
                     return false;
