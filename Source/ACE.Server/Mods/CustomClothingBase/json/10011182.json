@@ -1,0 +1,20 @@
+{
+  "clothingBaseEffects": {
+    "0x200161F": {
+      "cloObjectEffects": [
+        {
+          "index": 0,
+          "modelId": "0x1003D9E",
+          "cloTextureEffects": []
+        }
+      ]
+    }
+  },
+  "clothingSubPalEffects": {
+    "39": {
+      "icon": 0,
+      "cloSubPalettes": []
+    }
+  },
+  "id": "0x10011182"
+}

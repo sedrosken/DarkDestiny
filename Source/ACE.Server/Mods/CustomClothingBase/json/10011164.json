@@ -1,0 +1,983 @@
+{
+  "ClothingBaseEffects": {
+    "0x2001A18": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x01004ADB",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x01004ADC",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01004AD1",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x01004AD2",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x2001A10": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x01001237",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x01001236",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001240",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x01001241",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x2001970": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x01001237",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x01001236",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001240",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x01001241",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x2000001": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x010011F7",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x050032d3"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x010011F6",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x050032d3"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001219",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x050032d3"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x0100121E",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x050032d3"
+            }
+          ]
+        }
+      ]
+    },
+    "0x2001A1A": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x010011F7",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x010011F6",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001219",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x0100121E",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x2001A12": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x01004ADB",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x01004ADC",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01004AD1",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x01004AD2",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x2001A0C": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x01001237",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x01001236",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001240",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x01001241",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x2001A14": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x01001237",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x01001236",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001240",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x01001241",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x200196D": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x01001237",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x01001236",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001240",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x01001241",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x2001A0E": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x010011F7",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x010011F6",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001219",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x0100121E",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x2001A16": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x010011F7",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x010011F6",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001219",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x0100121E",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x200196E": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x010011F7",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x010011F6",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001219",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x0100121E",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x200004E": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x010011F7",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x050032d3"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x010011F6",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x050032d3"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001219",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x050032d3"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x0100121E",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x050032d3"
+            }
+          ]
+        }
+      ]
+    },
+    "0x200196F": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000D",
+          "ModelId": "0x010011F7",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000A",
+          "ModelId": "0x010011F6",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x01001219",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x0100121E",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    },
+    "0x20000DF": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x00000000",
+          "ModelId": "0x0100047B",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x050002CC",
+              "NewTexture": "0x05000E6A"
+            },
+            {
+              "OldTexture": "0x050002C4",
+              "NewTexture": "0x05000E67"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ClothingSubPalEffects": {
+    "2": {
+      "Icon": "0x060017D9",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00001B"
+        }
+      ]
+    },
+    "39": {
+      "Icon": "0x060013FB",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F0000AE"
+        }
+      ]
+    },
+    "8": {
+      "Icon": "0x060017DB",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F000022"
+        }
+      ]
+    },
+    "13": {
+      "Icon": "0x060017DC",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00001D"
+        }
+      ]
+    },
+    "14": {
+      "Icon": "0x060017DD",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00001E"
+        }
+      ]
+    },
+    "19": {
+      "Icon": "0x060017DA",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00001C"
+        }
+      ]
+    },
+    "84": {
+      "Icon": "0x060017DB",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00011B"
+        }
+      ]
+    },
+    "20": {
+      "Icon": "0x060013FB",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00001F"
+        }
+      ]
+    },
+    "85": {
+      "Icon": "0x060017DD",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00011C"
+        }
+      ]
+    },
+    "21": {
+      "Icon": "0x060017DE",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F000020"
+        }
+      ]
+    },
+    "86": {
+      "Icon": "0x060017DE",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00011D"
+        }
+      ]
+    },
+    "22": {
+      "Icon": "0x060017D8",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F000021"
+        }
+      ]
+    },
+    "87": {
+      "Icon": "0x060017DA",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00011E"
+        }
+      ]
+    },
+    "88": {
+      "Icon": "0x060017D9",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F00016F"
+        }
+      ]
+    },
+    "89": {
+      "Icon": "0x060017DB",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F000170"
+        }
+      ]
+    },
+    "90": {
+      "Icon": "0x060013FB",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F000171"
+        }
+      ]
+    },
+    "91": {
+      "Icon": "0x060017D9",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F0001E2"
+        }
+      ]
+    },
+    "92": {
+      "Icon": "0x060017DC",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F0001E4"
+        }
+      ]
+    },
+    "93": {
+      "Icon": "0x060013FB",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000300",
+              "NumColors": "0x00000060"
+            },
+            {
+              "Offset": "0x000003A0",
+              "NumColors": "0x00000060"
+            }
+          ],
+          "PaletteSet": "0x0F0001E3"
+        }
+      ]
+    }
+  },
+  "Id": "0x10000033"
+}

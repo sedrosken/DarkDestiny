@@ -1,0 +1,67 @@
+{
+  "clothingBaseEffects": {
+    "0x20002EE": {
+      "cloObjectEffects": [
+        {
+          "index": 0,
+          "modelId": "0x1000D00",
+          "cloTextureEffects": [
+            {
+              "OldTexture": "0x05002b93",
+              "NewTexture": "0x05002bc0"
+            },
+            {
+              "OldTexture": "0x05000e21",
+              "NewTexture": "0x05002bbf"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "modelId": "0x1000D02",
+          "cloTextureEffects": [
+            {
+              "OldTexture": "0x05002b93",
+              "NewTexture": "0x05002bc0"
+            },
+            {
+              "OldTexture": "0x05000e21",
+              "NewTexture": "0x05002bbf"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "modelId": "0x1000D06",
+          "cloTextureEffects": [
+            {
+              "OldTexture": "0x05002b93",
+              "NewTexture": "0x05002bc0"
+            },
+            {
+              "OldTexture": "0x05000e21",
+              "NewTexture": "0x05002bbf"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "modelId": "0x1000CFA",
+          "cloTextureEffects": [
+            {
+              "OldTexture": "0x05002b92",
+              "NewTexture": "0x05002bc1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "clothingSubPalEffects": {
+    "39": {
+      "icon": 0,
+      "cloSubPalettes": []
+    }
+  },
+  "id": "0x10011184"
+}

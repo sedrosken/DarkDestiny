@@ -1,244 +1,39 @@
 {
-    "Name": "Chaowings",
-    "ClothingBaseEffects": {
-        "33554510": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561112": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561104": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33560944": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33554433": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561114": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561106": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561386": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561100": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561108": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33560941": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561069": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561102": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33561110": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33560942": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33560943": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
-        },
-        "33560839": {
-            "CloObjectEffects": [
-                {
-                    "Index": "17",
-                    "ModelId": "16797056",
-                    "CloTextureEffects": [
-                        {
-                            "OldTexture": "83897491",
-                            "NewTexture": "0x05002BBD"
-                        }
-                    ]
-                }
-            ]
+  "ClothingBaseEffects": {
+    "0x2000001": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000001D",
+          "ModelId": "0x01004D80",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05002C93",
+              "NewTexture": "0x05002BBD"
+            }
+          ]
         }
+      ]
     },
-    "Id": "0x10000867"
+    "0x200004E": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000001D",
+          "ModelId": "0x01004D80",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05002C93",
+              "NewTexture": "0x05002BBD"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ClothingSubPalEffects": {
+    "4": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": []
+    }
+  },
+  "Id": "0x10009867"
 }

@@ -1,0 +1,244 @@
+{
+    "Name": "Snazzy Red Wings",
+    "ClothingBaseEffects": {
+        "33554510": {
+            "CloObjectEffects": [
+                {
+                    "Index": "29",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05001ad7"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561112": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561104": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33560944": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33554433": {
+            "CloObjectEffects": [
+                {
+                    "Index": "29",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05001ad7"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561114": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561106": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561386": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561100": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561108": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33560941": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561069": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561102": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33561110": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33560942": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33560943": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        },
+        "33560839": {
+            "CloObjectEffects": [
+                {
+                    "Index": "17",
+                    "ModelId": "16797056",
+                    "CloTextureEffects": [
+                        {
+                            "OldTexture": "83897491",
+                            "NewTexture": "0x05002BBD"
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "Id": "0x10011160"
+}

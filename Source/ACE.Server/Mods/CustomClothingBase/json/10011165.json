@@ -1,0 +1,55 @@
+{
+  "clothingBaseEffects": {
+    "33559603": {
+      "cloObjectEffects": [
+        {
+          "index": 0,
+          "modelId": 16792569,
+          "cloTextureEffects": []
+        },
+        {
+          "index": 1,
+          "modelId": 16792573,
+          "cloTextureEffects": []
+        },
+        {
+          "index": 2,
+          "modelId": 16792570,
+          "cloTextureEffects": []
+        },
+        {
+          "index": 3,
+          "modelId": 16792571,
+          "cloTextureEffects": []
+        },
+        {
+          "index": 4,
+          "modelId": 16792572,
+          "cloTextureEffects": []
+        },
+        {
+          "index": 5,
+          "modelId": 16792574,
+          "cloTextureEffects": []
+        },
+        {
+          "index": 6,
+          "modelId": 16792568,
+          "cloTextureEffects": []
+        },
+        {
+          "index": 7,
+          "modelId": 16792568,
+          "cloTextureEffects": []
+        }
+      ]
+    }
+  },
+  "clothingSubPalEffects": {
+    "39": {
+      "icon": 0,
+      "cloSubPalettes": []
+    }
+  },
+  "id": 268505445
+}

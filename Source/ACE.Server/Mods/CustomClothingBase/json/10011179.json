@@ -1,0 +1,115 @@
+{
+  "clothingBaseEffects": {
+    "0x20008EF": {
+      "cloObjectEffects": [
+        {
+          "index": 0,
+          "modelId": "0x1000477",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 1,
+          "modelId": "0x10004BE",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 2,
+          "modelId": "0x10004C4",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 3,
+          "modelId": "0x1000479",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 4,
+          "modelId": "0x10004BA",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 5,
+          "modelId": "0x10004C6",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 6,
+          "modelId": "0x10004C5",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 7,
+          "modelId": "0x1000478",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 8,
+          "modelId": "0x10004BC",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 9,
+          "modelId": "0x10004B9",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 10,
+          "modelId": "0x10004BF",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 11,
+          "modelId": "0x10004BD",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 12,
+          "modelId": "0x10004B7",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 13,
+          "modelId": "0x10004C2",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 14,
+          "modelId": "0x10004B8",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 15,
+          "modelId": "0x10004C3",
+          "cloTextureEffects": []
+        },
+        {
+          "index": 16,
+          "modelId": "0x10001EC",
+          "cloTextureEffects": [
+            {
+              "OldTexture": "0x050016d7",
+              "NewTexture": "0x0500"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "clothingSubPalEffects": {
+    "39": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [
+            {
+              "Offset": "0x00000000",
+              "NumColors": "0x00000800"
+            }
+          ],
+          "PaletteSet": "0x0F0000FE"
+        }
+      ]
+    }
+  },
+  "id": "0x10011179"
+}
