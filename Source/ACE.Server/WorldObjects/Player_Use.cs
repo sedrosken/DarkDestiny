@@ -292,7 +292,12 @@ namespace ACE.Server.WorldObjects
                 SendUseDoneEvent();
                 return;
             }
-
+            // Blackjack table objects (dealer / hit lever / stand lever)
+            if (success && Blackjack.TryHandleUse(this, item))
+            {
+                SendUseDoneEvent();
+                return;
+            }
             if (success)
             {
                 if (item is PressurePlate pressurePlate)
