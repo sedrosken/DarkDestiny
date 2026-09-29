@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using ACE.Entity.Enum;
+using ACE.Entity.Models;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
 using ACE.Server.Factories;
@@ -24,7 +25,16 @@ namespace ACE.Server.WorldObjects
         public const uint HitLeverWcid    = 9871096;
         public const uint StandButtonWcid = 9871097;
         public const uint ChipWcid        = 9871098;
-        public const uint ChipPouchWcid   = 9871101;   // bought for 1 prestige medal, opens into PouchChips chips
+        public const uint ChipPouchWcid   = 9871101;
+
+        // ---- Number plaques (scoreboard) ----
+        public const uint PlayerTensWcid  = 9871103;
+        public const uint PlayerOnesWcid  = 9871104;
+        public const uint DealerTensWcid  = 9871105;
+        public const uint DealerOnesWcid  = 9871106;
+        private const byte PlaquePartIndex    = 0;           // part of the signpost Setup (0x02000290) that has the sign face
+        private const uint PlaqueFaceTexture  = 0x0500136F;  // signpost face SurfaceTexture being replaced
+        private const uint DigitZeroTexture   = 0x05001EC7;  // apartment-number "0"; 1-9 follow sequentially   // bought for 1 prestige medal, opens into PouchChips chips
 
         // ---- Tuning ----
         public const int Bet = 10;                              // chips per hand (even number so insurance / 3:2 stay whole)
@@ -41,6 +51,7 @@ namespace ACE.Server.WorldObjects
         private static readonly ConcurrentDictionary<uint, Game> gamesByDealer = new ConcurrentDictionary<uint, Game>();
         private static readonly ConcurrentDictionary<uint, Shoe> shoes = new ConcurrentDictionary<uint, Shoe>();
         private static readonly ConcurrentDictionary<uint, int> owedChips = new ConcurrentDictionary<uint, int>();
+        private static readonly ConcurrentDictionary<uint, int> plaqueDigits = new ConcurrentDictionary<uint, int>();
 
         // =====================================================================
         // Entry point
@@ -347,6 +358,7 @@ namespace ACE.Server.WorldObjects
             hand.Done = true;
 
             Say(game.Dealer, $"Doubled. One card: {Describe(hand.Cards)}");
+            UpdateBoard(game);
             if (Total(hand.Cards) > 21)
                 Say(game.Dealer, "Bust!");
 
@@ -396,6 +408,7 @@ namespace ACE.Server.WorldObjects
             hand.Cards.Add(shoes[game.Dealer.Guid.Full].Draw());
             var total = Total(hand.Cards);
             Say(game.Dealer, $"{Describe(hand.Cards)}");
+            UpdateBoard(game);
 
             if (total > 21)
             {
@@ -439,6 +452,7 @@ namespace ACE.Server.WorldObjects
             game.Busy = true;
             game.HoleRevealed = true;
             Say(game.Dealer, $"Dealer reveals: {Describe(game.DealerCards)}");
+            UpdateBoard(game);
 
             // everyone busted: no need to draw
             // every hand already decided (bust or Five-card Charlie): no need to draw
@@ -468,6 +482,7 @@ namespace ACE.Server.WorldObjects
 
                 game.DealerCards.Add(shoes[game.Dealer.Guid.Full].Draw());
                 Say(game.Dealer, $"Dealer draws: {Describe(game.DealerCards)}");
+                UpdateBoard(game);
                 DealerDrawStep(game);
             });
             chain.EnqueueChain();
@@ -591,6 +606,56 @@ namespace ACE.Server.WorldObjects
             }
         }
 
+        // =====================================================================
+        // Scoreboard plaques
+        // =====================================================================
+
+        private static bool IsPlaque(uint wcid) => wcid == PlayerTensWcid || wcid == PlayerOnesWcid || wcid == DealerTensWcid || wcid == DealerOnesWcid;
+
+        /// <summary>
+        /// Called from WorldObject.CalculateObjDesc: paints the current digit onto a plaque.
+        /// </summary>
+        public static void AddPlaqueTexture(WorldObject wo, ACE.Entity.ObjDesc objDesc)
+        {
+            if (!IsPlaque(wo.WeenieClassId)) return;
+
+            plaqueDigits.TryGetValue(wo.Guid.Full, out var digit);   // defaults to 0
+            objDesc.TextureChanges.Add(new PropertiesTextureMap { PartIndex = PlaquePartIndex, OldTexture = PlaqueFaceTexture, NewTexture = DigitZeroTexture + (uint)Math.Clamp(digit, 0, 9) });
+        }
+
+        /// <summary>
+        /// Shows the active player hand total and the dealer's visible total on the plaques near this dealer.
+        /// </summary>
+        private static void UpdateBoard(Game game)
+        {
+            var landblock = game.Dealer.CurrentLandblock;
+            if (landblock == null) return;
+
+            var playerTotal = game.Hands.Count > 0 ? Total(game.ActiveHand.Cards) : 0;
+            var dealerTotal = game.HoleRevealed ? Total(game.DealerCards) : (game.DealerCards.Count > 0 ? Value(game.DealerCards[0]) : 0);
+
+            foreach (var wo in landblock.GetWorldObjectsForPhysicsHandling())
+            {
+                if (!IsPlaque(wo.WeenieClassId) || wo.Location.DistanceTo(game.Dealer.Location) > ControlRange)
+                    continue;
+
+                int digit;
+                switch (wo.WeenieClassId)
+                {
+                    case PlayerTensWcid: digit = playerTotal / 10 % 10; break;
+                    case PlayerOnesWcid: digit = playerTotal % 10; break;
+                    case DealerTensWcid: digit = dealerTotal / 10 % 10; break;
+                    default:             digit = dealerTotal % 10; break;
+                }
+
+                if (plaqueDigits.TryGetValue(wo.Guid.Full, out var old) && old == digit)
+                    continue;
+
+                plaqueDigits[wo.Guid.Full] = digit;
+                wo.EnqueueBroadcastUpdateObject();
+            }
+        }
+
         private static void OpenPouch(Player player, WorldObject pouch)
         {
             if (!player.TryConsumeFromInventoryWithNetworking(pouch, 1))
@@ -679,6 +744,7 @@ namespace ACE.Server.WorldObjects
                 : string.Join(" | ", game.Hands.Select((h, i) => $"Hand {i + 1}{(i == game.Active ? "*" : "")}: {Describe(h.Cards)}"));
 
             Say(game.Dealer, $"{hands}. Dealer: {dealerText}.");
+            UpdateBoard(game);
         }
 
         // ---- card math ----

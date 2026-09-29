@@ -915,6 +915,7 @@ namespace ACE.Server.WorldObjects
             ClothingTable item;
 
             AddBaseModelData(objDesc);
+            Blackjack.AddPlaqueTexture(this, objDesc);
 
             if (ClothingBase.HasValue)
             {
