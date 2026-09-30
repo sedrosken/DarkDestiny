@@ -904,6 +904,9 @@ namespace ACE.Server.WorldObjects.Managers
                     {
                         if (WorldObject.CurrentLandblock != null)
                             WorldObject.CurrentLandblock.EmitSignal(WorldObject, emote.Message);
+
+                        if (IsColoCoordinator)
+                            ColoTrackSignal(emote.Message);
                     }
                     break;
 
@@ -2052,10 +2055,163 @@ namespace ACE.Server.WorldObjects.Managers
             if (WorldObject is Player)
                 return;
 
+            if (IsColoCoordinator)
+                ColoWatchdog();
+
             if (WorldObject is Creature creature && creature.IsAwake)
                 return;
 
             ExecuteEmoteSet(EmoteCategory.HeartBeat);
+        }
+
+        // ------------------------------------------------------------------------------------------
+        // CUSTOM: Colosseum wave watchdog.
+        // The Colo Room Coordinator (71701) and Final Room Coordinator (71702) advance waves by keeping a
+        // running count (ColoCrittersKilled) built from ColoCritterSpawned / ColoCritterKilled signals.
+        // One lost signal leaves the count off forever and the room stalls. This watchdog checks what is
+        // ACTUALLY alive in the coordinator's own room (by generator lineage, not by distance) and fixes it:
+        //   1) Wave in progress, count not 0, but nothing of this room is alive or pending for ColoStuckSeconds
+        //      -> set the count to 0 so the coordinator's own emotes advance to the next wave.
+        //   2) A SpawnWave signal was sent but nothing from this room ever appeared for ColoStuckSeconds
+        //      -> re-send that SpawnWave signal.
+        // Normal rooms are never touched: it only acts when a room has been dead-stuck for ColoStuckSeconds.
+        // ------------------------------------------------------------------------------------------
+        private const uint ColoCoordinatorWcid = 71701;
+        private const uint ColoFinalCoordinatorWcid = 71702;
+        private const double ColoStuckSeconds = 30.0;
+        private const int ColoMaxResends = 3;
+
+        private bool IsColoCoordinator => WorldObject != null && (WorldObject.WeenieClassId == ColoCoordinatorWcid || WorldObject.WeenieClassId == ColoFinalCoordinatorWcid);
+
+        private string coloLastWaveSignal;
+        private DateTime coloLastWaveSignalTime;
+        private int coloResendCount;
+        private DateTime? coloStuckSince;
+
+        private void ColoTrackSignal(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+                return;
+
+            if (message.StartsWith("SpawnWave", StringComparison.OrdinalIgnoreCase))
+            {
+                coloLastWaveSignal = message;
+                coloLastWaveSignalTime = DateTime.UtcNow;
+                coloResendCount = 0;
+                coloStuckSince = null;
+            }
+            else if (message.Equals("RevealPortal", StringComparison.OrdinalIgnoreCase))
+            {
+                // room finished - nothing more to watch
+                coloLastWaveSignal = null;
+                coloStuckSince = null;
+            }
+        }
+
+        /// <summary>
+        /// Counts this room's live monsters and pending spawns by following the generator chain:
+        /// linkable wave generators that hear this coordinator -> the room spawn generators they made -> the monsters those made.
+        /// </summary>
+        private void ColoCountRoom(out int alive, out int pending, out int spawnGens)
+        {
+            alive = 0; pending = 0; spawnGens = 0;
+
+            var landblock = WorldObject.CurrentLandblock;
+            if (landblock == null) return;
+
+            foreach (var waveGen in landblock.GetAllWorldObjectsForDiagnostics())
+            {
+                if (waveGen == null || !waveGen.IsGenerator || !waveGen.HearLocalSignals)
+                    continue;
+
+                if (waveGen.WeenieClassName == null || waveGen.WeenieClassName.IndexOf("coloarenalinkablewave", StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
+                // same rule the server uses to deliver this coordinator's SpawnWave signals
+                if (!WorldObject.IsWithinUseRadiusOf(waveGen, waveGen.HearLocalSignalsRadius))
+                    continue;
+
+                foreach (var waveProfile in waveGen.GeneratorProfiles)
+                {
+                    pending += waveProfile.SpawnQueue.Count;
+
+                    foreach (var sgInfo in waveProfile.Spawned.Values)
+                    {
+                        var spawnGen = sgInfo.TryGetWorldObject();
+                        if (spawnGen == null) continue;
+
+                        spawnGens++;
+
+                        if (spawnGen.GeneratorProfiles == null) continue;
+
+                        foreach (var spawnProfile in spawnGen.GeneratorProfiles)
+                        {
+                            pending += spawnProfile.SpawnQueue.Count;
+
+                            foreach (var mobInfo in spawnProfile.Spawned.Values)
+                            {
+                                if (mobInfo.TryGetWorldObject() is Creature mob && !mob.IsDead)
+                                    alive++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ColoWatchdog()
+        {
+            if (!(WorldObject is Creature coordinator) || coordinator.QuestManager == null || coordinator.CurrentLandblock == null)
+                return;
+
+            // nothing sent yet, or room already finished
+            if (coloLastWaveSignal == null)
+                return;
+
+            ColoCountRoom(out var alive, out var pending, out var spawnGens);
+
+            // anything alive or about to spawn = room is working, reset the stuck timer
+            if (alive > 0 || pending > 0)
+            {
+                coloStuckSince = null;
+                return;
+            }
+
+            var waveInProgress = coordinator.QuestManager.HasQuest("ColoWaveInProgress");
+            var countIsZero = coordinator.QuestManager.HasQuestSolves("ColoCrittersKilled", 0, 0);
+
+            // case 1: normal end-of-wave (count 0) - coordinator's own emotes handle it
+            if (waveInProgress && countIsZero)
+            {
+                coloStuckSince = null;
+                return;
+            }
+
+            if (coloStuckSince == null)
+            {
+                coloStuckSince = DateTime.UtcNow;
+                return;
+            }
+
+            if ((DateTime.UtcNow - coloStuckSince.Value).TotalSeconds < ColoStuckSeconds)
+                return;
+
+            coloStuckSince = null;
+
+            if (waveInProgress)
+            {
+                // everything dead but the count is off -> fix the count
+                log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid} ({WorldObject.Location?.ToLOCString()}): room stuck with nothing alive but ColoCrittersKilled != 0 after '{coloLastWaveSignal}'. Resetting count to 0.");
+                coordinator.QuestManager.SetQuestCompletions("ColoCrittersKilled", 0);
+            }
+            else if ((DateTime.UtcNow - coloLastWaveSignalTime).TotalSeconds >= ColoStuckSeconds && coloResendCount < ColoMaxResends)
+            {
+                // a wave was called for but nothing of this room ever showed up -> call it again
+                coloResendCount++;
+                log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid} ({WorldObject.Location?.ToLOCString()}): '{coloLastWaveSignal}' produced nothing (spawnGens={spawnGens}). Re-sending, attempt {coloResendCount}/{ColoMaxResends}.");
+                coordinator.CurrentLandblock.EmitSignal(WorldObject, coloLastWaveSignal);
+                coloLastWaveSignalTime = DateTime.UtcNow;
+            }
         }
 
         public void OnUse(Creature activator)
@@ -2196,7 +2352,40 @@ namespace ACE.Server.WorldObjects.Managers
         /// </summary>
         public void OnLocalSignal(WorldObject emitter, string message)
         {
-            ExecuteEmoteSet(EmoteCategory.ReceiveLocalSignal, message, emitter);
+            TryLocalSignal(emitter, message, 0);
+        }
+
+        // CUSTOM: a local signal that arrives while this object is busy running another emote
+        // used to be silently dropped (ExecuteEmoteSet returns early when IsBusy).
+        // Now it is retried every SignalRetryDelay seconds until the object is free, up to SignalRetryMax times.
+        private const int SignalRetryMax = 40;          // 40 x 0.5s = up to 20 seconds of waiting
+        private const float SignalRetryDelay = 0.5f;
+
+        private void TryLocalSignal(WorldObject emitter, string message, int attempt)
+        {
+            if (!IsBusy)
+            {
+                if (attempt > 0)
+                    log.Warn($"[SIGNAL] {WorldObject.Name} (0x{WorldObject.Guid}:{WorldObject.WeenieClassId}) received delayed signal '{message}' after {attempt} retries.");
+
+                ExecuteEmoteSet(EmoteCategory.ReceiveLocalSignal, message, emitter);
+                return;
+            }
+
+            // only bother retrying if this object actually listens for this signal
+            if (GetEmoteSet(EmoteCategory.ReceiveLocalSignal, message, useRNG: false) == null)
+                return;
+
+            if (attempt >= SignalRetryMax)
+            {
+                log.Error($"[SIGNAL] {WorldObject.Name} (0x{WorldObject.Guid}:{WorldObject.WeenieClassId}) DROPPED signal '{message}' - still busy after {attempt} retries.");
+                return;
+            }
+
+            var retryChain = new ActionChain();
+            retryChain.AddDelaySeconds(SignalRetryDelay);
+            retryChain.AddAction(WorldObject, () => TryLocalSignal(emitter, message, attempt + 1));
+            retryChain.EnqueueChain();
         }
 
         /// <summary>
