@@ -132,7 +132,7 @@ namespace ACE.Server.Factories
 
             var mutationFilter = MutationCache.GetMutation(scriptName);
 
-            mutationFilter.TryMutate(wo, profile.Tier, profile.LootQualityMod);
+            mutationFilter.TryMutate(wo, profile.Tier, EliteDamageQualityMod(profile, EliteMeleeDamageQualityMod));
 
             // mutate WeaponOffense / WeaponDefense
             scriptName = GetOffenseDefenseScript(weaponSkill, roll.WeaponType);

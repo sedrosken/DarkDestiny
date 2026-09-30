@@ -107,7 +107,7 @@ namespace ACE.Server.Factories
                 var scriptName = GetCasterScript(isElemental);
 
                 mutationFilter = MutationCache.GetMutation(scriptName);
-                mutationFilter.TryMutate(wo, profile.Tier, profile.LootQualityMod);
+                mutationFilter.TryMutate(wo, profile.Tier, EliteDamageQualityMod(profile, EliteCasterDamageQualityMod));
 
                 // this part was not handled by mutation filter
                 if (wo.WieldRequirements == WieldRequirement.RawSkill)

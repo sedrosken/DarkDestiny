@@ -1302,6 +1302,10 @@ namespace ACE.Server.Factories
 
         public static WorldObject CreateRandomLootObjects(TreasureDeath treasureDeath, TreasureItemCategory category)
         {
+            // custom elite chest profile (see LootGenerationFactory_EliteChest.cs)
+            if (category == TreasureItemCategory.MagicItem && IsEliteChestProfile(treasureDeath))
+                return CreateEliteLootObject(treasureDeath);
+
             var treasureRoll = RollWcid(treasureDeath, category);
 
             if (treasureRoll == null) return null;

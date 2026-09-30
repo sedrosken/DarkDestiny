@@ -34,7 +34,7 @@ namespace ACE.Server.Factories
             if (roll.LifeCreatureEnchantments != null)
                 spells.AddRange(roll.LifeCreatureEnchantments);
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR || (!roll.IsJewelry && !roll.IsClothing))
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR || (!roll.IsJewelry && !roll.IsClothing) || IsEliteChestProfile(profile))
             {
                 roll.Cantrips = RollCantrips(wo, profile, roll);
 
@@ -578,7 +578,9 @@ namespace ACE.Server.Factories
 
             int numCantrips;
 
-            if (roll.IsClothArmor) // robes
+            if (IsEliteChestProfile(profile))
+                numCantrips = RollEliteNumCantrips();
+            else if (roll.IsClothArmor) // robes
                 numCantrips = CantripChance.RollRobeNumCantrips(profile);
             else
                 numCantrips = CantripChance.RollNumCantrips(profile);
@@ -604,7 +606,7 @@ namespace ACE.Server.Factories
 
             foreach (var cantrip in cantrips)
             {
-                var cantripLevel = CantripChance.RollCantripLevel(profile);
+                var cantripLevel = IsEliteChestProfile(profile) ? 2 : CantripChance.RollCantripLevel(profile);
 
                 var cantripLevels = SpellLevelProgression.GetSpellLevels(cantrip);
 
