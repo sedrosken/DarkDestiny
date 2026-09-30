@@ -1726,6 +1726,9 @@ namespace ACE.Server.WorldObjects.Managers
             // detect busy state
             // TODO: maybe eventually we should consider having categories that can be queued?
             // there are some categories that shouldn't be queued, like heartbeats...
+            if (ColoTraceOn(emoteSet))
+                ColoTraceLog($"EMOTE {(EmoteCategory)emoteSet.Category} quest='{emoteSet.Quest}' target={targetObject?.Name ?? "-"} nested={nested}{(IsBusy && !nested ? "  ** DROPPED - BUSY **" : "")}");
+
             if (IsBusy && !nested) return false;
 
             if (rootEmoteSet == null)
@@ -1807,6 +1810,9 @@ namespace ACE.Server.WorldObjects.Managers
 
             //    return;
             //}
+
+            if (ColoTraceOn(emoteSet))
+                ColoTraceLog($"  ACTION [{emoteIdx}] {(EmoteType)emote.Type}{(string.IsNullOrEmpty(emote.Message) ? "" : $" '{emote.Message}'")} (from {(EmoteCategory)emoteSet.Category} '{emoteSet.Quest}')");
 
             var nextDelay = ExecuteEmote(emoteSet, emote, targetObject, campBonus, rootEmoteSet);
 
@@ -2056,9 +2062,14 @@ namespace ACE.Server.WorldObjects.Managers
                 return;
 
             if (IsColoCoordinator)
+            {
+                ColoBusyGuard();
                 ColoWatchdog();
+            }
 
-            if (WorldObject is Creature creature && creature.IsAwake)
+            // CUSTOM: the Colo coordinator must always run its heartbeat emotes (they advance the waves),
+            // even if something (e.g. the wi-flag aggro scan) woke it up.
+            if (WorldObject is Creature creature && creature.IsAwake && !IsColoCoordinator)
                 return;
 
             ExecuteEmoteSet(EmoteCategory.HeartBeat);
@@ -2087,6 +2098,123 @@ namespace ACE.Server.WorldObjects.Managers
         private DateTime coloLastWaveSignalTime;
         private int coloResendCount;
         private DateTime? coloStuckSince;
+
+        private DateTime? coloBusySince;
+
+        /// <summary>
+        /// The coordinator's emotes have no delays, so it should never stay busy across heartbeats.
+        /// If it does (leaked Nested count), every heartbeat and signal would be dropped forever - reset it.
+        /// </summary>
+        private void ColoBusyGuard()
+        {
+            if (!IsBusy)
+            {
+                coloBusySince = null;
+                return;
+            }
+
+            if (coloBusySince == null)
+            {
+                coloBusySince = DateTime.UtcNow;
+                return;
+            }
+
+            if ((DateTime.UtcNow - coloBusySince.Value).TotalSeconds >= ColoStuckSeconds)
+            {
+                log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid}: emote manager stuck busy for {ColoStuckSeconds}s (Nested={Nested}). Resetting.");
+                Nested = 0;
+                IsBusy = false;
+                coloBusySince = null;
+            }
+        }
+
+        private static bool ColoIsLive(WorldObject wo) => wo != null && !wo.IsDestroyed && wo.CurrentLandblock != null;
+
+        /// <summary>
+        /// Returns the linkable wave generators that belong to this coordinator's room
+        /// (same rule the server uses to deliver this coordinator's SpawnWave signals).
+        /// </summary>
+        private List<WorldObject> ColoRoomWaveGens()
+        {
+            var result = new List<WorldObject>();
+
+            var landblock = WorldObject.CurrentLandblock;
+            if (landblock == null) return result;
+
+            foreach (var wo in landblock.GetAllWorldObjectsForDiagnostics())
+            {
+                if (wo == null || !wo.IsGenerator || !wo.HearLocalSignals)
+                    continue;
+
+                if (wo.WeenieClassName == null || wo.WeenieClassName.IndexOf("coloarenalinkablewave", StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
+                if (!WorldObject.IsWithinUseRadiusOf(wo, wo.HearLocalSignalsRadius))
+                    continue;
+
+                result.Add(wo);
+            }
+            return result;
+        }
+
+        private static bool ColoListensFor(WorldObject wo, string signal)
+        {
+            var emotes = wo?.Biota?.PropertiesEmote;
+            if (emotes == null) return false;
+
+            return emotes.Any(e => e.Category == EmoteCategory.ReceiveLocalSignal && e.Quest != null && e.Quest.Equals(signal, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Logs the full state of the room's wave generators, removes dead/ghost entries from their profiles,
+        /// and directly fires the wave generator that should have answered 'signal'.
+        /// </summary>
+        private void ColoRepairAndForceWave(string signal)
+        {
+            foreach (var waveGen in ColoRoomWaveGens())
+            {
+                var listens = ColoListensFor(waveGen, signal);
+                var ghosts = 0;
+                var info = new System.Text.StringBuilder();
+
+                for (var i = 0; i < waveGen.GeneratorProfiles.Count; i++)
+                {
+                    var p = waveGen.GeneratorProfiles[i];
+                    info.Append($" p{i}[wcid={p.WeenieClassId} spawned={p.Spawned.Count} queue={p.SpawnQueue.Count} max={p.MaxCreate} available={p.IsAvailable} nextAvail={p.NextAvailable:HH:mm:ss}]");
+
+                    foreach (var key in p.Spawned.Keys.ToList())
+                    {
+                        if (!ColoIsLive(p.Spawned[key].TryGetWorldObject()))
+                        {
+                            p.Spawned.Remove(key);
+                            ghosts++;
+                        }
+                    }
+                }
+
+                if (listens || ghosts > 0)
+                    log.Warn($"[COLO] repair: {waveGen.Name} 0x{waveGen.Guid} listensFor '{signal}'={listens} disabled={waveGen.GeneratorDisabled} poweringUp={waveGen.CurrentlyPoweringUp} busy={waveGen.EmoteManager.IsBusy} init={waveGen.InitCreate} max={waveGen.MaxCreate} current={waveGen.CurrentCreate} ghostsRemoved={ghosts} |{info}");
+
+                if (!listens)
+                    continue;
+
+                // clear a stuck busy flag so its own emotes work again next time
+                if (waveGen.EmoteManager.IsBusy)
+                {
+                    waveGen.EmoteManager.Nested = 0;
+                    waveGen.EmoteManager.IsBusy = false;
+                }
+
+                foreach (var p in waveGen.GeneratorProfiles)
+                    if (p.Spawned.Count == 0 && p.SpawnQueue.Count == 0)
+                        p.NextAvailable = DateTime.UtcNow.AddSeconds(-1);
+
+                waveGen.GeneratorDisabled = false;
+                waveGen.Generator_Generate();
+
+                log.Warn($"[COLO] repair: forced Generate on {waveGen.Name} 0x{waveGen.Guid} -> current={waveGen.CurrentCreate}");
+            }
+        }
 
         private void ColoTrackSignal(string message)
         {
@@ -2138,7 +2266,7 @@ namespace ACE.Server.WorldObjects.Managers
                     foreach (var sgInfo in waveProfile.Spawned.Values)
                     {
                         var spawnGen = sgInfo.TryGetWorldObject();
-                        if (spawnGen == null) continue;
+                        if (!ColoIsLive(spawnGen)) continue;
 
                         spawnGens++;
 
@@ -2150,7 +2278,7 @@ namespace ACE.Server.WorldObjects.Managers
 
                             foreach (var mobInfo in spawnProfile.Spawned.Values)
                             {
-                                if (mobInfo.TryGetWorldObject() is Creature mob && !mob.IsDead)
+                                if (mobInfo.TryGetWorldObject() is Creature mob && !mob.IsDead && ColoIsLive(mob))
                                     alive++;
                             }
                         }
@@ -2169,6 +2297,9 @@ namespace ACE.Server.WorldObjects.Managers
                 return;
 
             ColoCountRoom(out var alive, out var pending, out var spawnGens);
+
+            if (ColoTrace)
+                ColoTraceLog($"WATCHDOG last='{coloLastWaveSignal}' alive={alive} pending={pending} spawnGens={spawnGens} waveInProgress={coordinator.QuestManager.HasQuest("ColoWaveInProgress")} countZero={coordinator.QuestManager.HasQuestSolves("ColoCrittersKilled", 0, 0)} stuckFor={(coloStuckSince == null ? 0 : (DateTime.UtcNow - coloStuckSince.Value).TotalSeconds):0}s");
 
             // anything alive or about to spawn = room is working, reset the stuck timer
             if (alive > 0 || pending > 0)
@@ -2208,8 +2339,13 @@ namespace ACE.Server.WorldObjects.Managers
             {
                 // a wave was called for but nothing of this room ever showed up -> call it again
                 coloResendCount++;
-                log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid} ({WorldObject.Location?.ToLOCString()}): '{coloLastWaveSignal}' produced nothing (spawnGens={spawnGens}). Re-sending, attempt {coloResendCount}/{ColoMaxResends}.");
-                coordinator.CurrentLandblock.EmitSignal(WorldObject, coloLastWaveSignal);
+                log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid} ({WorldObject.Location?.ToLOCString()}): '{coloLastWaveSignal}' produced nothing (spawnGens={spawnGens}). Attempt {coloResendCount}/{ColoMaxResends}: {(coloResendCount == 1 ? "re-sending signal" : "repairing wave generators + forcing spawn")}.");
+
+                if (coloResendCount == 1)
+                    coordinator.CurrentLandblock.EmitSignal(WorldObject, coloLastWaveSignal);
+                else
+                    ColoRepairAndForceWave(coloLastWaveSignal);
+
                 coloLastWaveSignalTime = DateTime.UtcNow;
             }
         }
@@ -2352,7 +2488,44 @@ namespace ACE.Server.WorldObjects.Managers
         /// </summary>
         public void OnLocalSignal(WorldObject emitter, string message)
         {
+            if (ColoTrace && IsInColo(WorldObject))
+                ColoTraceLog($"HEARD signal '{message}' from {emitter?.Name} (0x{emitter?.Guid}:{emitter?.WeenieClassId}) dist={(emitter?.Location != null && WorldObject.Location != null ? emitter.Location.DistanceTo(WorldObject.Location).ToString("0.0") : "?")} busy={IsBusy}");
+
             TryLocalSignal(emitter, message, 0);
+        }
+
+        // ------------------------------------------------------------------------------------------
+        // CUSTOM: Colosseum trace. Logs every emote, emote action, signal heard and watchdog check
+        // for objects in the Colosseum landblocks (0x00AF-0x00B6). Toggle in-game with @colotrace.
+        // Lines start with [COLOTRACE] so they can be searched/filtered in the log.
+        // ------------------------------------------------------------------------------------------
+        public static bool ColoTrace = true;
+
+        public static bool IsInColo(WorldObject wo)
+        {
+            var lb = wo?.CurrentLandblock;
+            if (lb == null) return false;
+
+            var id = lb.Id.Raw >> 16;
+            return id >= 0x00AF && id <= 0x00B6;
+        }
+
+        private bool ColoTraceOn(PropertiesEmote emoteSet)
+        {
+            if (!ColoTrace || emoteSet == null || !IsInColo(WorldObject))
+                return false;
+
+            // idle heartbeat emotes on monsters are just animations - skip them, keep coordinator heartbeats
+            if (emoteSet.Category == EmoteCategory.HeartBeat && !IsColoCoordinator)
+                return false;
+
+            return true;
+        }
+
+        private void ColoTraceLog(string text)
+        {
+            var loc = WorldObject.Location;
+            log.Info($"[COLOTRACE] {WorldObject.Name} ({WorldObject.WeenieClassId} 0x{WorldObject.Guid}) @{(loc != null ? $"{loc.Cell:X8} {loc.PositionX:0.0},{loc.PositionY:0.0}" : "?")} | {text}");
         }
 
         // CUSTOM: a local signal that arrives while this object is busy running another emote

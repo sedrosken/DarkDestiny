@@ -1,6 +1,7 @@
 using ACE.Entity.Enum;
 using ACE.Server.Network;
 using ACE.Server.Network.GameMessages.Messages;
+using ACE.Server.WorldObjects.Managers;
 
 namespace ACE.Server.Command.Handlers
 {
@@ -31,6 +32,22 @@ namespace ACE.Server.Command.Handlers
             player.CurrentLandblock.EmitSignal(player, message);
 
             session.Network.EnqueueSend(new GameMessageSystemChat($"Signal sent: {message}", ChatMessageType.Broadcast));
+        }
+
+        // @colotrace [on|off] - toggles the [COLOTRACE] Colosseum debug logging (on by default)
+        [CommandHandler("colotrace", AccessLevel.Envoy, CommandHandlerFlag.None, 0,
+            "Toggles Colosseum trace logging ([COLOTRACE] lines in the server log).",
+            "[on|off]")]
+        public static void HandleColoTrace(Session session, params string[] parameters)
+        {
+            if (parameters.Length > 0 && parameters[0].Equals("on", System.StringComparison.OrdinalIgnoreCase))
+                EmoteManager.ColoTrace = true;
+            else if (parameters.Length > 0 && parameters[0].Equals("off", System.StringComparison.OrdinalIgnoreCase))
+                EmoteManager.ColoTrace = false;
+            else
+                EmoteManager.ColoTrace = !EmoteManager.ColoTrace;
+
+            CommandHandlerHelper.WriteOutputInfo(session, $"Colosseum trace is now {(EmoteManager.ColoTrace ? "ON" : "OFF")}.", ChatMessageType.Broadcast);
         }
     }
 }
