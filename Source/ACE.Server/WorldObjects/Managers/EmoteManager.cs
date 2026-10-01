@@ -903,7 +903,20 @@ namespace ACE.Server.WorldObjects.Managers
                     if (WorldObject != null)
                     {
                         if (WorldObject.CurrentLandblock != null)
+                        {
+                            // Throttle the mass teardown broadcast. The hourly arena reset re-fires
+                            // ColoSelfDestruct many times in a few seconds (once per heartbeat while its
+                            // condition holds), and each broadcast hits every object in the arena. Collapse
+                            // those into one broadcast per cooldown so a single reset can't storm the world.
+                            if (ColoIsNoiseSignal(emote.Message))
+                            {
+                                if ((DateTime.UtcNow - lastColoFanoutBroadcast).TotalSeconds < ColoFanoutCooldownSeconds)
+                                    break;
+                                lastColoFanoutBroadcast = DateTime.UtcNow;
+                            }
+
                             WorldObject.CurrentLandblock.EmitSignal(WorldObject, emote.Message);
+                        }
 
                         if (IsColoCoordinator)
                             ColoTrackSignal(emote.Message);
@@ -2065,6 +2078,7 @@ namespace ACE.Server.WorldObjects.Managers
             {
                 ColoBusyGuard();
                 ColoWatchdog();
+                ColoSyncWaveCount();
             }
 
             // CUSTOM: the Colo coordinator must always run its heartbeat emotes (they advance the waves),
@@ -2098,6 +2112,11 @@ namespace ACE.Server.WorldObjects.Managers
         private DateTime coloLastWaveSignalTime;
         private int coloResendCount;
         private DateTime? coloStuckSince;
+        private bool coloWaveSeenAlive;
+        private DateTime? coloEmptySince;
+        private const double ColoEmptyGraceSeconds = 12.0;
+        private DateTime lastColoFanoutBroadcast;
+        private const double ColoFanoutCooldownSeconds = 30.0;
 
         private DateTime? coloBusySince;
 
@@ -2121,7 +2140,7 @@ namespace ACE.Server.WorldObjects.Managers
 
             if ((DateTime.UtcNow - coloBusySince.Value).TotalSeconds >= ColoStuckSeconds)
             {
-                log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid}: emote manager stuck busy for {ColoStuckSeconds}s (Nested={Nested}). Resetting.");
+                if (ColoTrace) log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid}: emote manager stuck busy for {ColoStuckSeconds}s (Nested={Nested}). Resetting.");
                 Nested = 0;
                 IsBusy = false;
                 coloBusySince = null;
@@ -2193,7 +2212,7 @@ namespace ACE.Server.WorldObjects.Managers
                 }
 
                 if (listens || ghosts > 0)
-                    log.Warn($"[COLO] repair: {waveGen.Name} 0x{waveGen.Guid} listensFor '{signal}'={listens} disabled={waveGen.GeneratorDisabled} poweringUp={waveGen.CurrentlyPoweringUp} busy={waveGen.EmoteManager.IsBusy} init={waveGen.InitCreate} max={waveGen.MaxCreate} current={waveGen.CurrentCreate} ghostsRemoved={ghosts} |{info}");
+                    if (ColoTrace) log.Warn($"[COLO] repair: {waveGen.Name} 0x{waveGen.Guid} listensFor '{signal}'={listens} disabled={waveGen.GeneratorDisabled} poweringUp={waveGen.CurrentlyPoweringUp} busy={waveGen.EmoteManager.IsBusy} init={waveGen.InitCreate} max={waveGen.MaxCreate} current={waveGen.CurrentCreate} ghostsRemoved={ghosts} |{info}");
 
                 if (!listens)
                     continue;
@@ -2212,7 +2231,7 @@ namespace ACE.Server.WorldObjects.Managers
                 waveGen.GeneratorDisabled = false;
                 waveGen.Generator_Generate();
 
-                log.Warn($"[COLO] repair: forced Generate on {waveGen.Name} 0x{waveGen.Guid} -> current={waveGen.CurrentCreate}");
+                if (ColoTrace) log.Warn($"[COLO] repair: forced Generate on {waveGen.Name} 0x{waveGen.Guid} -> current={waveGen.CurrentCreate}");
             }
         }
 
@@ -2227,6 +2246,8 @@ namespace ACE.Server.WorldObjects.Managers
                 coloLastWaveSignalTime = DateTime.UtcNow;
                 coloResendCount = 0;
                 coloStuckSince = null;
+                coloWaveSeenAlive = false;
+                coloEmptySince = null;
             }
             else if (message.Equals("RevealPortal", StringComparison.OrdinalIgnoreCase))
             {
@@ -2332,14 +2353,14 @@ namespace ACE.Server.WorldObjects.Managers
             if (waveInProgress)
             {
                 // everything dead but the count is off -> fix the count
-                log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid} ({WorldObject.Location?.ToLOCString()}): room stuck with nothing alive but ColoCrittersKilled != 0 after '{coloLastWaveSignal}'. Resetting count to 0.");
+                if (ColoTrace) log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid} ({WorldObject.Location?.ToLOCString()}): room stuck with nothing alive but ColoCrittersKilled != 0 after '{coloLastWaveSignal}'. Resetting count to 0.");
                 coordinator.QuestManager.SetQuestCompletions("ColoCrittersKilled", 0);
             }
             else if ((DateTime.UtcNow - coloLastWaveSignalTime).TotalSeconds >= ColoStuckSeconds && coloResendCount < ColoMaxResends)
             {
                 // a wave was called for but nothing of this room ever showed up -> call it again
                 coloResendCount++;
-                log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid} ({WorldObject.Location?.ToLOCString()}): '{coloLastWaveSignal}' produced nothing (spawnGens={spawnGens}). Attempt {coloResendCount}/{ColoMaxResends}: {(coloResendCount == 1 ? "re-sending signal" : "repairing wave generators + forcing spawn")}.");
+                if (ColoTrace) log.Warn($"[COLO] {WorldObject.Name} 0x{WorldObject.Guid} ({WorldObject.Location?.ToLOCString()}): '{coloLastWaveSignal}' produced nothing (spawnGens={spawnGens}). Attempt {coloResendCount}/{ColoMaxResends}: {(coloResendCount == 1 ? "re-sending signal" : "repairing wave generators + forcing spawn")}.");
 
                 if (coloResendCount == 1)
                     coordinator.CurrentLandblock.EmitSignal(WorldObject, coloLastWaveSignal);
@@ -2348,6 +2369,69 @@ namespace ACE.Server.WorldObjects.Managers
 
                 coloLastWaveSignalTime = DateTime.UtcNow;
             }
+        }
+
+        /// <summary>
+        /// CUSTOM: keeps the coordinator's ColoCrittersKilled count equal to what is ACTUALLY alive in
+        /// its room (from ColoCountRoom, by generator lineage) instead of trusting the
+        /// ColoCritterSpawned / ColoCritterKilled LocalSignals. Those signals can be dropped (an object
+        /// stuck busy, or out of hearing radius) and a single lost one leaves the count off forever, so
+        /// the coordinator never sees the wave clear and the room stalls - the bug that reliably hit the
+        /// rooms with the most spawns (e.g. room 16). With the count pinned to reality every heartbeat,
+        /// the coordinator's own HeartBeat emotes advance the wave exactly when the room is clear, and a
+        /// lost signal can no longer stall anything.
+        ///
+        /// The "seen alive" guard means a freshly-signalled wave is never advanced before it has actually
+        /// spawned. Once the wave has appeared, alive == 0 lets the emotes advance - whether the room is
+        /// truly empty, or the player cleared the first half and the second half is still only queued. The
+        /// latter is the intended "clear the first half fast to skip the rest" reward, so it is preserved.
+        /// </summary>
+        private void ColoSyncWaveCount()
+        {
+            // no wave active, or the room already finished (RevealPortal clears this)
+            if (coloLastWaveSignal == null)
+                return;
+
+            if (!(WorldObject is Creature coordinator) || coordinator.QuestManager == null || coordinator.CurrentLandblock == null)
+                return;
+
+            ColoCountRoom(out var alive, out var pending, out var spawnGens);
+
+            if (alive > 0)
+            {
+                // the wave has materialized - from here on, alive == 0 means the player cleared it
+                coloWaveSeenAlive = true;
+                coloEmptySince = null;
+            }
+            else if (pending > 0 || spawnGens > 0)
+            {
+                // alive == 0 but the wave (or its skipped-able 2nd half) is still spawning - keep waiting
+                coloEmptySince = null;
+            }
+            else
+            {
+                // room is completely empty: nothing alive, nothing queued, no spawn generators left.
+                // If we already saw the wave fill, it is cleared now. If we NEVER saw it (its monsters are
+                // invisible to the room count for any reason, or nothing ever spawned), force it through
+                // after a short grace so a wave can never leave a room hung. This is the hard guarantee
+                // that no room gets permanently stuck, regardless of why the signals failed.
+                if (coloEmptySince == null)
+                    coloEmptySince = DateTime.UtcNow;
+
+                if ((DateTime.UtcNow - coloEmptySince.Value).TotalSeconds >= ColoEmptyGraceSeconds)
+                    coloWaveSeenAlive = true;
+            }
+
+            if (!coloWaveSeenAlive)
+                return;
+
+            // count == reality: a dropped or never-sent ColoCritterSpawned/ColoCritterKilled signal can no longer desync it
+            coordinator.QuestManager.SetQuestCompletions("ColoCrittersKilled", alive);
+
+            // the advance emotes only run while ColoWaveInProgress is stamped; a missing ColoCritterKilled can
+            // leave it erased even though the wave really happened - re-assert it so the clear registers
+            if (!coordinator.QuestManager.HasQuest("ColoWaveInProgress"))
+                coordinator.QuestManager.Stamp("ColoWaveInProgress");
         }
 
         public void OnUse(Creature activator)
@@ -2488,7 +2572,7 @@ namespace ACE.Server.WorldObjects.Managers
         /// </summary>
         public void OnLocalSignal(WorldObject emitter, string message)
         {
-            if (ColoTrace && IsInColo(WorldObject))
+            if (ColoTrace && IsInColo(WorldObject) && !ColoIsNoiseSignal(message))
                 ColoTraceLog($"HEARD signal '{message}' from {emitter?.Name} (0x{emitter?.Guid}:{emitter?.WeenieClassId}) dist={(emitter?.Location != null && WorldObject.Location != null ? emitter.Location.DistanceTo(WorldObject.Location).ToString("0.0") : "?")} busy={IsBusy}");
 
             TryLocalSignal(emitter, message, 0);
@@ -2499,7 +2583,12 @@ namespace ACE.Server.WorldObjects.Managers
         // for objects in the Colosseum landblocks (0x00AF-0x00B6). Toggle in-game with @colotrace.
         // Lines start with [COLOTRACE] so they can be searched/filtered in the log.
         // ------------------------------------------------------------------------------------------
-        public static bool ColoTrace = true;
+        public static bool ColoTrace = false;   // off by default; toggle in-game with @colotrace
+
+        // signals that fan out to every object in a room (the hourly teardown broadcast) and bury the
+        // useful wave trace under tens of thousands of lines - skip them in the HEARD logging
+        private static readonly HashSet<string> ColoNoiseSignals = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "ColoSelfDestruct" };
+        private static bool ColoIsNoiseSignal(string message) => message != null && ColoNoiseSignals.Contains(message);
 
         public static bool IsInColo(WorldObject wo)
         {
@@ -2517,6 +2606,11 @@ namespace ACE.Server.WorldObjects.Managers
 
             // idle heartbeat emotes on monsters are just animations - skip them, keep coordinator heartbeats
             if (emoteSet.Category == EmoteCategory.HeartBeat && !IsColoCoordinator)
+                return false;
+
+            // a coordinator with no wave running is just idling - skip its heartbeat cascade too, so the
+            // trace only shows coordinator heartbeats while a wave is actually in progress in that room
+            if (emoteSet.Category == EmoteCategory.HeartBeat && IsColoCoordinator && coloLastWaveSignal == null)
                 return false;
 
             return true;
@@ -2539,11 +2633,18 @@ namespace ACE.Server.WorldObjects.Managers
             if (!IsBusy)
             {
                 if (attempt > 0)
-                    log.Warn($"[SIGNAL] {WorldObject.Name} (0x{WorldObject.Guid}:{WorldObject.WeenieClassId}) received delayed signal '{message}' after {attempt} retries.");
+                    if (ColoTrace) log.Warn($"[SIGNAL] {WorldObject.Name} (0x{WorldObject.Guid}:{WorldObject.WeenieClassId}) received delayed signal '{message}' after {attempt} retries.");
 
                 ExecuteEmoteSet(EmoteCategory.ReceiveLocalSignal, message, emitter);
                 return;
             }
+
+            // Mass fan-out signals (the ColoSelfDestruct teardown) must never be retried. They are broadcast
+            // to every object in the arena at once, so retrying each busy listener up to SignalRetryMax times
+            // feeds the self-sustaining ColoSelfDestruct storm. One delivery attempt is enough for a teardown;
+            // if the listener is busy, skip it rather than scheduling 40 retries.
+            if (ColoIsNoiseSignal(message))
+                return;
 
             // only bother retrying if this object actually listens for this signal
             if (GetEmoteSet(EmoteCategory.ReceiveLocalSignal, message, useRNG: false) == null)
@@ -2551,7 +2652,7 @@ namespace ACE.Server.WorldObjects.Managers
 
             if (attempt >= SignalRetryMax)
             {
-                log.Error($"[SIGNAL] {WorldObject.Name} (0x{WorldObject.Guid}:{WorldObject.WeenieClassId}) DROPPED signal '{message}' - still busy after {attempt} retries.");
+                if (ColoTrace) log.Error($"[SIGNAL] {WorldObject.Name} (0x{WorldObject.Guid}:{WorldObject.WeenieClassId}) DROPPED signal '{message}' - still busy after {attempt} retries.");
                 return;
             }
 
