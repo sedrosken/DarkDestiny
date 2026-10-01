@@ -67,6 +67,11 @@ namespace ACE.Server.Network
         }
 
 
+        /// <summary>
+        /// True if this session exceeded ip_account_limit for its IP at world entry and is confined to the Abandoned Mine
+        /// </summary>
+        public bool IpRestricted { get; set; }
+
         public uint AccountId { get; private set; }
 
         public string Account { get; private set; }

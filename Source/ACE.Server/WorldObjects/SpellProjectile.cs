@@ -426,7 +426,7 @@ namespace ACE.Server.WorldObjects
                     if (LandblockManager.CurrentlyTickingLandblockGroupsMultiThreaded)
                     {
                         // Ok... if we got here, we're likely in the parallel landblock physics processing.
-                        if (ProjectileSource.CurrentLandblock == null || ProjectileSource.CurrentLandblock == null || ProjectileSource.CurrentLandblock.CurrentLandblockGroup != target.CurrentLandblock.CurrentLandblockGroup)
+                        if (ProjectileSource.CurrentLandblock == null || target.CurrentLandblock == null || ProjectileSource.CurrentLandblock.CurrentLandblockGroup != target.CurrentLandblock.CurrentLandblockGroup)
                             threadSafe = false;
                     }
 

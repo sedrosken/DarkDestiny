@@ -260,6 +260,19 @@ namespace ACE.Server.Network.Managers
             }
         }
 
+        public static List<Session> GetSessionsByAddress(IPAddress address)
+        {
+            sessionLock.EnterReadLock();
+            try
+            {
+                return sessionMap.Where(s => s != null && s.EndPointC2S.Address.Equals(address)).ToList();
+            }
+            finally
+            {
+                sessionLock.ExitReadLock();
+            }
+        }
+
         public static Session FindOrCreateSession(ConnectionListener connectionListener, IPEndPoint endPoint)
         {
             Session session;

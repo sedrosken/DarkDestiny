@@ -36,7 +36,11 @@ namespace ACE.Server.WorldObjects
 
             // handle proc spells for weapon
             // this could be a melee weapon, or a missile launcher
-            if (weapon != null && weapon.HasProc && weapon.ProcSpellSelfTargeted == selfTarget)
+            // for thrown weapons (ie. phials), weapon is ProjectileLauncher -- the still-equipped
+            // original of the same weenie as this flying projectile clone, carrying the identical
+            // ProcSpell already fired above. Skip it here so thrown weapons don't proc twice per hit.
+            if (weapon != null && weapon != this && weapon.WeenieClassId != WeenieClassId
+                && weapon.HasProc && weapon.ProcSpellSelfTargeted == selfTarget)
             {
                 // weapon
                 weapon.TryProcItem(attacker, target, selfTarget);

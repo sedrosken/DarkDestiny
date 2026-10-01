@@ -2544,17 +2544,17 @@ namespace ACE.Server.WorldObjects
 
                     // verify skill level - current / buffed
                     var skill = GetCreatureSkill(ConvertToMoASkill((Skill)skillOrAttribute), false);
-                    if (skill.Current < difficulty)
+                    if ((skill?.Current ?? 0) < difficulty)
                         return WeenieError.SkillTooLow;
-                    break;
+                break;
 
                 case WieldRequirement.RawSkill:
 
                     // verify skill level - base
                     skill = GetCreatureSkill(ConvertToMoASkill((Skill)skillOrAttribute), false);
-                    if (skill.Base < difficulty)
+                    if ((skill?.Base ?? 0) < difficulty)
                         return WeenieError.SkillTooLow;
-                    break;
+                break;
 
                 case WieldRequirement.Attrib:
 
@@ -2599,9 +2599,9 @@ namespace ACE.Server.WorldObjects
 
                     // verify skill is trained / specialized
                     skill = GetCreatureSkill(ConvertToMoASkill((Skill)skillOrAttribute), false);
-                    if ((int)skill.AdvancementClass < difficulty)
+                    if (skill == null || (int)skill.AdvancementClass < difficulty)
                         return WeenieError.SkillTooLow;
-                    break;
+                break;
 
                 case WieldRequirement.IntStat:      // unused in PY16
 

@@ -157,8 +157,8 @@ namespace ACE.Server.WorldObjects
                 return false;
 
             if (WeenieType == WeenieType.Missile || WeenieType == WeenieType.Ammunition || WeenieType == WeenieType.ProjectileSpell || WeenieType == WeenieType.GamePiece
-                || WeenieType == WeenieType.Pet || WeenieType == WeenieType.CombatPet)
-                return false;
+                || this is Pet)   // was: WeenieType == WeenieType.Pet || WeenieType == WeenieType.CombatPet
+            return false;
 
             if (WeenieType == WeenieType.Corpse && this is Corpse corpse && corpse.IsMonster)
                 return false;
