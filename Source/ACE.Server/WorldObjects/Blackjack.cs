@@ -265,6 +265,7 @@ namespace ACE.Server.WorldObjects
         private static void BeginHand(Game game)
         {
             if (!Alive(game)) return;
+            UpdateBoard(game);   // show the hand that's now active (split hand 2, etc.)
 
             var hand = game.ActiveHand;
             var player = game.Player;
