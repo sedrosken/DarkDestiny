@@ -1381,7 +1381,7 @@ namespace ACE.Server.WorldObjects
         }
 
         private const double slowTickSeconds = 1.0;
-        private double nextSlowTickTime;
+        protected double nextSlowTickTime;
 
         /// <summary>
         /// Called 1x per second
@@ -1394,7 +1394,8 @@ namespace ACE.Server.WorldObjects
 
             if (P_PetOwner?.PhysicsObj == null)
             {
-                log.Error($"{Name} ({Guid}).SlowTick() - P_PetOwner: {P_PetOwner}, P_PetOwner.PhysicsObj: {P_PetOwner?.PhysicsObj}");
+                if (!(this is Companion))   // joke companions: owner logged off, expected
+                    log.Error($"{Name} ({Guid}).SlowTick() - P_PetOwner: {P_PetOwner}, P_PetOwner.PhysicsObj: {P_PetOwner?.PhysicsObj}");
                 Destroy();
                 return;
             }

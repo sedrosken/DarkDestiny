@@ -401,7 +401,7 @@ namespace ACE.Server.WorldObjects
             public string ConfirmationMessage;
         }
 
-        public static InjectSpellData InjectSpell(WorldObject target, SpellId spellToAddId, bool requireConfirmation = false, bool confirmed = false)
+        public static InjectSpellData InjectSpell(WorldObject target, SpellId spellToAddId, bool requireConfirmation = false, bool confirmed = false, bool ignoreSlotLimit = false)
         {
             InjectSpellData data = new InjectSpellData();
             data.Target = target;
@@ -536,7 +536,7 @@ namespace ACE.Server.WorldObjects
             RemoveTinkerSpellsFromList(data.Target.TinkerLog, data.LifeCreatureEnchantments);
             RemoveTinkerSpellsFromList(data.Target.TinkerLog, data.Cantrips);
 
-            if (spellToReplace == null && (data.Target.ExtraSpellsCount ?? 0) >= data.Target.MaxExtraSpellsCount)
+            if (!ignoreSlotLimit && spellToReplace == null && (data.Target.ExtraSpellsCount ?? 0) >= data.Target.MaxExtraSpellsCount) // ignoreSlotLimit: Dark Destiny Spell Imprinting
             {
                 data.Result = InjectSpellResult.TargetCannotContainMoreSpells;
                 return data;
@@ -568,7 +568,7 @@ namespace ACE.Server.WorldObjects
                 return ContinueInjectSpell(data);
         }
 
-        private static InjectSpellData ContinueInjectSpell(InjectSpellData data)
+        public static InjectSpellData ContinueInjectSpell(InjectSpellData data)
         {
             if (data.IsProc)
             {

@@ -192,7 +192,7 @@ namespace ACE.Server.WorldObjects.Managers
 
             if (refreshSpell == null)
             {
-                var newEntry = BuildEntry(spell, caster, weapon, equip);
+                var newEntry = BuildEntry(spell, caster, weapon, equip, isWeaponSpell);
                 newEntry.LayerId = result.NextLayerId;
                 WorldObject.Biota.PropertiesEnchantmentRegistry.AddEnchantment(newEntry, WorldObject.BiotaDatabaseLock);
 
@@ -209,6 +209,8 @@ namespace ACE.Server.WorldObjects.Managers
                 var duration = spell.Duration;
                 if (caster is Player player && player.AugmentationIncreasedSpellDuration > 0 && !isWeaponSpell && spell.DotDuration == 0)
                     duration *= 1.0f + player.AugmentationIncreasedSpellDuration * 0.2f;
+
+                duration *= GetApprenticeDurationMod(spell, caster, isWeaponSpell); // Dark Destiny: Apprentice perks
 
                 var timeRemaining = refreshSpell.Duration + refreshSpell.StartTime;
 
@@ -229,6 +231,27 @@ namespace ACE.Server.WorldObjects.Managers
         }
 
         /// <summary>
+        /// Dark Destiny: Adja's / Harlune's / Celcynd's Apprentice
+        /// A player with Creature, Life or Item specialized gets double duration on spells they cast from that school.
+        /// Not applied to wand/item casts or DoTs.
+        /// </summary>
+        public static float GetApprenticeDurationMod(Spell spell, WorldObject caster, bool isWeaponSpell)
+        {
+            if (isWeaponSpell || spell.DotDuration != 0 || caster is not Player player)
+                return 1.0f;
+
+            var school = spell.School;
+            if (school != MagicSchool.CreatureEnchantment && school != MagicSchool.LifeMagic && school != MagicSchool.ItemEnchantment)
+                return 1.0f;
+
+            var skill = player.GetCreatureSkill(school);
+            if (skill != null && skill.AdvancementClass == SkillAdvancementClass.Specialized)
+                return 2.0f;
+
+            return 1.0f;
+        }
+
+        /// <summary>
         /// Builds an enchantment registry entry from a spell ID
         /// </summary>
         private PropertiesEnchantmentRegistry BuildEntry(Spell spell, WorldObject caster = null, WorldObject weapon = null, bool equip = false, bool isWeaponSpell = false)
@@ -246,6 +269,8 @@ namespace ACE.Server.WorldObjects.Managers
 
                 if (caster is Player player && player.AugmentationIncreasedSpellDuration > 0 && !isWeaponSpell && spell.DotDuration == 0)
                     entry.Duration *= 1.0f + player.AugmentationIncreasedSpellDuration * 0.2f;
+
+                entry.Duration *= GetApprenticeDurationMod(spell, caster, isWeaponSpell); // Dark Destiny: Apprentice perks
             }
             else
             {

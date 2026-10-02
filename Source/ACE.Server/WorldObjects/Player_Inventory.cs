@@ -3931,6 +3931,10 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            // Token of Companionship handed to the companion NPC
+            if (Companions.TryHandleGive(this, target, item))
+                return;
+
             if (item is PetDevice petDevice && petDevice.Pet is not null)
             {
                 Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, "You must unsummon your pet before you can transfer this item!"));

@@ -67,6 +67,10 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            // Dark Destiny: Spell Imprinting (infused quill -> scroll, imprint -> item)
+            if (SpellImprinting.TryHandleUse(this, sourceItem, target))
+                return;
+
             if ((sourceItem.TacticAndTechniqueId ?? 0) != (int)TacticAndTechniqueType.Sneak && (sourceItem.TacticAndTechniqueId ?? 0) != (int)TacticAndTechniqueType.Misdirect && target.WeenieType != WeenieType.Door)
                 EndSneaking();
 
@@ -289,6 +293,12 @@ namespace ACE.Server.WorldObjects
             if (item.WeenieClassId == 9870776)
             {
                 TryUnlockGatedTrinket();
+                SendUseDoneEvent();
+                return;
+            }
+            // Joke companion NPC ("blackjack and hookers")
+            if (success && Companions.TryHandleUse(this, item))
+            {
                 SendUseDoneEvent();
                 return;
             }

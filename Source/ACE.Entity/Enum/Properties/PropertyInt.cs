@@ -713,6 +713,18 @@ namespace ACE.Entity.Enum.Properties
         /// player spell hit to repeat the spell's damage on one creature near the struck target.
         /// </summary>
         SpellChainImbue                          = 10039,
+
+        /// <summary>
+        /// Dark Destiny Spell Imprinting: set on an item once an imprint has been applied (value = spell id).
+        /// Presence blocks a second imprint (one imprint per item).
+        /// </summary>
+        SpellImprinted                           = 10040,
+
+        /// <summary>
+        /// Dark Destiny Spell Imprinting: on a Spell Imprint, the wcid of the infused quill that made it
+        /// (Infliction-made Life imprints are caster-only).
+        /// </summary>
+        SpellImprintQuill                        = 10041,
     }
 
     public static class PropertyIntExtensions

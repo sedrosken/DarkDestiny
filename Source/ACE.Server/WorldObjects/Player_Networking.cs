@@ -163,6 +163,9 @@ namespace ACE.Server.WorldObjects
 
             RestoreDotsAndHots();
 
+            // respawn joke companions that are still within their 24h (or steal for ones that expired offline)
+            Companions.OnLogin(this);
+
             log.DebugFormat("[LOGIN] Account {0} entered the world with character {1} (0x{2}) at {3}.", Account.AccountName, Name, Guid, DateTime.Now.ToCommonString());
         }
 

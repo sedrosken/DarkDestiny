@@ -44,6 +44,7 @@ namespace ACE.Server.WorldObjects
         private const float PlayerRange = 15f;                  // player must be this close to the dealer to act
         private const double IdleTimeout = 90;                  // seconds without input -> hand forfeited
         private const int DeckCount = 6;
+        private const int MaxHands = 4;                         // re-split up to 4 hands total
         private const float SpeechRange = 20f;
         private const string ControlsHint = "Pull the lever to HIT, press the button to STAND.";
 
@@ -246,6 +247,7 @@ namespace ACE.Server.WorldObjects
                 var win = game.Hands[0].Bet * 3 / 2;
                 Pay(game, game.Free ? win : game.Hands[0].Bet + win);
                 Say(game.Dealer, $"BLACKJACK! Pays {win} chips.");
+                Companions.OnBlackjackWins(game.Player, game.Dealer, 1);
                 Motion(game.Dealer, MotionCommand.ClapHands);
                 PlaySound(game, ACE.Entity.Enum.Sound.RaiseTrait);
                 EndGame(game);
@@ -265,6 +267,7 @@ namespace ACE.Server.WorldObjects
         private static void BeginHand(Game game)
         {
             if (!Alive(game)) return;
+
             UpdateBoard(game);   // show the hand that's now active (split hand 2, etc.)
 
             var hand = game.ActiveHand;
@@ -288,8 +291,8 @@ namespace ACE.Server.WorldObjects
 
             var canAfford = CountChips(player) >= hand.Bet;
 
-            // split: first hand only, one split max, same value
-            if (game.Hands.Count == 1 && canAfford && Value(hand.Cards[0]) == Value(hand.Cards[1]))
+            // split: same value, up to MaxHands hands total (split aces can't be re-split)
+            if (game.Hands.Count < MaxHands && canAfford && Value(hand.Cards[0]) == Value(hand.Cards[1]))
             {
                 game.AwaitingAnswer = true;
                 Ask(player, game.Dealer, $"You have a pair. Split for another {hand.Bet} chips?",
@@ -339,7 +342,7 @@ namespace ACE.Server.WorldObjects
 
             first.Cards.Add(shoe.Draw());
             second.Cards.Add(shoe.Draw());
-            game.Hands.Add(second);
+            game.Hands.Insert(game.Active + 1, second);   // new hand plays right after this one
 
             Say(game.Dealer, aces ? "Split aces: one card each." : "Hands split.");
             Touch(game);
@@ -532,6 +535,8 @@ namespace ACE.Server.WorldObjects
                     losses++;
                 }
             }
+
+            Companions.OnBlackjackWins(game.Player, game.Dealer, wins);
 
             if (wins > losses)
             {

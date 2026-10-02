@@ -927,6 +927,10 @@ namespace ACE.Server.WorldObjects
             {
                 case CastingPreCheckStatus.Success:
 
+                    // Dark Destiny: specialized school -> spell performs at next level's values
+                    if (!isWeaponSpell)
+                        spell = GetSpecializationUpgradedSpell(spell);
+
                     if ((spell.Flags & SpellFlags.FellowshipSpell) == 0)
                     {
                         if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
@@ -1020,6 +1024,35 @@ namespace ACE.Server.WorldObjects
 
             if (finishCast)
                 FinishCast();
+        }
+
+        /// <summary>
+        /// Dark Destiny specialization perk:
+        /// if the player has the spell's school specialized, returns the next-level version of the spell
+        /// (Level I -> II ... VII -> VIII). Returns the original spell if there is no next level.
+        /// </summary>
+        public Spell GetSpecializationUpgradedSpell(Spell spell)
+        {
+            var skill = GetCreatureSkill(spell.School);
+            if (skill == null || skill.AdvancementClass != SkillAdvancementClass.Specialized)
+                return spell;
+
+            var spellId = (SpellId)spell.Id;
+            var level = SpellLevelProgression.GetSpellLevel(spellId);
+            if (level <= 0)
+                return spell;
+
+            var nextId = SpellLevelProgression.GetSpellAtLevel(spellId, level + 1);
+            if (nextId == SpellId.Undef || nextId == spellId)
+                return spell;
+
+            var nextSpell = new Spell(nextId);
+            if (nextSpell.NotFound)
+                return spell;
+
+            nextSpell.OverrideSchool = spell.OverrideSchool;
+            nextSpell.IntensityMod = spell.IntensityMod;
+            return nextSpell;
         }
 
         public void FinishCast()
