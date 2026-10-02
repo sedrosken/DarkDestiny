@@ -67,11 +67,6 @@ namespace ACE.Server.Network
         }
 
 
-        /// <summary>
-        /// True if this session exceeded ip_account_limit for its IP at world entry and is confined to the Abandoned Mine
-        /// </summary>
-        public bool IpRestricted { get; set; }
-
         public uint AccountId { get; private set; }
 
         public string Account { get; private set; }
@@ -362,6 +357,9 @@ namespace ACE.Server.Network
             }
 
             NetworkManager.RemoveSession(this);
+
+            // this account may have been holding one of its IP's outside slots; let pending over-limit players re-check
+            IpAccountLimiter.RecheckPending(EndPointC2S.Address);
 
             // This is a temp fix to mark the Session.Network portion of the Session as released
             // What this means is that we will release any network related resources, as well as avoid taking on additional resources

@@ -1,8 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 using ACE.Entity.Enum;
+using ACE.Server.Entity.Actions;
 using ACE.Server.Managers;
 
 using Position = ACE.Entity.Position;
@@ -10,46 +11,81 @@ using Position = ACE.Entity.Position;
 namespace ACE.Server.Network.Managers
 {
     /// <summary>
-    /// Limits how many accounts per IP may roam the world at once. Extra accounts are confined to the
-    /// Abandoned Mine landblock and are booted if they try to leave it.
+    /// Limits how many accounts from one IP may be OUTSIDE the Abandoned Mine landblock at the same time.
+    /// Accounts inside the mine never count against the limit and are never booted.
     /// </summary>
     public static class IpAccountLimiter
     {
-        // portalabandonedmine (weenie 1595) destination in the world DB: 0x01C9022D
+        // Abandoned Mine ("sub") landblock. portalabandonedmine lands at 0x01C9022D, /sub lands at 0x01C90234.
         public const uint PenLandblock = 0x01C9;
 
-        public static readonly Position MinePen = new Position(0x01C9022D, 72.9f, -30.2f, 0f, 0f, 0f, -0.990268f, 0.139173f);
+        // same spot the /sub command uses
+        public static readonly Position MinePen = new Position(0x01C90234, 75.240158f, -30.138903f, 0.005f, 0f, 0f, -0.998830f, -0.048363f);
 
-        public const string BootMessage = " because too many accounts are connected from your IP; additional accounts must stay in the Abandoned Mine";
+        /// <summary>
+        /// Serializes "decide whether a player is over the limit, then mark them" so two players can't both claim the last slot.
+        /// </summary>
+        public static readonly object Gate = new object();
 
         public static bool IsPenLandblock(uint cell) => (cell >> 16) == PenLandblock;
 
-        /// <summary>
-        /// Called once per login on the world thread (WorldManager.DoPlayerEnterWorld),
-        /// so two accounts logging in at the same moment can't race each other.
-        /// </summary>
-        public static bool Evaluate(Session session)
+        public static bool IsExempt(Session session)
         {
             if (!PropertyManager.GetBool("ip_account_limit_enabled").Item)
-                return false;
+                return true;
 
             if (session.AccessLevel > AccessLevel.Player) // never restrict staff
-                return false;
-
-            var ip = session.EndPointC2S.Address;
+                return true;
 
             var whitelist = PropertyManager.GetString("ip_account_limit_whitelist").Item
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (whitelist.Contains(ip.ToString()))
+
+            return whitelist.Contains(session.EndPointC2S.Address.ToString());
+        }
+
+        /// <summary>
+        /// True if letting this session stay outside the mine would put its IP over ip_account_limit.
+        /// Counts OTHER in-world, non-staff accounts on the same IP that are currently outside the mine landblock
+        /// and are not themselves in an over-limit grace period. Players inside the mine are never counted.
+        /// </summary>
+        public static bool IsOverLimit(Session session)
+        {
+            if (IsExempt(session))
                 return false;
 
             var limit = PropertyManager.GetLong("ip_account_limit").Item;
 
-            // unrestricted, in-world accounts on this IP (excluding ourselves)
-            var free = NetworkManager.GetSessionsByAddress(ip)
-                .Count(s => s != session && s.Player != null && !s.IpRestricted && s.AccountId != session.AccountId);
+            var outside = NetworkManager.GetSessionsByAddress(session.EndPointC2S.Address)
+                .Count(s => s != session
+                         && s.AccountId != session.AccountId
+                         && s.AccessLevel == AccessLevel.Player
+                         && s.Player != null
+                         && s.Player.IpOverLimitSince == null
+                         && !IsPenLandblock(s.Player.Location.Cell));
 
-            return free >= limit;
+            return outside >= limit;
+        }
+
+        /// <summary>
+        /// A slot may have opened on this IP (an account returned to the mine or logged out).
+        /// Ask every player on the IP that is in an over-limit grace period to re-check, oldest first.
+        /// Each re-check runs on that player's own thread and takes the Gate, so only as many are cleared as there are free slots.
+        /// </summary>
+        public static void RecheckPending(IPAddress address)
+        {
+            var pending = NetworkManager.GetSessionsByAddress(address)
+                .Where(s => s.Player != null && s.Player.IpOverLimitSince != null)
+                .OrderBy(s => s.Player.IpOverLimitSince)
+                .Select(s => s.Player)
+                .ToList();
+
+            foreach (var player in pending)
+            {
+                var p = player;
+                var chain = new ActionChain();
+                chain.AddAction(p, () => p.IpLimitReevaluate());
+                chain.EnqueueChain();
+            }
         }
     }
 }

@@ -562,7 +562,7 @@ namespace ACE.Server.Managers
 
         public static readonly ReadOnlyDictionary<string, Property<bool>> DefaultBooleanProperties =
             DictOf(
-                ("ip_account_limit_enabled", new Property<bool>(false, "if TRUE, only ip_account_limit accounts per IP may be in the world; extras are confined to the Abandoned Mine and booted if they leave it")),
+                ("ip_account_limit_enabled", new Property<bool>(false, "if TRUE, at most ip_account_limit accounts per IP may be outside the Abandoned Mine landblock at once; extras are booted after ip_account_limit_grace_seconds unless they return")),
                 ("account_login_boots_in_use", new Property<bool>(true, "if FALSE, oldest connection to account is not booted when new connection occurs")),
                 ("advanced_combat_pets", new Property<bool>(false, "(non-retail function) If enabled, Combat Pets can cast spells")),
                 ("advocate_fane_auto_bestow", new Property<bool>(false, "If enabled, Advocate Fane will automatically bestow new advocates to advocate_fane_auto_bestow_level")),
@@ -707,7 +707,8 @@ namespace ACE.Server.Managers
                 ("chat_requires_player_level", new Property<long>(0, "the level a player is required to have for global chat privileges")),
                 ("corpse_spam_limit", new Property<long>(15, "the number of corpses a player is allowed to leave on a landblock at one time")),
                 ("default_subscription_level", new Property<long>(1, "retail defaults to 1, 1 = standard subscription (same as 2 and 3), 4 grants ToD pre-order bonus item Asheron's Benediction")),
-                ("ip_account_limit", new Property<long>(2, "max concurrent unrestricted accounts per IP when ip_account_limit_enabled is TRUE")),
+                ("ip_account_limit", new Property<long>(2, "max accounts per IP allowed outside the Abandoned Mine at the same time when ip_account_limit_enabled is TRUE")),
+                ("ip_account_limit_grace_seconds", new Property<long>(30, "seconds an over-limit account may stay outside the Abandoned Mine before being disconnected; returning (e.g. /sub) cancels it")),
                 ("fellowship_even_share_level", new Property<long>(50, "level when fellowship XP sharing is no longer restricted")),
                 ("mansion_min_rank", new Property<long>(6, "overrides the default allegiance rank required to own a mansion")),
                 ("max_chars_per_account", new Property<long>(11, "retail defaults to 11, client supports up to 20")),

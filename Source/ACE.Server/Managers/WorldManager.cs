@@ -162,8 +162,6 @@ namespace ACE.Server.Managers
 
             session.SetPlayer(player);
 
-            session.IpRestricted = IpAccountLimiter.Evaluate(session);
-
             if (stripAdminProperties) // continue stripping properties
             {
                 player.CloakStatus = CloakStatus.Undef;
@@ -226,11 +224,11 @@ namespace ACE.Server.Managers
             if (olthoiPlayerReturnedToLifestone)
                 session.Player.Location = new Position(session.Player.Sanctuary);
 
-            if (session.IpRestricted && !IpAccountLimiter.IsPenLandblock(session.Player.Location.Cell))
+            if (!IpAccountLimiter.IsPenLandblock(session.Player.Location.Cell) && IpAccountLimiter.IsOverLimit(session))
             {
                 session.Player.Location = new Position(IpAccountLimiter.MinePen);
                 session.Network.EnqueueSend(new GameMessageSystemChat(
-                    "Too many accounts from your IP are online. This account is confined to the Abandoned Mine.",
+                    "Too many accounts from your IP are outside the Abandoned Mine, so you have been placed inside it.",
                     ChatMessageType.System));
             }
 

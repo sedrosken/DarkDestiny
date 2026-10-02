@@ -13,9 +13,6 @@ using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
-using ACE.Server.Network;
-using ACE.Server.Network.Enum;
-using ACE.Server.Network.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Managers;
@@ -704,14 +701,6 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public void Teleport(Position _newPosition, bool fromPortal = false)
         {
-            // IP account limit: restricted accounts are booted the moment they try to leave the Abandoned Mine.
-            // Return before any teleport state changes so the saved position stays inside the mine.
-            if (Session != null && Session.IpRestricted && !IpAccountLimiter.IsPenLandblock(_newPosition.Cell))
-            {
-                Session.Terminate(SessionTerminationReason.AccountBooted, new GameMessageBootAccount(IpAccountLimiter.BootMessage), null, "IP account limit: left Abandoned Mine landblock");
-                return;
-            }
-
             var newPosition = new Position(_newPosition);
 
             if(newPosition.PositionX == 0 && newPosition.PositionY == 0 && newPosition.Cell == 0) // Trying to catch invalid position.
@@ -819,12 +808,7 @@ namespace ACE.Server.WorldObjects
 
         public void OnTeleportComplete()
         {
-            // IP account limit backstop in case a path bypassed Teleport()
-            if (Session != null && Session.IpRestricted && !IpAccountLimiter.IsPenLandblock(Location.Cell))
-            {
-                Session.Terminate(SessionTerminationReason.AccountBooted, new GameMessageBootAccount(IpAccountLimiter.BootMessage), null, "IP account limit: outside Abandoned Mine landblock");
-                return;
-            }
+            IpLimitCheck(); // IP account limit: starts/cancels the over-limit boot timer
 
             if (CurrentLandblock != null && !CurrentLandblock.CreateWorldObjectsCompleted)
             {
