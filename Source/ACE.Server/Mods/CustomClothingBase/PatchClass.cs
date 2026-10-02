@@ -16,7 +16,22 @@ namespace CustomClothingBase;
 [HarmonyPatch]
 public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : BasicPatch<Settings>(mod, settingsName)
 {
-    private static JsonSerializerOptions _jsonSettings;
+    //private static JsonSerializerOptions _jsonSettings;
+    private static JsonSerializerOptions _jsonSettings => _jsonSettingsLazy.Value;
+	private static readonly Lazy<JsonSerializerOptions> _jsonSettingsLazy = new(() =>
+	{
+    	var o = new JsonSerializerOptions
+    	{
+        	WriteIndented = true,
+        	AllowTrailingCommas = true,
+        	NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString,
+        	PropertyNameCaseInsensitive = true,
+    	};
+    	o.Converters.Add(new HexUintJsonConverter());
+    	o.Converters.Add(new HexKeyDictionaryConverter<uint, ClothingBaseEffect>());
+    	o.Converters.Add(new HexKeyDictionaryConverter<uint, ClothingBaseEffectEx>());
+    	return o;
+	});
 
     static JsonFileWatcher _contentWatcher;
     static string ModDir => ModManager.GetModContainerByName("CustomClothingBase").FolderPath;
@@ -29,16 +44,16 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
     {
         Settings = SettingsContainer.Settings;
 
-        _jsonSettings = new()
-        {
-            WriteIndented = true,
-            AllowTrailingCommas = true,
-            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString,
-            PropertyNameCaseInsensitive = true,
-        };
-        _jsonSettings.Converters.Add(new HexUintJsonConverter());
-        _jsonSettings.Converters.Add(new HexKeyDictionaryConverter<uint, ClothingBaseEffect>());
-        _jsonSettings.Converters.Add(new HexKeyDictionaryConverter<uint, ClothingBaseEffectEx>());
+        //_jsonSettings = new()
+        //{
+        //    WriteIndented = true,
+        //    AllowTrailingCommas = true,
+        //    NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString,
+        //    PropertyNameCaseInsensitive = true,
+        //};
+        //_jsonSettings.Converters.Add(new HexUintJsonConverter());
+        //_jsonSettings.Converters.Add(new HexKeyDictionaryConverter<uint, ClothingBaseEffect>());
+        //_jsonSettings.Converters.Add(new HexKeyDictionaryConverter<uint, ClothingBaseEffectEx>());
               
         if (Settings.WatchContent)
         {
