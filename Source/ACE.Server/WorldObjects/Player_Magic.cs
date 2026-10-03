@@ -1050,6 +1050,14 @@ namespace ACE.Server.WorldObjects
             if (nextSpell.NotFound)
                 return spell;
 
+                        // Buffs keep their own spell id/name (VTank needs to see the spell it cast) and just take the next level's power
+            if (spell.MetaSpellType == SpellType.Enchantment)
+            {
+                spell.OverrideStatModVal = nextSpell.StatModVal;
+                spell.Duration = nextSpell.Duration;
+                return spell;
+            }
+
             nextSpell.OverrideSchool = spell.OverrideSchool;
             nextSpell.IntensityMod = spell.IntensityMod;
             return nextSpell;

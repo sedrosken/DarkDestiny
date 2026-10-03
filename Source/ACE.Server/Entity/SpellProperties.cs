@@ -260,7 +260,8 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The amount to modify a stat
         /// </summary>
-        public float StatModVal { get => _spell.StatModVal ?? 0.0f; }
+        public float? OverrideStatModVal; // Dark Destiny: specialization perk (next-level power, same spell id)
+        public float StatModVal { get => OverrideStatModVal ?? _spell.StatModVal ?? 0.0f; }
 
         /// <summary>
         /// The damage type for this spell
