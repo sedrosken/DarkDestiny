@@ -209,8 +209,14 @@ namespace ACE.Server.WorldObjects
         private static bool IsWeapon(WorldObject t) =>
             t.ItemType == ItemType.MeleeWeapon || t.ItemType == ItemType.MissileWeapon || t.ItemType == ItemType.Caster;
 
-        private static bool IsEligible(WorldObject target, MagicSchool school, int quillWcid)
+        private static bool IsEligible(WorldObject target, Spell spell, int quillWcid)
         {
+            var school = spell.School;
+
+            // harmful Creature / Life spells (debuffs) would hit the wearer if worn -> casters only, as the castable spell
+            if (spell.IsHarmful && (school == MagicSchool.CreatureEnchantment || school == MagicSchool.LifeMagic))
+                return target.ItemType == ItemType.Caster;
+
             switch (school)
             {
                 case MagicSchool.WarMagic:
@@ -257,14 +263,15 @@ namespace ACE.Server.WorldObjects
             var school = spell.School;
             var quillWcid = imprint.GetProperty(PropertyInt.SpellImprintQuill) ?? 0;
 
-            if (!IsEligible(target, school, quillWcid))
+            if (!IsEligible(target, spell, quillWcid))
             {
                 Msg(player, $"{spell.Name} cannot be imprinted onto the {target.NameWithMaterial}.");
                 return;
             }
 
-            // casters get War / Life imprints as their castable built-in spell (replaces any existing one)
-            var castable = target.ItemType == ItemType.Caster && (school == MagicSchool.WarMagic || school == MagicSchool.LifeMagic);
+            // casters get War / Life / harmful Creature imprints as their castable built-in spell (replaces any existing one)
+            var castable = target.ItemType == ItemType.Caster && (school == MagicSchool.WarMagic || school == MagicSchool.LifeMagic
+                || (school == MagicSchool.CreatureEnchantment && spell.IsHarmful));
 
             SpellTransferScroll.InjectSpellData data = default;
             if (!castable)
