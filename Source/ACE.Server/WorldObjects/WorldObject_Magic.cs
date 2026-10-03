@@ -627,7 +627,7 @@ namespace ACE.Server.WorldObjects
                         targetName = casterCheck ? "yourself" : "you";
 
                     if(showMsg)
-                        player.SendChatMessage(player, $"{casterName} {(spell.IsQuickcastSpell ? "quickcast" : "cast")}{(casterCheck ? "" : "s")} {spell.NameWithMetaspellAdjectivesWithoutQuickcast} on {targetName}{suffix}.", ChatMessageType.Magic);
+                        player.SendChatMessage(player, $"{casterName} {(spell.IsQuickcastSpell ? "quickcast" : "cast")}{(casterCheck ? "" : "s")} {spell.NameWithMetaspellAdjectivesWithoutQuickcast} on {targetName}{suffix}", ChatMessageType.Magic);
                 }
             }
 
