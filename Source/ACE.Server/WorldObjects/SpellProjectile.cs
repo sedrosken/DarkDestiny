@@ -1059,7 +1059,10 @@ namespace ACE.Server.WorldObjects
             {
                 ShowInfo(target, heritageMod, sneakAttackMod, damageRatingMod, damageResistRatingMod, critDamageRatingMod, critDamageResistRatingMod, pkDamageRatingMod, pkDamageResistRatingMod, damage);
             }
-
+            if (sourceCreature is Pet && Spell.Category != SpellCategory.StaminaLowering && Spell.Category != SpellCategory.ManaLowering)
+            {
+                Pet.TryReportPetDamage(sourceCreature, target, amount, Spell.DamageType, critical, Spell.NameWithMetaspellAdjectives);
+            }
             if (target.IsAlive)
             {
                 string verb = null, plural = null;

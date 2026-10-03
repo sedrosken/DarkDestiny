@@ -1011,7 +1011,7 @@ namespace ACE.Server.WorldObjects
         /// If the attacker is a pet whose owner has "/pet damage" on, shows the owner a combat
         /// line for the hit. Safe to call for any attacker/amount -- it self-filters.
         /// </summary>
-        public static void TryReportPetDamage(WorldObject attacker, Creature target, float amount, DamageType damageType)
+        public static void TryReportPetDamage(WorldObject attacker, Creature target, float amount, DamageType damageType, bool critical = false, string via = null)
         {
             if (!(attacker is Pet pet) || target == null || amount <= 0)
                 return;
@@ -1026,8 +1026,11 @@ namespace ACE.Server.WorldObjects
             if (petName.StartsWith(prefix))
                 petName = petName.Substring(prefix.Length);
 
+            var critMsg = critical ? "Critical hit! " : "";
+            var viaMsg = string.IsNullOrEmpty(via) ? "" : $" with {via}";
+
             owner.Session.Network.EnqueueSend(new GameMessageSystemChat(
-                $"{petName} hits {target.Name} for {(int)Math.Round(amount)} points of {damageType.GetName().ToLower()} damage.",
+                $"{critMsg}{petName} hits {target.Name} for {(int)Math.Round(amount)} points of {damageType.GetName().ToLower()} damage{viaMsg}.",
                 ChatMessageType.CombatSelf));
         }
 

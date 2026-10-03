@@ -158,7 +158,7 @@ namespace ACE.Server.WorldObjects
                                 petDmg *= combatPet.PetPowerFactor();
 
                             targetCreature.TakeDamage(this, damageEvent.DamageType, petDmg);
-
+                            Pet.TryReportPetDamage(this, targetCreature, petDmg, damageEvent.DamageType, damageEvent.IsCritical);
                             EmitSplatter(targetCreature, petDmg);
 
                             // handle Dirty Fighting

@@ -113,7 +113,7 @@ namespace ACE.Server.WorldObjects
                         if (damageEvent.HasDamage)
                         {
                             targetCreature.TakeDamage(sourceCreature, damageEvent.DamageType, damageEvent.Damage);
-
+                            Pet.TryReportPetDamage(sourceCreature, targetCreature, damageEvent.Damage, damageEvent.DamageType, damageEvent.IsCritical);
                             // blood splatter?
 
                             // handle Dirty Fighting

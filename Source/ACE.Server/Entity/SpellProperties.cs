@@ -118,12 +118,12 @@ namespace ACE.Server.Entity
                 if (OverrideDuration.HasValue)
                     return OverrideDuration.Value * IntensityMod;
 
-                if (_spell?.DotDuration != null)
+                if (PowerSpell?.DotDuration != null)
                 {
                     if (HasExtraTick)
-                        return _spell.DotDuration.Value + 5.0f;
+                        return PowerSpell.DotDuration.Value + 5.0f;
                     else
-                        return _spell.DotDuration.Value;
+                        return PowerSpell.DotDuration.Value;
                 }
                 else
                     return _spellBase.Duration * IntensityMod;
@@ -136,7 +136,7 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The DoT (damage over time) duration for the spell
         /// </summary>
-        public double DotDuration { get => _spell.DotDuration ?? 0; }
+        public double DotDuration { get => PowerSpell.DotDuration ?? 0; }
 
         /// <summary>
         /// Returns the number of ticks for a DoT spell
@@ -243,6 +243,38 @@ namespace ACE.Server.Entity
 
         public float IntensityMod; // CustomDM
 
+        // ---- Dark Destiny: specialization perk -------------------------------------------
+        // A specialized caster's spell keeps its own id / name / category / projectile / mana
+        // cost / skill difficulty, but takes its POWER numbers (damage, boost, stat mod,
+        // duration, transfer, dispel strength, ...) from the next spell level. Every
+        // power-scaling property below reads PowerSpell instead of _spell.
+
+        /// <summary>
+        /// The server-DB row the power numbers come from: the next level's row once
+        /// ApplyPowerFrom() has been called, otherwise this spell's own row.
+        /// </summary>
+        public Database.Models.World.Spell PowerSpell => _powerSpell ?? _spell;
+        private Database.Models.World.Spell _powerSpell;
+
+        /// <summary>TRUE once the specialization upgrade has been applied (guards against double-upgrade).</summary>
+        public bool IsSpecializationUpgraded { get; private set; }
+
+        /// <summary>
+        /// Makes this spell perform at <paramref name="source"/>'s power, keeping its own identity.
+        /// </summary>
+        public void ApplyPowerFrom(Spell source)
+        {
+            if (source == null || source.NotFound || IsSpecializationUpgraded)
+                return;
+
+            _powerSpell = source._spell;
+            IsSpecializationUpgraded = true;
+
+            // Duration is a DAT field (_spellBase) for plain enchantments, so override it explicitly.
+            // source.Duration already includes the DoT extra tick where applicable.
+            OverrideDuration = source.Duration;
+        }
+
         //==================================
         // Spell fields - from the server DB
         //==================================
@@ -260,8 +292,7 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The amount to modify a stat
         /// </summary>
-        public float? OverrideStatModVal; // Dark Destiny: specialization perk (next-level power, same spell id)
-        public float StatModVal { get => OverrideStatModVal ?? _spell.StatModVal ?? 0.0f; }
+                public float StatModVal { get => PowerSpell.StatModVal ?? 0.0f; }
 
         /// <summary>
         /// The damage type for this spell
@@ -271,14 +302,14 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The base amount of damage for this spell
         /// </summary>
-        public int BaseIntensity { get => _spell.BaseIntensity ?? 0; }
+        public int BaseIntensity { get => PowerSpell.BaseIntensity ?? 0; }
 
         public int MinDamage { get => (int)(BaseIntensity * IntensityMod); }
 
         /// <summary>
         /// The maximum additional daamage for this spell
         /// </summary>
-        public int Variance { get => _spell.Variance ?? 0; }
+        public int Variance { get => PowerSpell.Variance ?? 0; }
 
         public int MaxDamage { get => (int)(BaseIntensity * IntensityMod) + Variance; }
 
@@ -355,7 +386,7 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The amount of additional damage for a slayer spell
         /// </summary>
-        public float SlayerDamageBonus { get => _spell.SlayerDamageBonus ?? 0; }    // 0 = additive, or 1 = multiplier?
+        public float SlayerDamageBonus { get => PowerSpell.SlayerDamageBonus ?? 0; }    // 0 = additive, or 1 = multiplier?
 
         /// <summary>
         /// The critical chance frequency for this spell
@@ -365,7 +396,7 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The critical damage multiplier for this spell
         /// </summary>
-        public double CritMultiplier { get => _spell.CritMultiplier ?? 1.0; }    // verify default multiplier?
+        public double CritMultiplier { get => PowerSpell.CritMultiplier ?? 1.0; }    // verify default multiplier?
 
         /// <summary>
         /// If TRUE, ignores magic resistance
@@ -380,12 +411,12 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The amount of source vital to drain for a life spell
         /// </summary>
-        public float DrainPercentage { get => _spell.DrainPercentage ?? 0.0f; }
+        public float DrainPercentage { get => PowerSpell.DrainPercentage ?? 0.0f; }
 
         /// <summary>
         /// The percentage of DrainPercentage to damage a target for life projectiles
         /// </summary>
-        public float DamageRatio { get => (_spell.DamageRatio ?? 1.0f) * IntensityMod; }
+        public float DamageRatio { get => (PowerSpell.DamageRatio ?? 1.0f) * IntensityMod; }
 
         /// <summary>
         /// DamageType used by LifeMagic spells that specifies Health, Mana, or Stamina for the Boost type spells
@@ -395,14 +426,14 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The minimum amount of vital boost from a life spell
         /// </summary>
-        public int Boost { get => (int)((_spell.Boost ?? 0) * IntensityMod); }
+        public int Boost { get => (int)((PowerSpell.Boost ?? 0) * IntensityMod); }
 
         /// <summary>
         /// Boost + BoostVariance = the maximum amount of vital boost from a life spell
         /// </summary>
-        public int BoostVariance { get => _spell.BoostVariance ?? 0; }
+        public int BoostVariance { get => PowerSpell.BoostVariance ?? 0; }
 
-        public int MaxBoost { get => (int)((_spell.Boost ?? 0) * IntensityMod) + BoostVariance; }
+        public int MaxBoost { get => (int)((PowerSpell.Boost ?? 0) * IntensityMod) + BoostVariance; }
 
         /// <summary>
         /// The source vital for a life spell
@@ -417,29 +448,29 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The propotion of source vital to transfer to destination vital
         /// </summary>
-        public float Proportion { get => (_spell.Proportion ?? 1.0f) * IntensityMod; }
+        public float Proportion { get => (PowerSpell.Proportion ?? 1.0f) * IntensityMod; }
 
         /// <summary>
         /// The percent of source vital loss for a life magic transfer spell
         /// </summary>
-        public float LossPercent { get => _spell.LossPercent ?? 0.0f; }
+        public float LossPercent { get => PowerSpell.LossPercent ?? 0.0f; }
 
         /// <summary>
         /// A static amount of source vital loss for a life magic transfer spell?
         /// Unused / unknown?
         /// </summary>
-        public int SourceLoss { get => _spell.SourceLoss ?? 0; }
+        public int SourceLoss { get => PowerSpell.SourceLoss ?? 0; }
 
         /// <summary>
         /// The maximum amount of vital transferred by a life magic spell
         /// </summary>
-        public int TransferCap { get => (int)((_spell.TransferCap ?? 0) * IntensityMod); }
+        public int TransferCap { get => (int)((PowerSpell.TransferCap ?? 0) * IntensityMod); }
 
         /// <summary>
         /// The maximum destination vital boost for a life magic transfer spell?
         /// Unused / unknown?
         /// </summary>
-        public int MaxBoostAllowed { get => _spell.MaxBoostAllowed ?? 0; }
+        public int MaxBoostAllowed { get => PowerSpell.MaxBoostAllowed ?? 0; }
 
         /// <summary>
         /// Indicates the source and destination for life magic transfer spells
@@ -464,17 +495,17 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The minimum spell power to dispel (unused?)
         /// </summary>
-        public int MinPower { get => _spell.MinPower ?? 0; }
+        public int MinPower { get => PowerSpell.MinPower ?? 0; }
 
         /// <summary>
         /// The maximum spell power to dispel
         /// </summary>
-        public int MaxPower { get => _spell.MaxPower ?? 0; }
+        public int MaxPower { get => PowerSpell.MaxPower ?? 0; }
 
         /// <summary>
         /// Possible RNG for spell power to dispel (unused?)
         /// </summary>
-        public float PowerVariance { get => _spell.PowerVariance ?? 0.0f; }
+        public float PowerVariance { get => PowerSpell.PowerVariance ?? 0.0f; }
 
         /// <summary>
         /// The magic school to dispel, or undefined for all schools
@@ -492,12 +523,12 @@ namespace ACE.Server.Entity
         /// <summary>
         /// The maximum # of spells to dispel
         /// </summary>
-        public int Number { get => _spell.Number ?? 0; }
+        public int Number { get => PowerSpell.Number ?? 0; }
 
         /// <summary>
         /// Number * NumberVariance = the minimum # of spells to dispel
         /// </summary>
-        public float NumberVariance { get => _spell.NumberVariance ?? 0; }
+        public float NumberVariance { get => PowerSpell.NumberVariance ?? 0; }
 
         private static readonly List<SpellCategory> cantripCategories = new List<SpellCategory>()
         {
