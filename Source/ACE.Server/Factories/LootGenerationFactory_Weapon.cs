@@ -200,6 +200,55 @@ namespace ACE.Server.Factories
             }
         }
 
+        // Quest-made Atlan weapons (Magma Golem hand-in, Atlan stone upgrades) get the
+        // same per-type built-in as loot weapons. Called from WorldObjectFactory.CreateNewWorldObject.
+        public static void ApplyAtlanBuiltInProperty(WorldObject wo)
+        {
+            ApplyBuiltInWeaponProperty(null, wo);
+        }
+
+        public static bool IsAtlanWeapon(WorldObject wo)
+        {
+            return wo != null && (wo is MeleeWeapon || wo is MissileLauncher)
+                && wo.Name != null && wo.Name.Contains("Atlan");
+        }
+
+        // Atlan stone upgrades destroy the old weapon and create a new one (which rolls fresh).
+        // Copy the old weapon's built-in onto the upgraded weapon so the roll carries over.
+        // If the old weapon had no built-in (made before this feature), the fresh roll is kept.
+        public static void CarryOverAtlanBuiltIn(WorldObject from, WorldObject to)
+        {
+            if (!IsAtlanWeapon(from) || !IsAtlanWeapon(to))
+                return;
+
+            var hadBuiltIn = from.CriticalFrequency != null || from.CriticalMultiplier != null || from.IgnoreArmor != null
+                || from.ProcSpell != null || from.AbsorbMagicDamage != null || from.GetProperty(PropertyInt.ImbuedEffect2) != null;
+
+            if (!hadBuiltIn)
+                return;
+
+            CopyFloat(from, to, PropertyFloat.CriticalFrequency);
+            CopyFloat(from, to, PropertyFloat.CriticalMultiplier);
+            CopyFloat(from, to, PropertyFloat.IgnoreArmor);
+            CopyFloat(from, to, PropertyFloat.ProcSpellRate);
+            CopyFloat(from, to, PropertyFloat.AbsorbMagicDamage);
+
+            var proc = from.GetProperty(PropertyDataId.ProcSpell);
+            if (proc != null) to.SetProperty(PropertyDataId.ProcSpell, proc.Value); else to.RemoveProperty(PropertyDataId.ProcSpell);
+
+            var self = from.GetProperty(PropertyBool.ProcSpellSelfTargeted);
+            if (self != null) to.SetProperty(PropertyBool.ProcSpellSelfTargeted, self.Value); else to.RemoveProperty(PropertyBool.ProcSpellSelfTargeted);
+
+            var imbue = from.GetProperty(PropertyInt.ImbuedEffect2);
+            if (imbue != null) to.SetProperty(PropertyInt.ImbuedEffect2, imbue.Value); else to.RemoveProperty(PropertyInt.ImbuedEffect2);
+        }
+
+        private static void CopyFloat(WorldObject from, WorldObject to, PropertyFloat prop)
+        {
+            var v = from.GetProperty(prop);
+            if (v != null) to.SetProperty(prop, v.Value); else to.RemoveProperty(prop);
+        }
+
         private static void RollCleaveBiteCrush(WorldObject wo)
         {
             switch (ThreadSafeRandom.Next(0, 2))

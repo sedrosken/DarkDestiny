@@ -1305,6 +1305,9 @@ namespace ACE.Server.Managers
                 result = CreateItem(player, createItem, createAmount);
 
                 if (destroyTarget && result != null)
+                    LootGenerationFactory.CarryOverAtlanBuiltIn(target, result);   // Atlan stone upgrade keeps the old weapon's built-in roll
+
+                if (destroyTarget && result != null)
                 {
                     if (target.ExtraSpellsList != null)
                     {

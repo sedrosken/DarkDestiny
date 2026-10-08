@@ -440,6 +440,8 @@ namespace ACE.Server.Factories
 
             if (worldObject == null)
                 GuidManager.RecycleDynamicGuid(guid);
+            else if (LootGenerationFactory.IsAtlanWeapon(worldObject))
+                LootGenerationFactory.ApplyAtlanBuiltInProperty(worldObject);   // Atlan weapons roll the server's built-in weapon property on creation
 
             return worldObject;
         }
