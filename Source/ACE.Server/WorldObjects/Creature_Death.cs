@@ -116,7 +116,7 @@ namespace ACE.Server.WorldObjects
                     // creature pet system: chance for a killed creature to drop a pet
                     // egg (imprinted with that creature) into the killer's inventory.
                     // Drop rate: 0.01f = 1%. Change the number below to retune.
-                    if (topDamagerPlayer is Player eggKiller && !(this is Player) && ThreadSafeRandom.Next(0.0f, 1.0f) < 0.01f)
+                    if (topDamagerPlayer is Player eggKiller && !(this is Player) && ThreadSafeRandom.Next(0.0f, 1.0f) < 0.0001f)
                     {
                         var egg = WorldObjectFactory.CreateNewWorldObject(9870772u);
                         if (egg != null)
