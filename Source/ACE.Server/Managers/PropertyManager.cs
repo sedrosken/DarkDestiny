@@ -563,6 +563,9 @@ namespace ACE.Server.Managers
         public static readonly ReadOnlyDictionary<string, Property<bool>> DefaultBooleanProperties =
             DictOf(
                 ("ip_account_limit_enabled", new Property<bool>(false, "if TRUE, at most ip_account_limit accounts per IP may be outside the Abandoned Mine landblock at once; extras are booted after ip_account_limit_grace_seconds unless they return")),
+                ("other_buff_cooldown_count_surpassed", new Property<bool>(false, "if TRUE, an Other buff cast that is surpassed/blocked by a stronger existing buff still counts toward the cooldown. defaults to FALSE (nothing was affected, so no cooldown)")),
+                ("other_buff_cooldown_enabled", new Property<bool>(true, "master switch for the per-spell cooldown on beneficial Other buffs")),
+                ("other_buff_cooldown_fellowship", new Property<bool>(true, "if FALSE, fellowship buffs are exempt from the Other buff cooldown")),
                 ("account_login_boots_in_use", new Property<bool>(true, "if FALSE, oldest connection to account is not booted when new connection occurs")),
                 ("advanced_combat_pets", new Property<bool>(false, "(non-retail function) If enabled, Combat Pets can cast spells")),
                 ("advocate_fane_auto_bestow", new Property<bool>(false, "If enabled, Advocate Fane will automatically bestow new advocates to advocate_fane_auto_bestow_level")),
@@ -701,6 +704,9 @@ namespace ACE.Server.Managers
 
         public static readonly ReadOnlyDictionary<string, Property<long>> DefaultLongProperties =
             DictOf(
+                ("other_buff_cooldown_cast_window", new Property<long>(0, "seconds after a counted Other buff cast before the partial cast count for that spell resets. 0 = never expires. only matters when other_buff_cooldown_casts > 1")),
+                ("other_buff_cooldown_casts", new Property<long>(1, "number of successful casts of the same Other buff spell before its cooldown triggers. 1 = cooldown starts on the first successful cast")),
+                ("other_buff_cooldown_max_seconds", new Property<long>(3600, "maximum Other buff cooldown in seconds, applied after the duration multiplier. 0 = no cap")),
                 ("char_delete_time", new Property<long>(3600, "the amount of time in seconds a deleted character can be restored")),
                 ("chat_requires_account_time_seconds", new Property<long>(0, "the amount of time in seconds an account is required to have existed for for global chat privileges")),
                 ("chat_requires_player_age", new Property<long>(0, "the amount of time in seconds a player is required to have played for global chat privileges")),
@@ -729,6 +735,7 @@ namespace ACE.Server.Managers
         public static readonly ReadOnlyDictionary<string, Property<double>> DefaultDoubleProperties =
             DictOf(
 
+                ("other_buff_cooldown_duration_multiplier", new Property<double>(1.0, "Other buff cooldown length = spell duration * this value. 1.0 = cooldown equals spell duration, 0 = no cooldown")),
                 ("cantrip_drop_rate", new Property<double>(1.0, "Scales the chance for cantrips to drop in each tier. Defaults to 1.0, as per end of retail")),
                 ("cloak_cooldown_seconds", new Property<double>(5.0, "The number of seconds between possible cloak procs.")),
                 ("cloak_max_proc_base", new Property<double>(0.25, "The max proc chance of a cloak.")),

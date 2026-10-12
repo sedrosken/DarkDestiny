@@ -582,6 +582,10 @@ namespace ACE.Server.WorldObjects
             // create enchantment
             var addResult = target.EnchantmentManager.Add(spell, caster, weapon, equip, isWeaponSpell);
 
+            // Custom: let the caster know whether this buff actually landed (drives the "Other" buff cooldown)
+            if (player != null && !isWeaponSpell && !fromProc)
+                player.OnOtherBuffEnchantmentAdded(spell, addResult);
+
             // build message
             var suffix = "";
             switch (addResult.StackType)

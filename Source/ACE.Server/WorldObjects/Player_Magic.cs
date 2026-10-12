@@ -143,6 +143,14 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            // Custom: "Other" buff cooldown check
+            if (casterItem == null && IsOtherBuffOnCooldown(spellId, out var otherBuffRemaining))
+            {
+                SendTransientError($"You must wait {FormatOtherBuffCooldown(otherBuffRemaining)} before casting {new Spell(spellId).Name} again.");
+                SendSpellCastingDoneEvent(WeenieError.None, isCombatCasting);
+                return;
+            }
+
             var targetCategory = GetTargetCategory(targetGuid, spellId, out var target);
 
             if (target == null || target.Teleporting)
@@ -342,6 +350,14 @@ namespace ACE.Server.WorldObjects
             // or in the weapon's spellbook in the case of built-in spells
             if (!VerifySpell(spellId, isCombatCasting ? null : casterItem))
                 return;
+
+            // Custom: "Other"/fellowship buff cooldown check
+            if (casterItem == null && IsOtherBuffOnCooldown(spellId, out var otherBuffRemaining))
+            {
+                SendTransientError($"You must wait {FormatOtherBuffCooldown(otherBuffRemaining)} before casting {new Spell(spellId).Name} again.");
+                SendSpellCastingDoneEvent(WeenieError.None, isCombatCasting);
+                return;
+            }
 
             if (RecordCast.Enabled)
                 RecordCast.OnCastUntargetedSpell(new Spell(spellId));
@@ -927,6 +943,11 @@ namespace ACE.Server.WorldObjects
             {
                 case CastingPreCheckStatus.Success:
 
+                    // Custom: track "Other" buff cooldown (keyed on the spell actually cast, before specialization upgrade).
+                    // The cooldown is only committed after the cast, and only if an enchantment actually landed.
+                    if (!isWeaponSpell)
+                        BeginOtherBuffCast(spell);
+
                     // Dark Destiny: specialized school -> spell performs at next level's values
                     if (!isWeaponSpell)
                         spell = GetSpecializationUpgradedSpell(spell);
@@ -995,6 +1016,10 @@ namespace ACE.Server.WorldObjects
                             CreatePlayerSpell(fellow, spell, isWeaponSpell);
                     }
 
+                    // Custom: start / count the "Other" buff cooldown only if something was actually affected
+                    if (!isWeaponSpell)
+                        EndOtherBuffCast();
+
                     // handle self procs
                     if (spell.IsHarmful && target != this)
                         TryProcEquippedItems(this, this, true, caster);
@@ -1028,16 +1053,11 @@ namespace ACE.Server.WorldObjects
 
         /// <summary>
         /// Dark Destiny specialization perk:
-        /// if the player has the spell's school specialized, the spell performs at the next level's power
-        /// (Level I -> II ... VII -> VIII) while keeping its own id / name, for every spell type in every school
-        /// (projectiles, boosts, transfers, enchantments, dispels, etc). Returns the same Spell instance.
-        /// No change if the spell has no next level or the next level is a different spell type.
+        /// if the player has the spell's school specialized, returns the next-level version of the spell
+        /// (Level I -> II ... VII -> VIII). Returns the original spell if there is no next level.
         /// </summary>
         public Spell GetSpecializationUpgradedSpell(Spell spell)
         {
-            if (spell.IsSpecializationUpgraded)
-                return spell;
-
             var skill = GetCreatureSkill(spell.School);
             if (skill == null || skill.AdvancementClass != SkillAdvancementClass.Specialized)
                 return spell;
@@ -1052,11 +1072,19 @@ namespace ACE.Server.WorldObjects
                 return spell;
 
             var nextSpell = new Spell(nextId);
-            if (nextSpell.NotFound || nextSpell.MetaSpellType != spell.MetaSpellType)
+            if (nextSpell.NotFound)
                 return spell;
 
-            spell.ApplyPowerFrom(nextSpell);
-            return spell;
+                        // Buffs keep their own spell id/name (VTank needs to see the spell it cast) and just take the next level's power
+            if (spell.MetaSpellType == SpellType.Enchantment)
+            {
+                spell.ApplyPowerFrom(nextSpell);   // takes next level's StatModVal + Duration (replaces OverrideStatModVal)
+                return spell;
+            }
+
+            nextSpell.OverrideSchool = spell.OverrideSchool;
+            nextSpell.IntensityMod = spell.IntensityMod;
+            return nextSpell;
         }
 
         public void FinishCast()
