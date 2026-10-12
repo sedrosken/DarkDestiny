@@ -11,7 +11,11 @@ namespace ACE.Server.Network.GameMessages.Messages
             Writer.Write(worldObject.Sequences.GetNextSequence(Sequence.SequenceType.UpdateAttribute, creatureAttribute.Attribute));
             Writer.Write((uint)creatureAttribute.Attribute);
             Writer.Write(creatureAttribute.Ranks);
-            Writer.Write(creatureAttribute.StartingValue);
+            // fold prestige set crystal bonus into InitLevel so the client panel matches the server
+            var startingValue = creatureAttribute.StartingValue;
+            if (worldObject is Player player)
+                startingValue += (uint)player.GetSetCrystalAttributeBonus(creatureAttribute.Attribute);
+            Writer.Write(startingValue);
             Writer.Write(creatureAttribute.ExperienceSpent);
         }
     }

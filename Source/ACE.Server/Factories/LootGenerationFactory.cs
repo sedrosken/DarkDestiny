@@ -478,6 +478,10 @@ namespace ACE.Server.Factories
                     }
                 }
 
+                // elite chest: rare 1/1000 bonus rolls, once per chest
+                if (IsEliteChestProfile(profile))
+                    AddEliteBonusItems(loot);
+
                 return loot;
             }
             finally

@@ -511,6 +511,14 @@ namespace ACE.Server.WorldObjects
             //Console.WriteLine("Armor Self: " + bodyArmorMod);
             effectiveAL += bodyArmorMod;
 
+            // prestige Diemos' Crystal: +% armor level on this body part
+            if (effectiveAL > 0)
+            {
+                var setNaturalArmor = GetSetCrystalNaturalArmorBonus();
+                if (setNaturalArmor > 0)
+                    effectiveAL *= 1.0f + setNaturalArmor;
+            }
+
             // Armor Rending reduces physical armor too?
             if (effectiveAL > 0)
                 effectiveAL *= armorRendingMod;

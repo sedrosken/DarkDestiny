@@ -425,7 +425,7 @@ namespace ACE.Server.WorldObjects
                         targetProc = true;
                     }
 
-                    if (weapon != null && weapon.IsCleaving)
+                    if (weapon != null && (weapon.IsCleaving || GetSetCrystalCleaveBonus() > 0))
                     {
                         var cleave = GetCleaveTarget(creature, weapon);
 

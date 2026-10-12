@@ -367,6 +367,10 @@ namespace ACE.Server.Entity
                 }
             }
 
+            // prestige Rogue's Crystal 6-piece: +15% critical chance (not on self-damage)
+            if (playerAttacker != null && attacker != defender)
+                CriticalChance += playerAttacker.GetSetCrystalCritChanceBonus();
+
             // https://asheron.fandom.com/wiki/Announcements_-_2002/08_-_Atonement
             // It should be noted that any time a character is logging off, PK or not, all physical attacks against them become automatically critical.
             // (Note that spells do not share this behavior.) We hope this will stress the need to log off in a safe place.
@@ -382,6 +386,14 @@ namespace ACE.Server.Entity
                     var criticalDefenseChance = playerDefender.AugmentationCriticalDefense * criticalDefenseMod;
 
                     if (criticalDefenseChance > ThreadSafeRandom.Next(0.0f, 1.0f))
+                        CriticalDefended = true;
+                }
+
+                // prestige Guardian's Crystal 6-piece: chance to negate the critical hit
+                if (!CriticalDefended && playerDefender != null)
+                {
+                    var negateCritChance = playerDefender.GetSetCrystalNegateCritChance();
+                    if (negateCritChance > 0 && negateCritChance > ThreadSafeRandom.Next(0.0f, 1.0f))
                         CriticalDefended = true;
                 }
 

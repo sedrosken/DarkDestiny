@@ -135,6 +135,8 @@ namespace ACE.Server.Entity
 
             if(source.WeenieType == WeenieType.SpellTransferScroll)
                 SpellTransferScroll.UseObjectOnTarget(player, source, target, true);
+            else if (SetCrystal.IsSetCrystal(source))
+                SetCrystal.UseObjectOnTarget(player, source, target, true);
             else
                 RecipeManager.UseObjectOnTarget(player, source, target, true);
         }

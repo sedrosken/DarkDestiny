@@ -600,6 +600,10 @@ namespace ACE.Server.Factories
                     cantrips.Add(cantrip);
             }
 
+            // elite chest: a bane cantrip must be paired with at least one non-bane cantrip
+            if (IsEliteChestProfile(profile))
+                EnsureEliteNonBaneCantrip(wo, profile, roll, cantrips);
+
             var finalCantrips = new List<SpellId>();
 
             var hasLegendary = false;

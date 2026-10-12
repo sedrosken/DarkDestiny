@@ -250,7 +250,10 @@ namespace ACE.Server.WorldObjects.Entity
                         break;
                 }
 
-                var iTotal = (fTotal + additives + armorTypeBonus + gearSkillBonus).Round();
+                // prestige set crystal bonus (players only)
+                var setCrystalBonus = creature.GetSetCrystalSkillBonus(Skill);
+
+                var iTotal = (fTotal + additives + armorTypeBonus + gearSkillBonus + setCrystalBonus).Round();
 
                 iTotal = Math.Max(iTotal, 0);   // skill level cannot be debuffed below 0
 

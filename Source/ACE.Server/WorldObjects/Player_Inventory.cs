@@ -376,6 +376,10 @@ namespace ACE.Server.WorldObjects
             if (item != null && item.GetProperty(PropertyInt.GearCarryingCapacity) != null)
                 SendEffectiveCarryingCapacityAugs();
 
+            // Prestige set crystals: refresh panels + report the set's piece count
+            if (item != null && item.GetProperty(PropertyInt.SetCrystal) != null)
+                OnSetCrystalItemEquipChanged(item);
+
             return true;
         }
 
@@ -513,6 +517,10 @@ namespace ACE.Server.WorldObjects
             // Yellow Garnet: sync effective carrying-capacity augs so client burden bar updates
             if (item != null && item.GetProperty(PropertyInt.GearCarryingCapacity) != null)
                 SendEffectiveCarryingCapacityAugs();
+
+            // Prestige set crystals: refresh panels + report the set's piece count
+            if (item != null && item.GetProperty(PropertyInt.SetCrystal) != null)
+                OnSetCrystalItemEquipChanged(item);
 
             return true;
         }

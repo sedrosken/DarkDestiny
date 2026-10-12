@@ -118,6 +118,11 @@ namespace ACE.Server.WorldObjects
             if (protMod > naturalResistMod)
                 protMod = naturalResistMod;
 
+            // prestige Gaerlan's / Diemos' Crystal: add the set's % to the same protection life spells raise
+            var setProtection = GetSetCrystalProtectionBonus(damageType);
+            if (setProtection > 0)
+                protMod = Math.Max(0.0f, protMod - setProtection);
+
             // does this stack with natural resistance?
             if (this is Player player)
             {

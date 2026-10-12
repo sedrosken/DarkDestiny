@@ -118,6 +118,9 @@ namespace ACE.Server.WorldObjects.Entity
                 if (creature is Player manaPlayer && Vital == PropertyAttribute2nd.MaxMana)
                     total += (uint)manaPlayer.GetGearMaxMana();
 
+                // prestige set crystal flat max vital
+                total += (uint)creature.GetSetCrystalVitalBonus(Vital);
+
                 return total;
             }
         }
@@ -156,6 +159,9 @@ namespace ACE.Server.WorldObjects.Entity
 
                 if (Vital == PropertyAttribute2nd.MaxMana)
                     total += (uint)player.GetGearMaxMana();
+
+                // prestige set crystal flat max vital
+                total += (uint)player.GetSetCrystalVitalBonus(Vital);
             }
 
             // apply multiplicative enchantments first

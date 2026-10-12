@@ -12,7 +12,11 @@ namespace ACE.Server.Network.GameMessages.Messages
 
             Writer.Write((uint)creatureVital.Vital);
             Writer.Write(creatureVital.Ranks);
-            Writer.Write(creatureVital.StartingValue);
+            // fold prestige set crystal max-vital bonus into InitLevel so the client panel matches the server
+            var startingValue = creatureVital.StartingValue;
+            if (worldObject is Player player)
+                startingValue += (uint)player.GetSetCrystalVitalBonus(creatureVital.Vital);
+            Writer.Write(startingValue);
             Writer.Write(creatureVital.ExperienceSpent);
             Writer.Write(creatureVital.Current);
         }

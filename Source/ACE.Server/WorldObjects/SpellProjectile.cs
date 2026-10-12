@@ -376,10 +376,18 @@ namespace ACE.Server.WorldObjects
 
                     // Green Jade "Spell Chain" imbue: if the caster (wand/staff/orb) carries the
                     // imbue, repeat this spell's damage on one creature next to the struck target.
-                    if (player != null && !FromProc && ProjectileLauncher != null
-                        && (ProjectileLauncher.GetProperty(PropertyInt.SpellChainImbue) ?? 0) == 1)
+                    // prestige Sorcerer's Crystal 6-piece adds +1 chain target (stacks with the imbue).
+                    var spellChainTargets = 0;
+                    if (player != null && !FromProc)
                     {
-                        foreach (var chainTarget in player.GetProjectileSplitTargets(creatureTarget, 1))
+                        if (ProjectileLauncher != null && (ProjectileLauncher.GetProperty(PropertyInt.SpellChainImbue) ?? 0) == 1)
+                            spellChainTargets++;
+                        spellChainTargets += player.GetSetCrystalSpellChainBonus();
+                    }
+
+                    if (spellChainTargets > 0)
+                    {
+                        foreach (var chainTarget in player.GetProjectileSplitTargets(creatureTarget, spellChainTargets))
                         {
                             var cCrit = false;
                             var cCritDef = false;
@@ -585,6 +593,10 @@ namespace ACE.Server.WorldObjects
                     criticalChance += 0.10f;
             }
 
+            // prestige Rogue's Crystal 6-piece: +15% critical chance
+            if (sourcePlayer != null && source != target)
+                criticalChance += sourcePlayer.GetSetCrystalCritChanceBonus();
+
             if (source == target)
                 criticalChance = 0.0f; // Self-damage never crits.
 
@@ -596,6 +608,14 @@ namespace ACE.Server.WorldObjects
                     var criticalDefenseChance = targetPlayer.AugmentationCriticalDefense * criticalDefenseMod;
 
                     if (criticalDefenseChance > ThreadSafeRandom.Next(0.0f, 1.0f))
+                        critDefended = true;
+                }
+
+                // prestige Guardian's Crystal 6-piece: chance to negate the critical hit
+                if (!critDefended && targetPlayer != null)
+                {
+                    var negateCritChance = targetPlayer.GetSetCrystalNegateCritChance();
+                    if (negateCritChance > 0 && negateCritChance > ThreadSafeRandom.Next(0.0f, 1.0f))
                         critDefended = true;
                 }
 
@@ -776,6 +796,10 @@ namespace ACE.Server.WorldObjects
 
                 finalDamage = finalDamage * pvpMod;
             }
+
+            // prestige Wizard's Crystal 6-piece: 10% magic absorb on incoming spell damage
+            if (targetPlayer != null)
+                finalDamage *= targetPlayer.GetSetCrystalMagicAbsorbMod();
 
             // show debug info
             if (sourceCreature != null && sourceCreature.DebugDamage.HasFlag(Creature.DebugDamageType.Attacker))

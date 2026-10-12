@@ -235,49 +235,49 @@ namespace ACE.Server.Network.GameEvent.Events
                 if ((attributeFlags & AttributeCache.Strength) != 0)
                 {
                     Writer.Write(Session.Player.Strength.Ranks);
-                    Writer.Write(Session.Player.Strength.StartingValue);
+                    Writer.Write(Session.Player.Strength.StartingValue + (uint)Session.Player.GetSetCrystalAttributeBonus(Session.Player.Strength.Attribute)); // + prestige set crystal bonus
                     Writer.Write(Session.Player.Strength.ExperienceSpent);
                 }
 
                 if ((attributeFlags & AttributeCache.Endurance) != 0)
                 {
                     Writer.Write(Session.Player.Endurance.Ranks);
-                    Writer.Write(Session.Player.Endurance.StartingValue);
+                    Writer.Write(Session.Player.Endurance.StartingValue + (uint)Session.Player.GetSetCrystalAttributeBonus(Session.Player.Endurance.Attribute)); // + prestige set crystal bonus
                     Writer.Write(Session.Player.Endurance.ExperienceSpent);
                 }
 
                 if ((attributeFlags & AttributeCache.Quickness) != 0)
                 {
                     Writer.Write(Session.Player.Quickness.Ranks);
-                    Writer.Write(Session.Player.Quickness.StartingValue);
+                    Writer.Write(Session.Player.Quickness.StartingValue + (uint)Session.Player.GetSetCrystalAttributeBonus(Session.Player.Quickness.Attribute)); // + prestige set crystal bonus
                     Writer.Write(Session.Player.Quickness.ExperienceSpent);
                 }
 
                 if ((attributeFlags & AttributeCache.Coordination) != 0)
                 {
                     Writer.Write(Session.Player.Coordination.Ranks);
-                    Writer.Write(Session.Player.Coordination.StartingValue);
+                    Writer.Write(Session.Player.Coordination.StartingValue + (uint)Session.Player.GetSetCrystalAttributeBonus(Session.Player.Coordination.Attribute)); // + prestige set crystal bonus
                     Writer.Write(Session.Player.Coordination.ExperienceSpent);
                 }
 
                 if ((attributeFlags & AttributeCache.Focus) != 0)
                 {
                     Writer.Write(Session.Player.Focus.Ranks);
-                    Writer.Write(Session.Player.Focus.StartingValue);
+                    Writer.Write(Session.Player.Focus.StartingValue + (uint)Session.Player.GetSetCrystalAttributeBonus(Session.Player.Focus.Attribute)); // + prestige set crystal bonus
                     Writer.Write(Session.Player.Focus.ExperienceSpent);
                 }
 
                 if ((attributeFlags & AttributeCache.Self) != 0)
                 {
                     Writer.Write(Session.Player.Self.Ranks);
-                    Writer.Write(Session.Player.Self.StartingValue);
+                    Writer.Write(Session.Player.Self.StartingValue + (uint)Session.Player.GetSetCrystalAttributeBonus(Session.Player.Self.Attribute)); // + prestige set crystal bonus
                     Writer.Write(Session.Player.Self.ExperienceSpent);
                 }
 
                 if ((attributeFlags & AttributeCache.Health) != 0)
                 {
                     Writer.Write(Session.Player.Health.Ranks);
-                    Writer.Write(Session.Player.Health.StartingValue); // init_level - always appears to be 0
+                    Writer.Write(Session.Player.Health.StartingValue + (uint)Session.Player.GetSetCrystalVitalBonus(Session.Player.Health.Vital)); // init_level (+ prestige set crystal bonus)
                     Writer.Write(Session.Player.Health.ExperienceSpent);
                     Writer.Write(Session.Player.Health.Current);
                 }
@@ -285,7 +285,7 @@ namespace ACE.Server.Network.GameEvent.Events
                 if ((attributeFlags & AttributeCache.Stamina) != 0)
                 {
                     Writer.Write(Session.Player.Stamina.Ranks);
-                    Writer.Write(Session.Player.Stamina.StartingValue); // init_level - always appears to be 0
+                    Writer.Write(Session.Player.Stamina.StartingValue + (uint)Session.Player.GetSetCrystalVitalBonus(Session.Player.Stamina.Vital)); // init_level (+ prestige set crystal bonus)
                     Writer.Write(Session.Player.Stamina.ExperienceSpent);
                     Writer.Write(Session.Player.Stamina.Current);
                 }
@@ -293,7 +293,7 @@ namespace ACE.Server.Network.GameEvent.Events
                 if ((attributeFlags & AttributeCache.Mana) != 0)
                 {
                     Writer.Write(Session.Player.Mana.Ranks);
-                    Writer.Write(Session.Player.Mana.StartingValue); // init_level - always appears to be 0
+                    Writer.Write(Session.Player.Mana.StartingValue + (uint)Session.Player.GetSetCrystalVitalBonus(Session.Player.Mana.Vital)); // init_level (+ prestige set crystal bonus)
                     Writer.Write(Session.Player.Mana.ExperienceSpent);
                     Writer.Write(Session.Player.Mana.Current);
                 }
@@ -314,7 +314,7 @@ namespace ACE.Server.Network.GameEvent.Events
                     Writer.Write((ushort)1u);
                     Writer.Write((uint)kvp.Value.AdvancementClass); // skill state
                     Writer.Write(kvp.Value.ExperienceSpent); // xp spent on this skill
-                    Writer.Write(kvp.Value.InitLevel);  // init_level, for training/specialized bonus from character creation
+                    Writer.Write(kvp.Value.InitLevel + (uint)Session.Player.GetSetCrystalSkillBonus(kvp.Key));  // init_level, for training/specialized bonus from character creation (+ prestige set crystal bonus)
                     Writer.Write(0u); // task difficulty, aka "resistance_of_last_check"
                     Writer.Write(0d); // last_time_used
                 }

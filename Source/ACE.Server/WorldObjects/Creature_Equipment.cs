@@ -244,6 +244,8 @@ namespace ACE.Server.WorldObjects
 
         private void AddItemToEquippedItemsRatingCache(WorldObject wo)
         {
+            AddItemToSetCrystalCache(wo);
+
             if ((wo.GearDamage ?? 0) == 0 && (wo.GearDamageResist ?? 0) == 0 && (wo.GearCrit ?? 0) == 0 && (wo.GearCritResist ?? 0) == 0 && (wo.GearCritDamage ?? 0) == 0 && (wo.GearCritDamageResist ?? 0) == 0 && (wo.GearHealingBoost ?? 0) == 0 && (wo.GearMaxHealth ?? 0) == 0 && (wo.GearPKDamageRating ?? 0) == 0 && (wo.GearPKDamageResistRating ?? 0) == 0 && (wo.GearMaxStamina ?? 0) == 0 && (wo.GearMaxMana ?? 0) == 0)
                 return;
 
@@ -282,6 +284,8 @@ namespace ACE.Server.WorldObjects
 
         private void RemoveItemFromEquippedItemsRatingCache(WorldObject wo)
         {
+            RemoveItemFromSetCrystalCache(wo);
+
             if (equippedItemsRatingCache == null)
                 return;
 

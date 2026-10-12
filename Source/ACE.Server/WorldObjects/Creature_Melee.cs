@@ -114,14 +114,17 @@ namespace ACE.Server.WorldObjects
         {
             var player = this as Player;
 
-            if (!weapon.IsCleaving) return null;
+            // prestige Warrior's Crystal 6-piece: +1 cleave target (also lets a non-cleaving weapon cleave 1)
+            var setCleaveBonus = player != null ? player.GetSetCrystalCleaveBonus() : 0;
+
+            if (!weapon.IsCleaving && setCleaveBonus == 0) return null;
 
             // sort visible objects by ascending distance
             var visible = PhysicsObj.ObjMaint.GetVisibleObjectsValuesWhere(o => o.WeenieObj.WorldObject != null);
             visible.Sort(DistanceComparator);
 
             var cleaveTargets = new List<Creature>();
-            var totalCleaves = weapon.CleaveTargets;
+            var totalCleaves = weapon.CleaveTargets + setCleaveBonus;
 
             foreach (var obj in visible)
             {

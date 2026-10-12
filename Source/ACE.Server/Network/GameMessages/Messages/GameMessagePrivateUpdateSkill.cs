@@ -28,6 +28,7 @@ namespace ACE.Server.Network.GameMessages.Messages
             {
                 initLevel += (uint)GetArmorTypeSkillBonus(player, creatureSkill.Skill);
                 initLevel += (uint)GetGearSkillBonus(player, creatureSkill.Skill);
+                initLevel += (uint)player.GetSetCrystalSkillBonus(creatureSkill.Skill);
                 initLevel += (uint)GetSkilledMasteryBonus(player, creatureSkill.Skill);
             }
 

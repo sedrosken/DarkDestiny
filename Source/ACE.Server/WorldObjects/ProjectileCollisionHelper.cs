@@ -66,12 +66,17 @@ namespace ACE.Server.WorldObjects
                         // launcher (bow/crossbow/atlatl) or a thrown weapon carries the split imbue,
                         // deal one extra hit to a creature standing next to the struck target.
                         // Intentionally NOT ruleset-gated (this server runs Infiltration, not CustomDM).
+                        // Prestige Marksman's Crystal 6-piece adds +1 split target (stacks with the imbue).
                         var splitSource = worldObject.ProjectileLauncher ?? worldObject;
-                        if (splitSource != null
-                            && (splitSource.GetProperty(PropertyInt.ArrowSplitImbue) ?? 0) == 1
+                        var arrowSplitTargets = 0;
+                        if (splitSource != null && (splitSource.GetProperty(PropertyInt.ArrowSplitImbue) ?? 0) == 1)
+                            arrowSplitTargets++;
+                        arrowSplitTargets += sourcePlayer.GetSetCrystalArrowSplitBonus();
+
+                        if (arrowSplitTargets > 0
                             && (worldObject.WeenieType == WeenieType.Missile || worldObject.WeenieType == WeenieType.Ammunition))
                         {
-                            foreach (var splitTarget in sourcePlayer.GetProjectileSplitTargets(targetCreature, 1))
+                            foreach (var splitTarget in sourcePlayer.GetProjectileSplitTargets(targetCreature, arrowSplitTargets))
                                 sourcePlayer.DamageTarget(splitTarget, worldObject);
                         }
                     }
@@ -113,7 +118,7 @@ namespace ACE.Server.WorldObjects
                         if (damageEvent.HasDamage)
                         {
                             targetCreature.TakeDamage(sourceCreature, damageEvent.DamageType, damageEvent.Damage);
-                            Pet.TryReportPetDamage(sourceCreature, targetCreature, damageEvent.Damage, damageEvent.DamageType, damageEvent.IsCritical);
+
                             // blood splatter?
 
                             // handle Dirty Fighting

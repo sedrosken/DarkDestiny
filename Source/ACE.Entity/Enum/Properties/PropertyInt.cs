@@ -725,6 +725,13 @@ namespace ACE.Entity.Enum.Properties
         /// (Infliction-made Life imprints are caster-only).
         /// </summary>
         SpellImprintQuill                        = 10041,
+
+        /// <summary>
+        /// Prestige set crystals: on a crystal = which crystal it is; on armor/clothing/jewelry/weapon =
+        /// which crystal was imbued (one per item). 1-11 = set crystals, 12 = Heroic Guardian, 13 = Heroic Destroyer.
+        /// See SetCrystalType in Creature_SetCrystals.cs.
+        /// </summary>
+        SetCrystal                               = 10042,
     }
 
     public static class PropertyIntExtensions

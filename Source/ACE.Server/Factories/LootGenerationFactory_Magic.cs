@@ -263,7 +263,9 @@ namespace ACE.Server.Factories
                 if (allowSpecialProperties)
                 {
                     TryMutate_HeritageRequirement(wo, profile, roll);
-                    TryMutate_AllegianceRequirement(wo, profile, roll);
+
+                    if (!IsEliteChestProfile(profile)) // elite chest: no allegiance rank requirements
+                        TryMutate_AllegianceRequirement(wo, profile, roll);
                 }
             }
 

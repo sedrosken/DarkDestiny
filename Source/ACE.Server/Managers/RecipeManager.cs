@@ -228,6 +228,9 @@ namespace ACE.Server.Managers
 
             var successChance = SkillCheck.GetSkillChance(playerCurrentPlusLumAugSkilledCraft, recipe.Difficulty);
 
+            // prestige Acrobat's Crystal 6-piece: +5% to all crafting interactions
+            successChance = Math.Min(1.0, successChance + player.GetSetCrystalCraftingBonus());
+
             return successChance;
         }
 
@@ -283,6 +286,9 @@ namespace ACE.Server.Managers
                     if (player.AugmentationBonusImbueChance > 0)
                         successChance += player.AugmentationBonusImbueChance * 0.05f;
                 }
+
+                // prestige Acrobat's Crystal 6-piece: +5% to all crafting interactions
+                successChance = Math.Min(1.0, successChance + player.GetSetCrystalCraftingBonus());
 
                 // todo: remove this once foolproof salvage recipes are updated
                 if (foolproofTinkers.Contains((WeenieClassName)tool.WeenieClassId))

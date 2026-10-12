@@ -143,7 +143,10 @@ namespace ACE.Server.WorldObjects.Entity
             var multipliers = enchanted ? creature.EnchantmentManager.GetAttributeMod_Multiplier(Attribute) : 1.0f;
             var additives = enchanted ? creature.EnchantmentManager.GetAttributeMod_Additive(Attribute) : 0;
 
-            var total = (int)Base * multipliers + additives;
+            // prestige set crystal bonus: counted as innate (applied before multipliers, enchanted or not)
+            var setCrystalBonus = creature.GetSetCrystalAttributeBonus(Attribute);
+
+            var total = ((int)Base + setCrystalBonus) * multipliers + additives;
 
             total = total.Round();
 

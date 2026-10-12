@@ -42,6 +42,12 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (SetCrystal.IsSetCrystal(this))
+            {
+                SetCrystal.UseObjectOnTarget(player, this, target);
+                return;
+            }
+
             if (CorePlating.IsCorePlatingDevice(this))
             {
                 CorePlating.UseObjectOnTarget(player, this, target);

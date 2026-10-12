@@ -208,6 +208,9 @@ namespace ACE.Server.WorldObjects
             if (this is Player player && player.AugmentationFasterRegen > 0)
                 augMod += player.AugmentationFasterRegen;
 
+            // prestige set crystals: +% regeneration speed (Titan health, Acrobat stamina, Wizard mana)
+            augMod += GetSetCrystalRegenBonus(vital.Vital);
+
             // cap rate?
             var currentTick = vital.RegenRate * attributeMod * stanceMod * enchantmentMod * augMod;
 

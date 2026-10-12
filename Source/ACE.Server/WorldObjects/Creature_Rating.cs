@@ -555,6 +555,9 @@ namespace ACE.Server.WorldObjects
             var total = 0;
             foreach (var wo in EquippedObjects.Values)
                 total += wo.GetProperty(PropertyInt.GearCarryingCapacity) ?? 0;
+
+            // prestige Titan's Crystal 6-piece: +20% burden bearing
+            total += GetSetCrystalBurdenBonus();
             return total;
         }
 
