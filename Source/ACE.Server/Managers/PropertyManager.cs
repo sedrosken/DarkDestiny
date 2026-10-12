@@ -707,6 +707,7 @@ namespace ACE.Server.Managers
                 ("other_buff_cooldown_cast_window", new Property<long>(0, "seconds after a counted Other buff cast before the partial cast count for that spell resets. 0 = never expires. only matters when other_buff_cooldown_casts > 1")),
                 ("other_buff_cooldown_casts", new Property<long>(1, "number of successful casts of the same Other buff spell before its cooldown triggers. 1 = cooldown starts on the first successful cast")),
                 ("other_buff_cooldown_max_seconds", new Property<long>(3600, "maximum Other buff cooldown in seconds, applied after the duration multiplier. 0 = no cap")),
+                ("other_buff_cooldown_min_level", new Property<long>(1, "lowest spell level (1-8) the Other buff cooldown applies to, judged on the spell as cast (before specialization power-up). 1 = all levels, 5 = level V and up")),
                 ("char_delete_time", new Property<long>(3600, "the amount of time in seconds a deleted character can be restored")),
                 ("chat_requires_account_time_seconds", new Property<long>(0, "the amount of time in seconds an account is required to have existed for for global chat privileges")),
                 ("chat_requires_player_age", new Property<long>(0, "the amount of time in seconds a player is required to have played for global chat privileges")),
