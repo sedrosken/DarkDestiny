@@ -341,7 +341,8 @@ namespace ACE.Server.Network.Structure
                 PropertiesString[PropertyString.Use] = useMessage;
             }
 
-            if (wo is CraftTool && (wo.ItemType == ItemType.TinkeringMaterial || wo.WeenieClassId >= 36619 && wo.WeenieClassId <= 36628 || wo.WeenieClassId >= 36634 && wo.WeenieClassId <= 36636))
+            // custom salvage bags (9870xxx) are WeenieType Generic, not CraftTool — hide uses for any TinkeringMaterial
+            if (wo.ItemType == ItemType.TinkeringMaterial || (wo is CraftTool && (wo.WeenieClassId >= 36619 && wo.WeenieClassId <= 36628 || wo.WeenieClassId >= 36634 && wo.WeenieClassId <= 36636)))
             {
                 if (PropertiesInt.ContainsKey(PropertyInt.Structure))
                     PropertiesInt.Remove(PropertyInt.Structure);
