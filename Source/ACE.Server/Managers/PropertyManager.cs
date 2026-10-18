@@ -699,7 +699,8 @@ namespace ACE.Server.Managers
                 ("cmd_pop_show_current", new Property<bool>(true, "Allow the pop command to show current online population count")),
                 ("cmd_pop_show_24_hours", new Property<bool>(true, "Allow the pop command to show the 24 hours unique IPs count")),
                 ("cmd_pop_show_7_days", new Property<bool>(true, "Allow the pop command to show the 7 days unique IPs count")),
-                ("bz_whispers_enabled", new Property<bool>(true, "CustomDM: Enables/Disables whispers from Bael'Zharon revealing the location of other PK players"))
+                ("bz_whispers_enabled", new Property<bool>(true, "CustomDM: Enables/Disables whispers from Bael'Zharon revealing the location of other PK players")),
+                ("wiflag_enabled", new Property<bool>(true, "master switch for Wi Flag targeting (natural daily flags, @wiflag overrides, passive-creature aggro). FALSE = monsters use their normal targeting tactics only"))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<long>> DefaultLongProperties =
@@ -730,7 +731,10 @@ namespace ACE.Server.Managers
                 ("quest_mindelta_rate_shortest", new Property<long>(72000, "Quest min deltas below this won't be affected by quest_mindelta_rate, additionally modified min deltas that would fall under this value will be set to this value instead")),
                 ("bz_whispers_min_pop", new Property<long>(5, "CustomDM: Minimum required online PK players for bz whispers to be sent")),
                 ("bz_whispers_login_delay", new Property<long>(3600, "CustomDM: How long a player must remain online before being able to receive a bz whisper")),
-                ("bz_whispers_interval", new Property<long>(600, "CustomDM: How often a player can receive a bz whisper"))
+                ("bz_whispers_interval", new Property<long>(600, "CustomDM: How often a player can receive a bz whisper")),
+                ("wiflag_min", new Property<long>(0, "lowest natural daily Wi Flag a character can roll (0-100). @wiflag overrides ignore this range")),
+                ("wiflag_max", new Property<long>(100, "highest natural daily Wi Flag a character can roll (0-100). @wiflag overrides ignore this range")),
+                ("wiflag_reroll_salt", new Property<long>(0, "internal counter mixed into the natural Wi Flag roll. @wiflagreroll increments it to force an immediate re-roll for every character; do not edit by hand"))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<double>> DefaultDoubleProperties =

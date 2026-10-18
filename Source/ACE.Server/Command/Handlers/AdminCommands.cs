@@ -5482,8 +5482,9 @@ public static void HandleEventsActive(Session session, params string[] parameter
             "  0-5           = aggro magnet: always chosen, and even bunnies/chickens attack\n" +
             "  6-94          = weighted: lower numbers are attacked more often\n" +
             "  95-100        = only attacked when no other player is in range\n" +
-            "  clear         = remove the override (back to the character's natural rolled flag)\n" +
-            "Every character has a natural flag of 1-100 derived from their id; the override just replaces it.")]
+            "  clear         = remove the override (back to the character's natural daily flag)\n" +
+            "Every character gets a natural flag that re-rolls once per day (server midnight), within the range set by server properties wiflag_min/wiflag_max; an override replaces it until cleared.\n" +
+            "See also: @wiflagreroll, @wiflagresetall, and the wiflag_enabled server property.")]
         public static void HandleWiFlag(Session session, params string[] parameters)
         {
             if (parameters.Length < 1)
@@ -5501,15 +5502,15 @@ public static void HandleEventsActive(Session session, params string[] parameter
                 return;
             }
 
-            // Effective flag = override if set, else the natural GUID-hash value (1-100).
-            int NaturalFlag() { unchecked { return (int)((player.Guid.Full * 2654435761u) % 100u) + 1; } }
+            // Effective flag = override if set, else today's natural flag (1-100, re-rolls daily).
+            int NaturalFlag() => Creature.GetNaturalWiFlag(player.Guid.Full);
             var overrideVal = player.GetProperty(PropertyInt.WiFlagOverride);
 
             // Name only: report the effective flag.
             if (parameters.Length < 2)
             {
                 var eff = overrideVal ?? NaturalFlag();
-                var src = overrideVal.HasValue ? "override" : "natural";
+                var src = overrideVal.HasValue ? "admin override - does not re-roll" : "natural - re-rolls daily at midnight";
                 session.Network.EnqueueSend(new GameMessageSystemChat($"{player.Name}'s effective Wi Flag is {eff} ({src}).", ChatMessageType.Broadcast));
                 return;
             }
@@ -5517,7 +5518,7 @@ public static void HandleEventsActive(Session session, params string[] parameter
             if (parameters[1].Equals("clear", StringComparison.OrdinalIgnoreCase))
             {
                 player.RemoveProperty(PropertyInt.WiFlagOverride);
-                session.Network.EnqueueSend(new GameMessageSystemChat($"{player.Name}'s Wi Flag override has been cleared (natural flag is now {NaturalFlag()}).", ChatMessageType.Broadcast));
+                session.Network.EnqueueSend(new GameMessageSystemChat($"{player.Name}'s Wi Flag override has been cleared (today's natural flag is {NaturalFlag()}).", ChatMessageType.Broadcast));
                 return;
             }
 
@@ -5534,6 +5535,42 @@ public static void HandleEventsActive(Session session, params string[] parameter
             else if (priority >= 95) tier = "ignored unless they're the only player nearby";
             else tier = "weighted – lower numbers are attacked more often";
             session.Network.EnqueueSend(new GameMessageSystemChat($"{player.Name} now has Wi Flag {priority} ({tier}).", ChatMessageType.Broadcast));
+        }
+
+        [CommandHandler("wiflagreroll", AccessLevel.Admin, CommandHandlerFlag.None, 0,
+            "Forces an immediate re-roll of every character's natural Wi Flag.",
+            "Bumps the wiflag_reroll_salt server property so all natural flags are recomputed (persists across restarts). Admin overrides are untouched; use @wiflagresetall to clear those.")]
+        public static void HandleWiFlagReroll(Session session, params string[] parameters)
+        {
+            var salt = PropertyManager.GetLong("wiflag_reroll_salt").Item + 1;
+            PropertyManager.ModifyLong("wiflag_reroll_salt", salt);
+
+            CommandHandlerHelper.WriteOutputInfo(session, $"All natural Wi Flags have been re-rolled (salt {salt}). Admin overrides were not changed.", ChatMessageType.Broadcast);
+            PlayerManager.BroadcastToAuditChannel(session?.Player, $"{session?.Player?.Name ?? "Console"} forced a Wi Flag re-roll for all characters (wiflag_reroll_salt = {salt}).");
+        }
+
+        [CommandHandler("wiflagresetall", AccessLevel.Admin, CommandHandlerFlag.None, 0,
+            "Clears every character's forced Wi Flag override (online and offline).",
+            "Removes PropertyInt.WiFlagOverride from all characters so they return to their natural daily flag.")]
+        public static void HandleWiFlagResetAll(Session session, params string[] parameters)
+        {
+            var cleared = 0;
+
+            foreach (var iplayer in PlayerManager.GetAllPlayers())
+            {
+                if (iplayer.GetProperty(PropertyInt.WiFlagOverride) == null)
+                    continue;
+
+                iplayer.RemoveProperty(PropertyInt.WiFlagOverride);
+                cleared++;
+
+                // Online players are persisted by the normal player save cycle; offline ones must be saved here.
+                if (iplayer is OfflinePlayer offline)
+                    offline.SaveBiotaToDatabase();
+            }
+
+            CommandHandlerHelper.WriteOutputInfo(session, $"Cleared the Wi Flag override on {cleared} character(s).", ChatMessageType.Broadcast);
+            PlayerManager.BroadcastToAuditChannel(session?.Player, $"{session?.Player?.Name ?? "Console"} cleared all Wi Flag overrides ({cleared} character(s)).");
         }
     }
 }

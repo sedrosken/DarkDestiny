@@ -407,12 +407,13 @@ namespace ACE.Server.WorldObjects
         public List<Creature> GetAttackTargets()
         {
             var visibleTargets = new List<Creature>();
+            var wiEnabled = WiFlagEnabled;
 
             foreach (var creature in PhysicsObj.ObjMaint.GetVisibleTargetsValuesOfTypeCreature())
             {
                 // Special case: players in the 0-5 wi flag band aggro even passive creatures
                 // (bunnies, chickens, etc.) -- bypasses the normal attackable/tolerance filters.
-                if (creature is Player wiPlayer)
+                if (wiEnabled && creature is Player wiPlayer)
                 {
                     if (GetEffectiveWiFlag(wiPlayer) <= WiFlagMagnetMax)
                     {
@@ -502,7 +503,7 @@ namespace ACE.Server.WorldObjects
             {
                 ulong hashKey;
 
-                if (td.Target is Player player && player.GetProperty(PropertyInt.WiFlagOverride) != null)
+                if (WiFlagEnabled && td.Target is Player player && player.GetProperty(PropertyInt.WiFlagOverride) != null)
                 {
                     // Lower number = higher priority (0 is the strongest Wi Flag)
                     hashKey = (ulong)player.GetProperty(PropertyInt.WiFlagOverride).Value;
@@ -552,9 +553,14 @@ namespace ACE.Server.WorldObjects
         public const int WiFlagIgnoreMin = 95;
 
         /// <summary>
+        /// Master switch (server property wiflag_enabled). When false the whole wi flag system is
+        /// bypassed: no natural flags, no overrides, no magnet/ignore tiers, no passive-creature aggro.
+        /// </summary>
+        public static bool WiFlagEnabled => PropertyManager.GetBool("wiflag_enabled").Item;
+
+        /// <summary>
         /// A player's effective wi flag. Manual override (PropertyInt.WiFlagOverride) if set,
-        /// otherwise a stable per-character value in 1..100 derived from the GUID — the "natural"
-        /// wi flag every character is born with (some lucky, some not). Never stored.
+        /// otherwise the natural daily flag (GetNaturalWiFlag). Never stored.
         /// </summary>
         public static int GetEffectiveWiFlag(Player player)
         {
@@ -562,10 +568,37 @@ namespace ACE.Server.WorldObjects
             if (ov.HasValue)
                 return ov.Value;
 
-            // Knuth multiplicative hash so sequentially-created characters don't get sequential luck.
+            return GetNaturalWiFlag(player.Guid.Full);
+        }
+
+        /// <summary>
+        /// Natural wi flag, rolled within [wiflag_min, wiflag_max] (clamped to 0..100) and re-rolled
+        /// once per day at server-local midnight, or immediately when @wiflagreroll bumps wiflag_reroll_salt.
+        /// Deterministic from (character GUID, date, salt) so it stays constant all day, survives
+        /// restarts/relogs, and needs no stored property. An admin override (@wiflag) wins over it.
+        /// </summary>
+        public static int GetNaturalWiFlag(uint guidFull)
+        {
+            var day = (uint)(DateTime.Now.Date - DateTime.UnixEpoch.Date).TotalDays;
+
+            var min = (int)Math.Clamp(PropertyManager.GetLong("wiflag_min").Item, 0L, 100L);
+            var max = (int)Math.Clamp(PropertyManager.GetLong("wiflag_max").Item, 0L, 100L);
+            if (min > max)
+                (min, max) = (max, min);
+            var span = (uint)(max - min + 1);
+            var salt = (uint)PropertyManager.GetLong("wiflag_reroll_salt").Item;
+
             unchecked
             {
-                return (int)((player.Guid.Full * 2654435761u) % 100u) + 1; // 1..100
+                // Mix guid + day + reroll salt, then murmur3 fmix32 finalizer so neighbouring
+                // days/characters/salts get unrelated values.
+                uint h = guidFull * 2654435761u ^ day * 2246822519u ^ salt * 3266489917u;
+                h ^= h >> 16;
+                h *= 0x85EBCA6Bu;
+                h ^= h >> 13;
+                h *= 0xC2B2AE35u;
+                h ^= h >> 16;
+                return (int)(h % span) + min;
             }
         }
 
@@ -575,6 +608,9 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public Creature SelectByWiFlag(List<TargetDistance> targetDistances)
         {
+            if (!WiFlagEnabled)
+                return null;
+
             // Gather visible player targets with their effective flags.
             var players = new List<TargetDistance>();
             var flags = new List<int>();
@@ -637,7 +673,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public void CheckForWiFlagZeroTarget()
         {
-            if (AttackTarget != null || IsAwake)
+            if (!WiFlagEnabled || AttackTarget != null || IsAwake)
                 return;
 
             // No tactic/tolerance gate here on purpose. The creatures we want to force
