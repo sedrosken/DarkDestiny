@@ -146,46 +146,14 @@
           "stacksize": "10"
         },
         {
-          "weenieId": "774",
-          "name": "Hyssop",
-          "stacksize": "10"
+          "weenieId": "20631",
+          "name": "Prismatic Taper",
+          "stacksize": "25"
         },
         {
-          "weenieId": "760",
-          "name": "Realgar",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "789",
-          "name": "Powdered Moonstone",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "749",
-          "name": "Poplar Talisman",
-          "stacksize": "3"
-        },
-        {
-          "weenieId": "626",
-          "name": "Powdered Hematite",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "750",
-          "name": "Rowan Talisman",
-          "stacksize": "3"
-        },
-        {
-          "weenieId": "754",
-          "name": "Cadmia",
-          "stacksize": "10",
-          "specializedOnly": "true"
-        },
-        {
-          "weenieId": "782",
-          "name": "Powdered Agate",
-          "stacksize": "10",
-          "specializedOnly": "true"
+          "weenieId": "15268",
+          "name": "Foci of Enchantment",
+          "stacksize": "1"
         }
       ],
       "heritage": [
@@ -1631,40 +1599,14 @@
           "stacksize": "10"
         },
         {
-          "weenieId": "774",
-          "name": "Hyssop",
-          "stacksize": "10"
+          "weenieId": "20631",
+          "name": "Prismatic Taper",
+          "stacksize": "25"
         },
         {
-          "weenieId": "740",
-          "name": "Ashwood Talisman",
-          "stacksize": "3"
-        },
-        {
-          "weenieId": "759",
-          "name": "Quicksilver",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "792",
-          "name": "Powdered Turquoise",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "756",
-          "name": "Cobalt",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "790",
-          "name": "Powdered Onyx",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "761",
-          "name": "Stibnite",
-          "stacksize": "10",
-          "specializedOnly": "true"
+          "weenieId": "15269",
+          "name": "Foci of Artifice",
+          "stacksize": "1"
         }
       ],
       "heritage": [
@@ -2020,62 +1962,14 @@
           "stacksize": "10"
         },
         {
-          "weenieId": "780",
-          "name": "Wormwood",
-          "stacksize": "10"
+          "weenieId": "20631",
+          "name": "Prismatic Taper",
+          "stacksize": "25"
         },
         {
-          "weenieId": "790",
-          "name": "Powdered Onyx",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "756",
-          "name": "Cobalt",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "744",
-          "name": "Ebony Talisman",
-          "stacksize": "3"
-        },
-        {
-          "weenieId": "774",
-          "name": "Hyssop",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "783",
-          "name": "Powdered Amber",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "757",
-          "name": "Colcothar",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "751",
-          "name": "Willow Talisman",
-          "stacksize": "3"
-        },
-        {
-          "weenieId": "776",
-          "name": "Mugwort",
-          "stacksize": "10",
-          "specializedOnly": "true"
-        },
-        {
-          "weenieId": "755",
-          "name": "Cinnabar",
-          "stacksize": "10",
-          "specializedOnly": "true"
-        },
-        {
-          "weenieId": "752",
-          "name": "Yew Talisman",
-          "stacksize": "3",
-          "specializedOnly": "true"
+          "weenieId": "15270",
+          "name": "Foci of Verdancy",
+          "stacksize": "1"
         }
       ],
       "heritage": [
@@ -2681,35 +2575,14 @@
           "stacksize": "10"
         },
         {
-          "weenieId": "772",
-          "name": "Hawthorn",
-          "stacksize": "10"
+          "weenieId": "20631",
+          "name": "Prismatic Taper",
+          "stacksize": "25"
         },
         {
-          "weenieId": "790",
-          "name": "Powdered Onyx",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "741",
-          "name": "Birch Talisman",
-          "stacksize": "3"
-        },
-        {
-          "weenieId": "762",
-          "name": "Turpeth",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "760",
-          "name": "Realgar",
-          "stacksize": "10"
-        },
-        {
-          "weenieId": "756",
-          "name": "Cobalt",
-          "stacksize": "10",
-          "specializedOnly": "true"
+          "weenieId": "15271",
+          "name": "Foci of Strife",
+          "stacksize": "1"
         }
       ],
       "heritage": [

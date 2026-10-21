@@ -1058,6 +1058,9 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public Spell GetSpecializationUpgradedSpell(Spell spell)
         {
+            if (spell.IsSpecializationUpgraded)
+                return spell;   // already upgraded - never double-apply
+
             var skill = GetCreatureSkill(spell.School);
             if (skill == null || skill.AdvancementClass != SkillAdvancementClass.Specialized)
                 return spell;
@@ -1079,6 +1082,10 @@ namespace ACE.Server.WorldObjects
             // and just take the next level's power numbers (BaseIntensity, Variance, StatModVal, Duration,
             // Boost, Transfer, Dispel strength, ...). OverrideSchool/IntensityMod stay on the original object.
             spell.ApplyPowerFrom(nextSpell);
+
+            // DIAGNOSTIC - remove once verified. Proves this build is running and shows identity vs power source.
+            log.Info($"[SpecUpgrade] {Name}: cast {spell.Name} ({spell.Id}) -> reports {spell.Name} ({spell.Id}), power from {nextSpell.Name} ({nextSpell.Id}), BaseIntensity {spell.BaseIntensity}, Variance {spell.Variance}");
+
             return spell;
         }
 

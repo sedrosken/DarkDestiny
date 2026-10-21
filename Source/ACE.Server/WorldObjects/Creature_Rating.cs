@@ -497,6 +497,20 @@ namespace ACE.Server.WorldObjects
             return GetEquippedItemsRatingSum(PropertyInt.GearMaxStamina);
         }
 
+        /// <summary>
+        /// Gear max stamina/mana (Amber/Sapphire imbues) folded into the InitLevel sent to the client,
+        /// since the client does not understand GearMaxStamina/GearMaxMana.
+        /// </summary>
+        public int GetGearVitalBonusForClient(PropertyAttribute2nd vital)
+        {
+            switch (vital)
+            {
+                case PropertyAttribute2nd.MaxStamina: return GetGearMaxStamina();
+                case PropertyAttribute2nd.MaxMana: return GetGearMaxMana();
+                default: return 0;
+            }
+        }
+
         public int GetGearMaxMana()
         {
             return GetEquippedItemsRatingSum(PropertyInt.GearMaxMana);

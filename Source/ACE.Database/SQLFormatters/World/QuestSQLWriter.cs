@@ -25,9 +25,9 @@ namespace ACE.Database.SQLFormatters.World
 
         public void CreateSQLINSERTStatement(Quest input, StreamWriter writer)
         {
-            writer.WriteLine("INSERT INTO `quest` (`name`, `min_Delta`, `max_Solves`, `message`, `last_Modified`)");
+            writer.WriteLine("INSERT INTO `quest` (`name`, `min_Delta`, `max_Solves`, `free_Solves`, `message`, `last_Modified`)");
 
-            var output = $"VALUES ({GetSQLString(input.Name)}, {input.MinDelta}, {input.MaxSolves}, {GetSQLString(input.Message)}, '{input.LastModified:yyyy-MM-dd HH:mm:ss}');";
+            var output = $"VALUES ({GetSQLString(input.Name)}, {input.MinDelta}, {input.MaxSolves}, {input.FreeSolves}, {GetSQLString(input.Message)}, '{input.LastModified:yyyy-MM-dd HH:mm:ss}');";
 
             output = FixNullFields(output);
 

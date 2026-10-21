@@ -285,7 +285,7 @@ namespace ACE.Server.Network.GameEvent.Events
                 if ((attributeFlags & AttributeCache.Stamina) != 0)
                 {
                     Writer.Write(Session.Player.Stamina.Ranks);
-                    Writer.Write(Session.Player.Stamina.StartingValue + (uint)Session.Player.GetSetCrystalVitalBonus(Session.Player.Stamina.Vital)); // init_level (+ prestige set crystal bonus)
+                    Writer.Write(Session.Player.Stamina.StartingValue + (uint)Session.Player.GetSetCrystalVitalBonus(Session.Player.Stamina.Vital) + (uint)Session.Player.GetGearVitalBonusForClient(Session.Player.Stamina.Vital)); // init_level (+ prestige set crystal bonus)
                     Writer.Write(Session.Player.Stamina.ExperienceSpent);
                     Writer.Write(Session.Player.Stamina.Current);
                 }
@@ -293,7 +293,7 @@ namespace ACE.Server.Network.GameEvent.Events
                 if ((attributeFlags & AttributeCache.Mana) != 0)
                 {
                     Writer.Write(Session.Player.Mana.Ranks);
-                    Writer.Write(Session.Player.Mana.StartingValue + (uint)Session.Player.GetSetCrystalVitalBonus(Session.Player.Mana.Vital)); // init_level (+ prestige set crystal bonus)
+                    Writer.Write(Session.Player.Mana.StartingValue + (uint)Session.Player.GetSetCrystalVitalBonus(Session.Player.Mana.Vital) + (uint)Session.Player.GetGearVitalBonusForClient(Session.Player.Mana.Vital)); // init_level (+ prestige set crystal bonus)
                     Writer.Write(Session.Player.Mana.ExperienceSpent);
                     Writer.Write(Session.Player.Mana.Current);
                 }

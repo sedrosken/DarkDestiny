@@ -1031,7 +1031,10 @@ namespace ACE.Server.Managers
 
                 ("pk_cast_radius", new Property<double>(6.0, "The distance in meters a player can travel from their starting cast position. if they exceed this distance, they fizzle the spell.")),
 
-                ("specialized_defense_damage_reduction", new Property<double>(0.10, "PvE only. Flat damage reduction (0.0-1.0) applied to melee/missile/magic damage taken when the defender's relevant Defense skill (Melee/Missile/Magic Defense) is Specialized. Does not apply to PK/PvP combat.")),
+                ("specialized_defense_damage_reduction", new Property<double>(0.10, "PvE only. Maximum damage reduction (0.0-1.0) a player gets from a Specialized Melee/Missile/Magic Defense skill. Scales linearly with base skill from 0 up to this value at the matching specialized_defense_cap_* skill level. Does not apply to PK/PvP combat.")),
+                ("specialized_defense_cap_melee", new Property<double>(419.0, "Base Melee Defense at which the specialized defense damage reduction reaches its maximum.")),
+                ("specialized_defense_cap_missile", new Property<double>(342.0, "Base Missile Defense at which the specialized defense damage reduction reaches its maximum.")),
+                ("specialized_defense_cap_magic", new Property<double>(309.0, "Base Magic Defense at which the specialized defense damage reduction reaches its maximum.")),
 
                 // Hardcore settings
                 ("hardcore_npk_death_level_modifier", new Property<double>(1.0, "Percentage of levels lost on death for Hardcore NPK gameplay mode. A value of 1.0 means deaths reset the player to level 1.")),

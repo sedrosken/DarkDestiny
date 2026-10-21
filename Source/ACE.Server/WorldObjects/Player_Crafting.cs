@@ -347,9 +347,7 @@ namespace ACE.Server.WorldObjects
 
         public int GetStructure(WorldObject salvageItem, SalvageResults salvageResults, ref SalvageMessage message)
         {
-            // By default, salvaging uses either a tinkering skill, or your salvaging skill that would yield the greatest amount of material.
-            // Tinkering skills can only yield at most the workmanship number in units of salvage.
-            // The salvaging skill can produce more units than workmanship.
+            // Yield is based on the Salvaging skill only, capped at the item's workmanship unless the player has Ciandra's Fortune.
 
             // You can also significantly increase the amount of material returned by training the Ciandra's Fortune augmentation.
             // This augmentation can be trained 4 times, each time providing an additional 25% bonus to the amount of material returned.
@@ -365,28 +363,24 @@ namespace ACE.Server.WorldObjects
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && salvageItem.WeenieType == WeenieType.Missile)
                 stackSize = 1; // thrown weapons count just as a single item no matter the stack size.
 
-            // should this be getting the highest tinkering skill,
-            // or the tinkering skill for the material?
+            // yield is based on the Salvaging skill only
             var salvageSkill = GetCreatureSkill(Skill.Salvaging).Current;
-            var highestTinkeringSkill = GetMaxSkill(TinkeringSkills);
-            var highestTrainedTinkeringSkill = highestTinkeringSkill.AdvancementClass >= SkillAdvancementClass.Trained ? highestTinkeringSkill.Current : 0;
 
-            // take augs into account for salvaging only
-            var salvageAmount = CalcNumUnits((int)salvageSkill, workmanship, AugmentationBonusSalvage) * stackSize;
-            var tinkeringAmount = Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM ? 0 : CalcNumUnits((int)highestTrainedTinkeringSkill, workmanship, 0); // CustomDM always uses the salvageAmount
+            // take augs into account; without Ciandra's Fortune, units per item are capped at the item's workmanship
+            var unitsPerItem = CalcNumUnits((int)salvageSkill, workmanship, AugmentationBonusSalvage);
 
-            // cap tinkeringAmount to item workmanship
-            tinkeringAmount = Math.Min(tinkeringAmount, (int)Math.Round(salvageItem.Workmanship ?? 1.0f)) * stackSize;
+            if (AugmentationBonusSalvage == 0)
+                unitsPerItem = Math.Min(unitsPerItem, (int)Math.Round(workmanship));
 
-            // choose the best one
-            var addStructure = Math.Max(salvageAmount, tinkeringAmount);
+            var addStructure = unitsPerItem * stackSize;
 
             addStructure = (int)Math.Round(addStructure * PropertyManager.GetDouble("salvage_amount_multiplier").Item);
 
             // Ensure at least 1 unit
             addStructure = Math.Max(addStructure, 1);
 
-            var skill = salvageAmount > tinkeringAmount ? Skill.Salvaging : GetMaxSkill(TinkeringSkills).Skill;
+            // the client builds the "based on your knowledge of X" text from this skill
+            var skill = Skill.Salvaging;
 
             message = salvageResults.GetMessage(salvageItem.MaterialType ?? ACE.Entity.Enum.MaterialType.Unknown, skill);
             message.Amount += (uint)addStructure;

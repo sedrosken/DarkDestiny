@@ -375,6 +375,9 @@ namespace ACE.Server.Managers
             if (quest.MaxSolves > -1 && playerQuest.NumTimesCompleted >= quest.MaxSolves)
                 return TimeSpan.MaxValue;   // cannot solve this quest again - max solves reached / exceeded
 
+            if (quest.FreeSolves > 0 && playerQuest.NumTimesCompleted < quest.FreeSolves)
+                return TimeSpan.MinValue;   // still within the free allotment - ignore min_Delta
+
             var currentTime = (uint)Time.GetUnixTime();
             uint nextSolveTime;
 

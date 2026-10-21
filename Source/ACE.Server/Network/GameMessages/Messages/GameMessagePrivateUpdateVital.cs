@@ -15,7 +15,7 @@ namespace ACE.Server.Network.GameMessages.Messages
             // fold prestige set crystal max-vital bonus into InitLevel so the client panel matches the server
             var startingValue = creatureVital.StartingValue;
             if (worldObject is Player player)
-                startingValue += (uint)player.GetSetCrystalVitalBonus(creatureVital.Vital);
+                startingValue += (uint)(player.GetSetCrystalVitalBonus(creatureVital.Vital) + player.GetGearVitalBonusForClient(creatureVital.Vital));
             Writer.Write(startingValue);
             Writer.Write(creatureVital.ExperienceSpent);
             Writer.Write(creatureVital.Current);

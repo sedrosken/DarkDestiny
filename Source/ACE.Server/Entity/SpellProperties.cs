@@ -264,7 +264,9 @@ namespace ACE.Server.Entity
         /// </summary>
         public void ApplyPowerFrom(Spell source)
         {
-            if (source == null || source.NotFound || IsSpecializationUpgraded)
+            // NOTE: intentionally callable more than once (e.g. specialization, then Empower) - the last call wins.
+            // Callers that must not double-apply (specialization) check IsSpecializationUpgraded themselves.
+            if (source == null || source.NotFound)
                 return;
 
             _powerSpell = source._spell;
@@ -272,8 +274,13 @@ namespace ACE.Server.Entity
 
             // Duration is a DAT field (_spellBase) for plain enchantments, so override it explicitly.
             // source.Duration already includes the DoT extra tick where applicable.
-            OverrideDuration = source.Duration;
+            // DoT projectiles read PowerSpell.DotDuration in the Duration getter, so leave those alone.
+            if (source._spell.DotDuration == null)
+                OverrideDuration = source.Duration;
         }
+
+        /// <summary>The spell id whose DB row currently supplies this spell's power numbers (== Id until ApplyPowerFrom).</summary>
+        public SpellId PowerSpellId => (SpellId)PowerSpell.Id;
 
         //==================================
         // Spell fields - from the server DB

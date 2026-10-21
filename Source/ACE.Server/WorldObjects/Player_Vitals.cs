@@ -244,6 +244,7 @@ namespace ACE.Server.WorldObjects
             if (Stamina.Current > Stamina.MaxValue)
                 Stamina.Current = Stamina.MaxValue;
 
+            Session.Network.EnqueueSend(new GameMessagePrivateUpdateVital(this, Stamina));
             Session.Network.EnqueueSend(new GameMessagePrivateUpdateAttribute2ndLevel(this, Vital.Stamina, Stamina.Current));
         }
 
@@ -264,6 +265,7 @@ namespace ACE.Server.WorldObjects
             if (Mana.Current > Mana.MaxValue)
                 Mana.Current = Mana.MaxValue;
 
+            Session.Network.EnqueueSend(new GameMessagePrivateUpdateVital(this, Mana));
             Session.Network.EnqueueSend(new GameMessagePrivateUpdateAttribute2ndLevel(this, Vital.Mana, Mana.Current));
         }
 

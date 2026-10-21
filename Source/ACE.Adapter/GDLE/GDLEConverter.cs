@@ -247,6 +247,7 @@ namespace ACE.Adapter.GDLE
                 // FIXME: db schema should be int
                 result.MinDelta = (uint)input.value.mindelta;
                 result.MaxSolves = input.value.maxsolves;
+                result.FreeSolves = 0; // GDLE has no free-solves concept; default to none
                 result.Message = input.value.fullname;
 
                 return true;

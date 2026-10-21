@@ -820,20 +820,11 @@ namespace ACE.Server.WorldObjects
 
         /// <summary>
         /// Returns the damage multiplier from the target's specialized Magic Defense skill.
-        /// PvE only - this never applies to PK/PvP combat.
+        /// Scaling and PvE-only rules live in DamageEvent.GetSpecializedDefenseMod.
         /// </summary>
         public static float GetSpecializedMagicDefenseMod(Creature target, bool isPvP)
         {
-            if (isPvP)
-                return 1.0f;
-
-            var magicDefenseSkill = target.GetCreatureSkill(Skill.MagicDefense);
-            if (magicDefenseSkill == null || magicDefenseSkill.AdvancementClass != SkillAdvancementClass.Specialized)
-                return 1.0f;
-
-            var reduction = PropertyManager.GetDouble("specialized_defense_damage_reduction").Item;
-
-            return (float)Math.Max(0.0, 1.0 - reduction);
+            return DamageEvent.GetSpecializedDefenseMod(target, Skill.MagicDefense, isPvP);
         }
 
         public static float GetAbsorbMod(WorldObject source, Creature target)

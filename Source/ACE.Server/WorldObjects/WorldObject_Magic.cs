@@ -2712,18 +2712,20 @@ namespace ACE.Server.WorldObjects
                 var empowerSpell = EnchantmentManager.GetEnchantments(SpellCategory.EmpowerSpell).OrderByDescending(o => o.StatModValue).FirstOrDefault();
                 if (empowerSpell != null && empowerSpell.StatModKey > 0)
                 {
+                    // Empower: the spell keeps the id that was cast and only takes the power of the next level up.
+                    // Stacks on top of the specialization upgrade (power level + 1).
                     var level1SpellId = SpellLevelProgression.GetLevel1SpellId((SpellId)spell.Id);
-                    var newSpellId = SpellLevelProgression.GetSpellAtLevel(level1SpellId, (int)spell.Level + 1);
+                    var currentPowerLevel = SpellLevelProgression.GetSpellLevel(spell.PowerSpellId);
+                    if (currentPowerLevel <= 0)
+                        currentPowerLevel = (int)spell.Level;
+                    var newSpellId = SpellLevelProgression.GetSpellAtLevel(level1SpellId, currentPowerLevel + 1);
                     if (newSpellId != SpellId.Undef)
                     {
                         var newSpell = new Spell(newSpellId);
                         if (!newSpell.NotFound)
                         {
                             spell.IsEmpoweredSpell = true;
-
-                            newSpell.CopyMetaspellsFrom(spell);
-                            newSpell.IntensityMod = spell.IntensityMod;
-                            spell = newSpell;
+                            spell.ApplyPowerFrom(newSpell);
 
                             empowerSpell.StatModKey--;
                             empowerSpell.StartTime = 0;
@@ -2859,17 +2861,26 @@ namespace ACE.Server.WorldObjects
                 else if (!spell.IsSelfTargeted && this == newTarget)
                     spellId = SpellLevelProgression.GetSelfSpellId(spellId);
 
+                // Enchain hops keep the id of the spell that was cast (only the self/other variant may differ)
+                // and perform at half the effective power level.
                 var level1SpellId = SpellLevelProgression.GetLevel1SpellId(spellId);
-                var newSpellId = SpellLevelProgression.GetSpellAtLevel(level1SpellId, (int)Math.Max(Math.Ceiling(spell.Level / 2f), 1), true);
+                var effectiveLevel = SpellLevelProgression.GetSpellLevel(spell.PowerSpellId);
+                if (effectiveLevel <= 0)
+                    effectiveLevel = (int)spell.Level;
+                var chainPowerId = SpellLevelProgression.GetSpellAtLevel(level1SpellId, (int)Math.Max(Math.Ceiling(effectiveLevel / 2f), 1), true);
 
-                if (newSpellId == SpellId.Undef)
-                    newSpellId = spellId;
-
-                if (newSpellId != SpellId.Undef)
+                if (spellId != SpellId.Undef)
                 {
-                    var newSpell = new Spell(newSpellId);
+                    var newSpell = new Spell(spellId);
                     if (!newSpell.NotFound)
                     {
+                        if (chainPowerId != SpellId.Undef && chainPowerId != spellId)
+                        {
+                            var chainPowerSpell = new Spell(chainPowerId);
+                            if (!chainPowerSpell.NotFound)
+                                newSpell.ApplyPowerFrom(chainPowerSpell);
+                        }
+
                         newSpell.CopyMetaspellsFrom(spell);
                         newSpell.EnchainedTargetGuids.Add(newTarget.Guid.Full);
                         newSpell.IntensityMod = spell.IntensityMod;

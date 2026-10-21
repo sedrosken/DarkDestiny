@@ -899,6 +899,32 @@ CREATE TABLE `pkkills` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
+--
+-- Table structure for table `character_obituary`
+--
+
+DROP TABLE IF EXISTS `character_obituary`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `character_obituary` (
+  `id` int(10) UNSIGNED NOT NULL COMMENT 'Unique Id of this registry',
+  `account_Id` int(10) UNSIGNED NOT NULL,
+  `character_Id` int(10) UNSIGNED NOT NULL,
+  `character_Name` varchar(50) NOT NULL,
+  `character_Level` int(11) NOT NULL,
+  `killer_Name` varchar(50) NOT NULL,
+  `killer_Level` int(11) NOT NULL,
+  `landblock_Id` int(10) UNSIGNED NOT NULL,
+  `gameplay_Mode` int(11) NOT NULL,
+  `was_Pvp` tinyint(1) NOT NULL,
+  `kills` int(11) NOT NULL,
+  `xp` bigint(20) NOT NULL,
+  `age` int(11) NOT NULL,
+  `time_Of_Death` datetime NOT NULL DEFAULT current_timestamp(),
+  `monarch_Id` int(10) UNSIGNED DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

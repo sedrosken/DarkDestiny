@@ -545,7 +545,7 @@ namespace ACE.Server.Entity
             var damageBeforeShieldMod = DamageBeforeMitigation * ArmorMod * ResistanceMod * DamageResistanceRatingMod;
 
             // specialized defense skill mitigation (PvE only)
-            var specDefenseMod = GetSpecializedDefenseMod(defender, pkBattle);
+            var specDefenseMod = GetSpecializedDefenseMod(defender, CombatType == CombatType.Missile ? Skill.MissileDefense : Skill.MeleeDefense, pkBattle);
 
             // calculate final output damage
             Damage = damageBeforeShieldMod * ShieldMod * specDefenseMod;
@@ -808,21 +808,35 @@ namespace ACE.Server.Entity
         }
 
         /// <summary>
-        /// Returns the damage multiplier from the defender's specialized Defense skill.
-        /// PvE only - this never applies to PK/PvP combat.
+        /// Returns the damage multiplier from a player defender's specialized Defense skill.
+        /// The reduction scales linearly with the defender's BASE skill, from 0 up to
+        /// specialized_defense_damage_reduction at the skill's cap, and only applies when the
+        /// skill is Specialized. PvE only - never applies to PK/PvP combat or to non-player defenders.
         /// </summary>
-        public float GetSpecializedDefenseMod(Creature defender, bool pkBattle)
+        public static float GetSpecializedDefenseMod(Creature defender, Skill defenseSkillType, bool pvp)
         {
-            if (pkBattle)
+            if (pvp || !(defender is Player))
                 return 1.0f;
-
-            var defenseSkillType = CombatType == CombatType.Missile ? Skill.MissileDefense : Skill.MeleeDefense;
 
             var defenseSkill = defender.GetCreatureSkill(defenseSkillType);
             if (defenseSkill == null || defenseSkill.AdvancementClass != SkillAdvancementClass.Specialized)
                 return 1.0f;
 
-            var reduction = PropertyManager.GetDouble("specialized_defense_damage_reduction").Item;
+            string capProperty;
+            switch (defenseSkillType)
+            {
+                case Skill.MeleeDefense: capProperty = "specialized_defense_cap_melee"; break;
+                case Skill.MissileDefense: capProperty = "specialized_defense_cap_missile"; break;
+                case Skill.MagicDefense: capProperty = "specialized_defense_cap_magic"; break;
+                default: return 1.0f;
+            }
+
+            var cap = PropertyManager.GetDouble(capProperty).Item;
+            if (cap <= 0.0)
+                return 1.0f;
+
+            var scale = Math.Min(1.0, defenseSkill.Base / cap);
+            var reduction = PropertyManager.GetDouble("specialized_defense_damage_reduction").Item * scale;
 
             return (float)Math.Max(0.0, 1.0 - reduction);
         }

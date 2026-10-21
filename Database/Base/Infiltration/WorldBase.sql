@@ -183,12 +183,16 @@ CREATE TABLE `quest` (
   `name` varchar(255) NOT NULL COMMENT 'Unique Name of Quest',
   `min_Delta` int unsigned NOT NULL COMMENT 'Minimum time between Quest completions',
   `max_Solves` int NOT NULL COMMENT 'Maximum number of times Quest can be completed',
+  `free_Solves` int unsigned NOT NULL DEFAULT '0' COMMENT 'Number of completions that ignore min_Delta',
   `message` text COMMENT 'Quest solved text - unused?',
   `last_Modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Quests';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+UPDATE `quest` SET `min_Delta` = 604800, `free_Solves` = 4 WHERE `name` = 'SkillAlterationGemPickedUp';
+UPDATE `quest` SET `free_Solves` = 9 WHERE `name` IN ('AttributeLoweringGemPickedUp','AttributeRaisingGemPickedUp');
 
 --
 -- Table structure for table `recipe`

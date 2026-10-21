@@ -29,6 +29,11 @@ public partial class Quest
     public int MaxSolves { get; set; }
 
     /// <summary>
+    /// Number of Quest completions that ignore MinDelta (0 = none)
+    /// </summary>
+    public uint FreeSolves { get; set; }
+
+    /// <summary>
     /// Quest solved text - unused?
     /// </summary>
     public string Message { get; set; }

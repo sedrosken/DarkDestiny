@@ -463,6 +463,10 @@ public partial class WorldDbContext : DbContext
             entity.Property(e => e.Id)
                 .HasComment("Unique Id of this Quest")
                 .HasColumnName("id");
+            entity.Property(e => e.FreeSolves)
+                .HasDefaultValue(0u)
+                .HasComment("Number of completions that ignore min_Delta")
+                .HasColumnName("free_Solves");
             entity.Property(e => e.LastModified)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
