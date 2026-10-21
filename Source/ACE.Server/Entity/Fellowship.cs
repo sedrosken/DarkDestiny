@@ -380,6 +380,10 @@ namespace ACE.Server.Entity
             {
                 FellowshipLeaderGuid = newLeader.Guid.Full;
 
+                // XP sharing (EvenShare/ShareXP) is judged against the leader's level, so it must be
+                // recalculated before the full update below pushes the flags to the clients
+                CalculateXPSharing();
+
                 if (oldLeader != null)
                     oldLeader.Session.Network.EnqueueSend(new GameEventWeenieErrorWithString(oldLeader.Session, WeenieErrorWithString.YouHavePassedFellowshipLeadershipTo_, newLeader.Name));
 
@@ -397,6 +401,8 @@ namespace ACE.Server.Entity
                 var fellowGuids = fellowshipMembers.Keys.ToList();
 
                 FellowshipLeaderGuid = fellowGuids[rng];
+
+                CalculateXPSharing();
 
                 var newLeaderName = fellowshipMembers[FellowshipLeaderGuid].Name;
 
@@ -470,13 +476,19 @@ namespace ACE.Server.Entity
                 return;
             }
 
-            var leader = PlayerManager.GetOnlinePlayer(FellowshipLeaderGuid);
-            if (leader == null)
-                return;
-
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
             {
-                var maxLevelDiff = fellows.Values.Max(f => Math.Abs((leader.Level ?? 1) - (f.Level ?? 1)));
+                // Judge against the leader's level. Resolve the leader from the live fellowship first;
+                // if they aren't in the live fellowship (mid-logout, mid-handoff), fall back to the highest-level member,
+                // which is the strictest reading (every member must be within range of the top level).
+                // Returning early here used to leave ShareXP/EvenShare stale.
+                int referenceLevel;
+                if (fellows.TryGetValue(FellowshipLeaderGuid, out var leader))
+                    referenceLevel = leader.Level ?? 1;
+                else
+                    referenceLevel = fellows.Values.Max(f => f.Level ?? 1);
+
+                var maxLevelDiff = fellows.Values.Max(f => Math.Abs(referenceLevel - (f.Level ?? 1)));
 
                 if (maxLevelDiff <= 5)
                 {
@@ -763,9 +775,16 @@ namespace ACE.Server.Entity
         /// </summary>
         public void OnFellowLevelUp(Player player)
         {
+            var prevShareXP = ShareXP;
+            var prevEvenShare = EvenShare;
+
             CalculateXPSharing();
 
             var fellowshipMembers = GetFellowshipMembers();
+
+            // clients only learn ShareXP/EvenShare from a full update, so push one if the level-up flipped either
+            if (ShareXP != prevShareXP || EvenShare != prevEvenShare)
+                UpdateAllMembers();
 
             foreach (var fellow in fellowshipMembers.Values)
             {

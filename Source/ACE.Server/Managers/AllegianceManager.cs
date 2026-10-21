@@ -119,8 +119,18 @@ namespace ACE.Server.Managers
 
             player.Allegiance = GetAllegiance(player);
             player.AllegianceNode = GetAllegianceNode(player);
+        }
 
-            // TODO: update chat channels for online players here?
+        /// <summary>
+        /// Resends the turbine chat channel list to every online member of an allegiance,
+        /// so each client picks up the current allegiance chat channel id after a rebuild.
+        /// </summary>
+        public static void RefreshChatChannels(Allegiance allegiance)
+        {
+            if (allegiance?.Members == null) return;
+
+            foreach (var member in allegiance.Members.Keys)
+                PlayerManager.GetOnlinePlayer(member)?.SendTurbineChatChannels();
         }
 
         /// <summary>
@@ -341,6 +351,11 @@ namespace ACE.Server.Managers
             // maintain approved vassals list
             if (allegiance != null && allegiance.HasApprovedVassal(vassal.Guid.Full))
                 allegiance.RemoveApprovedVassal(vassal.Guid.Full);
+
+            // the allegiance was rebuilt above, so the local 'allegiance' may be stale.
+            // use vassal.Allegiance (set by LoadPlayer) and tell every online member
+            // the current chat channel, not just the player who swore
+            RefreshChatChannels(vassal.Allegiance);
         }
 
         /// <summary>

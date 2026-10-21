@@ -918,7 +918,8 @@ namespace ACE.Database
                             where biota.WeenieType == (int)WeenieType.Allegiance && iid.Type == (int)PropertyInstanceId.Monarch && iid.Value == monarchID
                             select biota.Id;
 
-                return query.FirstOrDefault();
+                // deterministic if a monarch somehow has more than one allegiance biota
+                return query.OrderBy(id => id).FirstOrDefault();
             }
         }
 

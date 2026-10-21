@@ -544,8 +544,11 @@ namespace ACE.Server.Entity
 
             var damageBeforeShieldMod = DamageBeforeMitigation * ArmorMod * ResistanceMod * DamageResistanceRatingMod;
 
+            // specialized defense skill mitigation (PvE only)
+            var specDefenseMod = GetSpecializedDefenseMod(defender, pkBattle);
+
             // calculate final output damage
-            Damage = damageBeforeShieldMod * ShieldMod;
+            Damage = damageBeforeShieldMod * ShieldMod * specDefenseMod;
 
             if (attacker == defender)
                 Damage *= 1.33f; // Self-damage does extra damage.
@@ -802,6 +805,26 @@ namespace ACE.Server.Entity
                 evadeChance = Math.Min(evadeChance, 0.90f + ((CombatType == CombatType.Missile ? playerDefender.CachedMissileDefenseCapBonus : playerDefender.CachedMeleeDefenseCapBonus) * 0.01));
 
             return (float)evadeChance;
+        }
+
+        /// <summary>
+        /// Returns the damage multiplier from the defender's specialized Defense skill.
+        /// PvE only - this never applies to PK/PvP combat.
+        /// </summary>
+        public float GetSpecializedDefenseMod(Creature defender, bool pkBattle)
+        {
+            if (pkBattle)
+                return 1.0f;
+
+            var defenseSkillType = CombatType == CombatType.Missile ? Skill.MissileDefense : Skill.MeleeDefense;
+
+            var defenseSkill = defender.GetCreatureSkill(defenseSkillType);
+            if (defenseSkill == null || defenseSkill.AdvancementClass != SkillAdvancementClass.Specialized)
+                return 1.0f;
+
+            var reduction = PropertyManager.GetDouble("specialized_defense_damage_reduction").Item;
+
+            return (float)Math.Max(0.0, 1.0 - reduction);
         }
 
         /// <summary>

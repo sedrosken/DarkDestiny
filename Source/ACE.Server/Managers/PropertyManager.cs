@@ -1031,6 +1031,8 @@ namespace ACE.Server.Managers
 
                 ("pk_cast_radius", new Property<double>(6.0, "The distance in meters a player can travel from their starting cast position. if they exceed this distance, they fizzle the spell.")),
 
+                ("specialized_defense_damage_reduction", new Property<double>(0.10, "PvE only. Flat damage reduction (0.0-1.0) applied to melee/missile/magic damage taken when the defender's relevant Defense skill (Melee/Missile/Magic Defense) is Specialized. Does not apply to PK/PvP combat.")),
+
                 // Hardcore settings
                 ("hardcore_npk_death_level_modifier", new Property<double>(1.0, "Percentage of levels lost on death for Hardcore NPK gameplay mode. A value of 1.0 means deaths reset the player to level 1.")),
                 ("hardcore_pk_pvp_death_level_modifier", new Property<double>(1.0, "Percentage of levels lost on death for Hardcore PK gameplay mode when dying in PvP. A value of 1.0 means deaths reset the player to level 1.")),

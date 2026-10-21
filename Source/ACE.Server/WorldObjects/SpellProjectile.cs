@@ -458,16 +458,18 @@ namespace ACE.Server.WorldObjects
                     }
                 }
 
-                // also called on resist
-                if (player != null && targetPlayer == null)
-                    player.OnAttackMonster(creatureTarget);
+            }
 
-                if (player == null && targetPlayer == null)
-                {
-                    // check for faction combat
-                    if (sourceCreature != null && creatureTarget != null && (sourceCreature.AllowFactionCombat(creatureTarget) || sourceCreature.PotentialFoe(creatureTarget)))
-                        sourceCreature.MonsterOnAttackMonster(creatureTarget);
-                }
+            // aggro the target whether the spell landed or was resisted
+            // (this previously sat inside the damage != null block, so resisted spells never woke/aggroed monsters)
+            if (player != null && targetPlayer == null)
+                player.OnAttackMonster(creatureTarget);
+
+            if (player == null && targetPlayer == null)
+            {
+                // check for faction combat
+                if (sourceCreature != null && creatureTarget != null && (sourceCreature.AllowFactionCombat(creatureTarget) || sourceCreature.PotentialFoe(creatureTarget)))
+                    sourceCreature.MonsterOnAttackMonster(creatureTarget);
             }
         }
 
@@ -641,6 +643,9 @@ namespace ACE.Server.WorldObjects
             // Possible 2x + damage bonus for the slayer property
             var slayerMod = GetWeaponCreatureSlayerModifier(weapon, sourceCreature, target);
 
+            // specialized Magic Defense mitigation (PvE only)
+            var specDefenseMod = GetSpecializedMagicDefenseMod(target, isPvP);
+
             // life magic projectiles: ie., martyr's hecatomb
             if (Spell.MetaSpellType == ACE.Entity.Enum.SpellType.LifeProjectile)
             {
@@ -667,7 +672,7 @@ namespace ACE.Server.WorldObjects
 
                 resistanceMod = (float)Math.Max(0.0f, target.GetResistanceMod(resistanceType, this, null, weaponResistanceMod));
 
-                finalDamage = (lifeMagicDamage + critDamageBonus) * elementalDamageMod * slayerMod * resistanceMod * absorbMod;
+                finalDamage = (lifeMagicDamage + critDamageBonus) * elementalDamageMod * slayerMod * resistanceMod * absorbMod * specDefenseMod;
             }
             // war/void magic projectiles
             else
@@ -760,7 +765,7 @@ namespace ACE.Server.WorldObjects
 
                 finalDamage = baseDamage + critDamageBonus + skillBonus;
 
-                finalDamage *= elementalDamageMod * slayerMod * resistanceMod * absorbMod;
+                finalDamage *= elementalDamageMod * slayerMod * resistanceMod * absorbMod * specDefenseMod;
             }
 
             if (shieldMod != 1.0f && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
@@ -811,6 +816,24 @@ namespace ACE.Server.WorldObjects
                 ShowInfo(target, Spell, attackSkill, criticalChance, criticalHit, critDefended, overpower, weaponCritDamageMod, skillBonus, baseDamage, critDamageBonus, elementalDamageMod, slayerMod, weaponResistanceMod, resistanceMod, absorbMod, LifeProjectileDamage, lifeMagicDamage, finalDamage);
             }
             return finalDamage;
+        }
+
+        /// <summary>
+        /// Returns the damage multiplier from the target's specialized Magic Defense skill.
+        /// PvE only - this never applies to PK/PvP combat.
+        /// </summary>
+        public static float GetSpecializedMagicDefenseMod(Creature target, bool isPvP)
+        {
+            if (isPvP)
+                return 1.0f;
+
+            var magicDefenseSkill = target.GetCreatureSkill(Skill.MagicDefense);
+            if (magicDefenseSkill == null || magicDefenseSkill.AdvancementClass != SkillAdvancementClass.Specialized)
+                return 1.0f;
+
+            var reduction = PropertyManager.GetDouble("specialized_defense_damage_reduction").Item;
+
+            return (float)Math.Max(0.0, 1.0 - reduction);
         }
 
         public static float GetAbsorbMod(WorldObject source, Creature target)

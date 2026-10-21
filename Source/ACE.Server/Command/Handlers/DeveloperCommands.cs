@@ -1882,9 +1882,137 @@ namespace ACE.Server.Command.Handlers
         }
 
         /// <summary>
+        /// Copies the last appraised item, with its current (modified) properties, into the developer's inventory
+        /// </summary>
+        [CommandHandler("cloneitem", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 0,
+            "Copies the last appraised item, including tinkers and other property changes, into your inventory.",
+            "[count]\n" +
+            "Copies int, int64, bool, float, string, data id and instance id properties, the spell book, palettes, animation parts and texture maps.\n" +
+            "Enchantments, positions, and owner / container / wielder links are not copied. Count defaults to 1 (max 100).")]
+        public static void HandleCloneItem(Session session, params string[] parameters)
+        {
+            var source = CommandHandlerHelper.GetLastAppraisedObject(session);
+            if (source == null) return;
+
+            if (source is Creature || source is Corpse)
+            {
+                session.Network.EnqueueSend(new GameMessageSystemChat($"cloneitem: {source.Name} is a creature or corpse, items only.", ChatMessageType.Broadcast));
+                return;
+            }
+
+            var count = 1;
+            if (parameters.Length > 0 && (!int.TryParse(parameters[0], out count) || count < 1 || count > 100))
+            {
+                session.Network.EnqueueSend(new GameMessageSystemChat("cloneitem: count must be a number between 1 and 100.", ChatMessageType.Broadcast));
+                return;
+            }
+
+            var created = 0;
+            for (var i = 0; i < count; i++)
+            {
+                var clone = CloneItem(source);
+                if (clone == null)
+                {
+                    session.Network.EnqueueSend(new GameMessageSystemChat($"cloneitem: couldn't create a copy of {source.Name} (wcid {source.WeenieClassId}).", ChatMessageType.Broadcast));
+                    break;
+                }
+
+                if (!session.Player.TryCreateInInventoryWithNetworking(clone))
+                {
+                    clone.Destroy();
+                    session.Network.EnqueueSend(new GameMessageSystemChat($"cloneitem: couldn't place the copy of {source.Name} in your inventory (full?).", ChatMessageType.Broadcast));
+                    break;
+                }
+
+                created++;
+                PlayerManager.BroadcastToAuditChannel(session.Player, $"{session.Player.Name} has cloned {source.Name} (0x{source.Guid:X8}) into 0x{clone.Guid:X8} in their inventory.");
+            }
+
+            if (created > 0)
+                session.Network.EnqueueSend(new GameMessageSystemChat($"Cloned {source.Name} x{created}.", ChatMessageType.Broadcast));
+        }
+
+        // links to the original owner / location that must not follow a copy
+        private static readonly HashSet<PropertyInt> CloneSkipInt = new HashSet<PropertyInt> { PropertyInt.CurrentWieldedLocation, PropertyInt.PlacementPosition };
+        private static readonly HashSet<PropertyInstanceId> CloneSkipIID = new HashSet<PropertyInstanceId> { PropertyInstanceId.Owner, PropertyInstanceId.Container, PropertyInstanceId.Wielder };
+
+        private static WorldObject CloneItem(WorldObject source)
+        {
+            // fresh guid and base weenie properties first, then overwrite with the source's current values
+            var clone = WorldObjectFactory.CreateNewWorldObject(source.WeenieClassId);
+            if (clone == null)
+                return null;
+
+            CloneProperties(source, clone, b => b.PropertiesInt, k => CloneSkipInt.Contains(k), (k, v) => clone.SetProperty(k, v), k => clone.RemoveProperty(k));
+            CloneProperties(source, clone, b => b.PropertiesInt64, k => false, (k, v) => clone.SetProperty(k, v), k => clone.RemoveProperty(k));
+            CloneProperties(source, clone, b => b.PropertiesBool, k => false, (k, v) => clone.SetProperty(k, v), k => clone.RemoveProperty(k));
+            CloneProperties(source, clone, b => b.PropertiesFloat, k => false, (k, v) => clone.SetProperty(k, v), k => clone.RemoveProperty(k));
+            CloneProperties(source, clone, b => b.PropertiesString, k => false, (k, v) => clone.SetProperty(k, v), k => clone.RemoveProperty(k));
+            CloneProperties(source, clone, b => b.PropertiesDID, k => false, (k, v) => clone.SetProperty(k, v), k => clone.RemoveProperty(k));
+            CloneProperties(source, clone, b => b.PropertiesIID, k => CloneSkipIID.Contains(k), (k, v) => clone.SetProperty(k, v), k => clone.RemoveProperty(k));
+
+            // spell book
+            var spells = source.Biota.CloneSpells(source.BiotaDatabaseLock);
+            clone.Biota.ClearSpells(clone.BiotaDatabaseLock);
+            foreach (var spell in spells)
+                clone.Biota.GetOrAddKnownSpell(spell.Key, clone.BiotaDatabaseLock, out _, spell.Value);
+
+            // appearance changes (tailoring, dyes, etc.), deep-copied so the two items don't share records
+            source.BiotaDatabaseLock.EnterReadLock();
+            clone.BiotaDatabaseLock.EnterWriteLock();
+            try
+            {
+                if (source.Biota.PropertiesPalette != null)
+                    clone.Biota.PropertiesPalette = source.Biota.PropertiesPalette.Select(p => p.Clone()).ToList();
+                if (source.Biota.PropertiesAnimPart != null)
+                    clone.Biota.PropertiesAnimPart = source.Biota.PropertiesAnimPart.Select(p => p.Clone()).ToList();
+                if (source.Biota.PropertiesTextureMap != null)
+                    clone.Biota.PropertiesTextureMap = source.Biota.PropertiesTextureMap.Select(p => p.Clone()).ToList();
+            }
+            finally
+            {
+                clone.BiotaDatabaseLock.ExitWriteLock();
+                source.BiotaDatabaseLock.ExitReadLock();
+            }
+
+            clone.ChangesDetected = true;
+
+            return clone;
+        }
+
+        private static void CloneProperties<K, V>(WorldObject source, WorldObject clone,
+            Func<ACE.Entity.Models.Biota, IDictionary<K, V>> selector,
+            Func<K, bool> skip, Action<K, V> set, Action<K> remove)
+        {
+            List<KeyValuePair<K, V>> sourceProps;
+            source.BiotaDatabaseLock.EnterReadLock();
+            try { sourceProps = selector(source.Biota)?.ToList() ?? new List<KeyValuePair<K, V>>(); }
+            finally { source.BiotaDatabaseLock.ExitReadLock(); }
+
+            List<K> cloneKeys;
+            clone.BiotaDatabaseLock.EnterReadLock();
+            try { cloneKeys = selector(clone.Biota)?.Keys.ToList() ?? new List<K>(); }
+            finally { clone.BiotaDatabaseLock.ExitReadLock(); }
+
+            // drop weenie defaults that the source no longer has
+            var sourceKeys = new HashSet<K>(sourceProps.Select(kvp => kvp.Key));
+            foreach (var key in cloneKeys)
+            {
+                if (!skip(key) && !sourceKeys.Contains(key))
+                    remove(key);
+            }
+
+            foreach (var kvp in sourceProps)
+            {
+                if (!skip(kvp.Key))
+                    set(kvp.Key, kvp.Value);
+            }
+        }
+
+        /// <summary>
         /// Sets a property for the last appraised object
         /// </summary>
-        [CommandHandler("setproperty", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 2, "Sets a property for the last appraised object", "<property> <value>")]
+        [CommandHandler("setproperty",AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 2, "Sets a property for the last appraised object", "<property> <value>")]
         public static void HandleSetProperty(Session session, params string[] parameters)
         {
             var obj = CommandHandlerHelper.GetLastAppraisedObject(session);

@@ -351,14 +351,12 @@ namespace ACE.Server.WorldObjects
 
             if (numStrikes > 1 && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
             {
-                if (PowerLevel < MultiStrikeThreshold)
+                // multistrike tiers use buffed skill (Current), regardless of power bar
+                uint buffedSkill = GetCreatureSkill(GetCurrentWeaponSkill()).Current;
+                if (buffedSkill < MultiStrikeDoubleSkill)
                     numStrikes = 1;
-
-                uint baseSkill = GetCreatureSkill(GetCurrentWeaponSkill()).Base;
-                if(baseSkill < 250)
-                    numStrikes = 1;
-                else if(baseSkill < 325)
-                    numStrikes = 2;
+                else if (buffedSkill < MultiStrikeTripleSkill)
+                    numStrikes = Math.Min(numStrikes, 2);
             }
 
             var swingTime = animLength / numStrikes / 1.5f;
@@ -561,7 +559,9 @@ namespace ACE.Server.WorldObjects
         }
 
         public const float KickThreshold = 0.75f;
-        public const float MultiStrikeThreshold = 0.75f;
+        public const float MultiStrikeThreshold = 0.75f;    // no longer used by Infiltration multistrike
+        public const uint MultiStrikeDoubleSkill = 200;     // buffed skill required for double strike
+        public const uint MultiStrikeTripleSkill = 300;     // buffed skill required for triple strike
 
         public MotionCommand PrevMotionCommand;
 
@@ -595,16 +595,12 @@ namespace ACE.Server.WorldObjects
             {
                 if (AttackType.IsMultiStrike())
                 {
-                    if (PowerLevel < MultiStrikeThreshold)
+                    // multistrike tiers use buffed skill (Current), regardless of power bar
+                    uint buffedSkill = GetCreatureSkill(GetCurrentWeaponSkill()).Current;
+                    if (buffedSkill < MultiStrikeDoubleSkill)
                         AttackType = AttackType.ReduceMultiStrike();
-                    else
-                    {
-                        uint baseSkill = GetCreatureSkill(GetCurrentWeaponSkill()).Base;
-                        if (baseSkill < 250)
-                            AttackType = AttackType.ReduceMultiStrike();
-                        else if (baseSkill < 325)
-                            AttackType = AttackType.ReduceMultiStrikeToDouble();
-                    }
+                    else if (buffedSkill < MultiStrikeTripleSkill)
+                        AttackType = AttackType.ReduceMultiStrikeToDouble();
                 }
             }
 
