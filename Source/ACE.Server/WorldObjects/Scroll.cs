@@ -123,10 +123,30 @@ namespace ACE.Server.WorldObjects
             });
 
 
-            // FIXME: return stance time
-            player.EnqueueMotion(actionChain, MotionCommand.Ready);
+            // Trailing Ready motion.
+            // EnqueueMotion() resolves the stance when the chain is BUILT, not when it runs, so it would
+            // broadcast a stale NonCombat stance if a (deferred) combat-mode change fired mid-chain.
+            // Build it manually and skip it if the player has re-entered combat in the meantime.
+            var readyStance = MotionStance.NonCombat; // SetCombatMode(NonCombat) above already put us here
+            var readyMotion = new ACE.Server.Entity.Motion(readyStance, MotionCommand.Ready);
+            readyMotion.MotionState.TurnSpeed = 2.25f;
 
-            player.LastUseTime += animTime;     // return stance
+            var readyTime = ACE.Server.Physics.Animation.MotionTable.GetAnimationLength(player.MotionTableId, readyStance, MotionCommand.Ready);
+
+            actionChain.AddAction(player, () =>
+            {
+                if (player.CombatMode != CombatMode.NonCombat)
+                    return;
+
+                player.CurrentMotionState = readyMotion;
+                player.EnqueueBroadcastMotion(readyMotion);
+            });
+            actionChain.AddDelaySeconds(readyTime);
+
+            // LastUseTime (-> NextUseTime) must cover the ENTIRE chain, or a queued combat-mode
+            // request fires before the chain finishes. This was missing readyTime.
+            player.LastUseTime += readyTime;
+            player.LastUseTime += animTime;     // trailing delay below
 
             actionChain.AddDelaySeconds(animTime);
 

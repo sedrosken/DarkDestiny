@@ -1075,16 +1075,11 @@ namespace ACE.Server.WorldObjects
             if (nextSpell.NotFound)
                 return spell;
 
-                        // Buffs keep their own spell id/name (VTank needs to see the spell it cast) and just take the next level's power
-            if (spell.MetaSpellType == SpellType.Enchantment)
-            {
-                spell.ApplyPowerFrom(nextSpell);   // takes next level's StatModVal + Duration (replaces OverrideStatModVal)
-                return spell;
-            }
-
-            nextSpell.OverrideSchool = spell.OverrideSchool;
-            nextSpell.IntensityMod = spell.IntensityMod;
-            return nextSpell;
+            // ALL spell types keep their own spell id/name/projectile (the addon needs to see the spell it cast)
+            // and just take the next level's power numbers (BaseIntensity, Variance, StatModVal, Duration,
+            // Boost, Transfer, Dispel strength, ...). OverrideSchool/IntensityMod stay on the original object.
+            spell.ApplyPowerFrom(nextSpell);
+            return spell;
         }
 
         public void FinishCast()
