@@ -60,47 +60,48 @@ namespace ACE.Server.WorldObjects
         }
 
         /// <summary>
-        /// A CombatPet is cloned from the parent monster's weenie, so its Biota inherits that
-        /// monster's generator and emotes. Neither should run on a summoned pet, so this strips
-        /// them from the PET'S OWN Biota (the cached parent Weenie is never touched):
-        ///   - the generator, so the pet cannot spawn other monsters;
-        ///   - world-affecting emote actions (broadcasts, events, local signal, generate) and
-        ///     whole scream emote sets, plus any emote set left empty afterwards.
+        /// A CombatPet is built from the parent monster's cached Weenie. WeenieConverter.ConvertToBiota
+        /// (referenceWeenieCollectionsForCommonProperties = true) hands the new Biota the cached Weenie's
+        /// OWN PropertiesGenerator / PropertiesEmote / PropertiesCreateList / PropertiesEventFilter
+        /// instances. Mutating them in place edits the cached Weenie for every live and future instance
+        /// of that wcid, so they must be detached before anything is stripped.
         /// Runs at construction, before Init()/EnterWorld().
         /// </summary>
         private void StripClonedWorldData()
         {
             // ---- generator: pets must not spawn other monsters ----
-            Biota.PropertiesGenerator?.Clear();
+            Biota.PropertiesGenerator = null;      // detach; never Clear() the shared list
+            GeneratorProfiles?.Clear();            // built from the shared list in the WorldObject ctor
             RemoveProperty(PropertyInt.InitGeneratedObjects);
             RemoveProperty(PropertyInt.MaxGeneratedObjects);
+            ReinitializeHeartbeats();              // IsGenerator is now false -> no generator update/regen ticks
 
-            // ---- emotes: drop world-affecting sets/actions ----
+            // ---- emotes: rebuild as private deep clones, minus world-affecting sets/actions ----
             if (Biota.PropertiesEmote != null)
             {
-                foreach (var set in Biota.PropertiesEmote.ToList())
+                var filtered = new List<PropertiesEmote>(Biota.PropertiesEmote.Count);
+
+                foreach (var set in Biota.PropertiesEmote)
                 {
                     // drop entire blocked-category sets (e.g. Scream)
                     if (BlockedEmoteCategories.Contains(set.Category))
-                    {
-                        Biota.PropertiesEmote.Remove(set);
                         continue;
-                    }
 
-                    // drop blocked action types within the set
-                    if (set.PropertiesEmoteAction != null)
+                    var clone = set.Clone();       // deep: clones PropertiesEmoteAction too
+
+                    // drop blocked action types within the (private) set
+                    for (var i = clone.PropertiesEmoteAction.Count - 1; i >= 0; i--)
                     {
-                        foreach (var action in set.PropertiesEmoteAction.ToList())
-                        {
-                            if (BlockedEmoteTypes.Contains((EmoteType)action.Type))
-                                set.PropertiesEmoteAction.Remove(action);
-                        }
+                        if (BlockedEmoteTypes.Contains((EmoteType)clone.PropertiesEmoteAction[i].Type))
+                            clone.PropertiesEmoteAction.RemoveAt(i);
                     }
 
                     // drop any set left with no actions
-                    if (set.PropertiesEmoteAction == null || set.PropertiesEmoteAction.Count == 0)
-                        Biota.PropertiesEmote.Remove(set);
+                    if (clone.PropertiesEmoteAction.Count > 0)
+                        filtered.Add(clone);
                 }
+
+                Biota.PropertiesEmote = filtered;  // detach from the cached Weenie
             }
         }
 
