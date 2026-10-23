@@ -864,6 +864,82 @@ namespace ACE.Server.Factories.Tables
             }
             else if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
             {
+                // jewelry (non-AL): life/creature buffs only. No item enchants, Ineptitude, Olthoi or quest spells.
+                spellSelectionGroup2 = new ChanceTable<SpellId>(ChanceTableType.Weight)
+                {
+                    // protections / armor
+                    ( SpellId.ArmorOther1,                      5.0f ),
+                    ( SpellId.AcidProtectionOther1,             5.0f ),
+                    ( SpellId.BludgeonProtectionOther1,         5.0f ),
+                    ( SpellId.ColdProtectionOther1,             5.0f ),
+                    ( SpellId.LightningProtectionOther1,        5.0f ),
+                    ( SpellId.FireProtectionOther1,             5.0f ),
+                    ( SpellId.BladeProtectionOther1,            5.0f ),
+                    ( SpellId.PiercingProtectionOther1,         5.0f ),
+
+                    // defense / resist
+                    ( SpellId.MagicResistanceOther1,            4.0f ),
+                    ( SpellId.ImpregnabilityOther1,             3.0f ),
+                    ( SpellId.InvulnerabilityOther1,            3.0f ),
+
+                    // attributes
+                    ( SpellId.StrengthOther1,                   4.0f ),
+                    ( SpellId.EnduranceOther1,                  4.0f ),
+                    ( SpellId.CoordinationOther1,               4.0f ),
+                    ( SpellId.QuicknessOther1,                  4.0f ),
+                    ( SpellId.FocusOther1,                      4.0f ),
+                    ( SpellId.WillpowerOther1,                  4.0f ),
+
+                    // vitals / regen
+                    ( SpellId.ManaRenewalOther1,                3.0f ),
+                    ( SpellId.ManaMasteryOther1,                3.0f ),
+                    ( SpellId.RegenerationOther1,               3.0f ),
+                    ( SpellId.RejuvenationOther1,               3.0f ),
+
+                    // weapon skills
+                    ( SpellId.HeavyWeaponsMasteryOther1,        2.0f ), // sword
+                    ( SpellId.LightWeaponsMasteryOther1,        2.0f ), // axe
+                    ( SpellId.FinesseWeaponsMasteryOther1,      2.0f ), // dagger
+                    ( SpellId.MaceMasteryOther1,                2.0f ),
+                    ( SpellId.SpearMasteryOther1,               2.0f ),
+                    ( SpellId.StaffMasteryOther1,               2.0f ),
+                    ( SpellId.UnarmedCombatMasteryOther1,       2.0f ),
+                    ( SpellId.DualWieldMasteryOther1,           2.0f ),
+                    ( SpellId.ShieldMasteryOther1,              2.0f ),
+                    ( SpellId.DirtyFightingMasteryOther1,       2.0f ),
+                    ( SpellId.RecklessnessMasteryOther1,        2.0f ),
+                    ( SpellId.SneakAttackMasteryOther1,         2.0f ),
+                    ( SpellId.MissileWeaponsMasteryOther1,      2.0f ), // remove if bow is gone
+                    ( SpellId.CrossbowMasteryOther1,            2.0f ), // remove if crossbow is gone
+                    ( SpellId.ThrownWeaponMasteryOther1,        2.0f ), // remove if thrown is gone
+
+                    // magic skills
+                    ( SpellId.WarMagicMasteryOther1,            2.0f ),
+                    ( SpellId.LifeMagicMasteryOther1,           2.0f ),
+                    ( SpellId.CreatureEnchantmentMasteryOther1, 2.0f ),
+                    ( SpellId.ItemEnchantmentMasteryOther1,     2.0f ),
+                    ( SpellId.ArcaneEnlightenmentOther1,        2.0f ),
+
+                    // misc skills
+                    ( SpellId.AlchemyMasteryOther1,             1.0f ),
+                    ( SpellId.CookingMasteryOther1,             1.0f ),
+                    ( SpellId.FletchingMasteryOther1,           1.0f ),
+                    ( SpellId.HealingMasteryOther1,             1.0f ),
+                    ( SpellId.LockpickMasteryOther1,            1.0f ),
+                    ( SpellId.JumpingMasteryOther1,             1.0f ),
+                    ( SpellId.SprintOther1,                     1.0f ),
+                    ( SpellId.LeadershipMasteryOther1,          1.0f ),
+                    ( SpellId.FealtyOther1,                     1.0f ),
+                    ( SpellId.DeceptionMasteryOther1,           1.0f ),
+                    ( SpellId.MonsterAttunementOther1,          1.0f ),
+                    ( SpellId.PersonAttunementOther1,           1.0f ),
+                    ( SpellId.ArcanumSalvagingOther1,           1.0f ),
+                    ( SpellId.ItemExpertiseOther1,              1.0f ),
+                    ( SpellId.MagicItemExpertiseOther1,         1.0f ),
+                    ( SpellId.ArmorExpertiseOther1,             1.0f ),
+                    ( SpellId.WeaponExpertiseOther1,            1.0f ),
+                };
+
                 // orbs
                 spellSelectionGroup4 = new ChanceTable<SpellId>()
                 {

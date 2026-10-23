@@ -1021,7 +1021,7 @@ namespace ACE.Server.Command.Handlers
             "Teleport yourself to the sub.")]
         public static void HandleTeleportSub(Session session, params string[] parameters)
         {
-            session.Player.Teleport(new Position(0x01C90234, 75.240158f, -30.138903f, 0.005000f, 0.000000f, 0.000000f, -0.998830f, -0.048363f));
+            session.Player.HandleActionTeleToSub();
         }
 
         // time
@@ -4421,15 +4421,6 @@ public static void HandleEventsActive(Session session, params string[] parameter
         public static void Handledumpattackers(Session session, params string[] parameters)
         {
             // @dumpattackers - Displays the detection and enemy information for the selected creature.
-
-            // TODO: output
-        }
-
-        // knownobjs
-        [CommandHandler("knownobjs", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 0)]
-        public static void Handleknownobjs(Session session, params string[] parameters)
-        {
-            // @knownobjs - Display a list of objects that the client is aware of.
 
             // TODO: output
         }

@@ -34,7 +34,10 @@ namespace ACE.Server.Factories
             if (roll.LifeCreatureEnchantments != null)
                 spells.AddRange(roll.LifeCreatureEnchantments);
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR || (!roll.IsJewelry && !roll.IsClothing) || IsEliteChestProfile(profile))
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR
+                || (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration && roll.IsJewelry)
+                || (!roll.IsJewelry && !roll.IsClothing)
+                || IsEliteChestProfile(profile))
             {
                 roll.Cantrips = RollCantrips(wo, profile, roll);
 
@@ -131,6 +134,12 @@ namespace ACE.Server.Factories
                 var spellLevel = SpellLevelChance.Roll(profile.Tier);
 
                 var spellLevels = SpellLevelProgression.GetSpellLevels(spell);
+
+                if (spellLevels == null)
+                {
+                    log.Error($"RollSpellLevels({wo.Name}, {spell}) - no spell level progression found for spell");
+                    continue;
+                }
 
                 if (spellLevels.Count != 8)
                 {

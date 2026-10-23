@@ -69,6 +69,9 @@ namespace ACE.Server.Entity
 
             foreach (var entry in entries.OrderByDescending(i => i.PowerLevel))
             {
+                if (entry.LayerId > TopLayerId)
+                    TopLayerId = entry.LayerId;
+
                 if (powerLevel > entry.PowerLevel)
                 {
                     // surpassing existing spell
@@ -93,6 +96,22 @@ namespace ACE.Server.Entity
                     else
                     {
                         // handle special case to prevent message: Pumpkin Shield casts Web of Defense on you, refreshing Aura of Defense
+                        // at equal power, a non-gear (timed) buff takes precedence over a gear (equip, Duration -1) buff,
+                        // matching the ordering in PropertiesEnchantmentRegistryExtensions.GetEnchantmentsTopLayer*
+                        var entryIsGear = entry.Duration == -1;
+
+                        if (!equip && entryIsGear)
+                        {
+                            Surpass.Add(entry);
+                            continue;
+                        }
+
+                        if (equip && !entryIsGear)
+                        {
+                            Surpassed.Add(entry);
+                            continue;
+                        }
+
                         var spellDuration = equip ? double.PositiveInfinity : spell.Duration;
 
                         if (!equip && caster is Player player && player.AugmentationIncreasedSpellDuration > 0 && !isWeaponSpell)
@@ -122,8 +141,6 @@ namespace ACE.Server.Entity
                     Surpassed.Add(entry);
                 }
 
-                if (entry.LayerId > TopLayerId)
-                    TopLayerId = entry.LayerId;
             }
 
             SetStackType();

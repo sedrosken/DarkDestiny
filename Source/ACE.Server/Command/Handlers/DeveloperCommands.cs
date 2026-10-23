@@ -1679,10 +1679,7 @@ namespace ACE.Server.Command.Handlers
             if (target == null)
                 return;
 
-            Console.WriteLine($"\nKnown objects to {target.Name}: {target.PhysicsObj.ObjMaint.GetKnownObjectsCount()}");
-
-            foreach (var obj in target.PhysicsObj.ObjMaint.GetKnownObjectsValues())
-                Console.WriteLine($"{obj.Name} ({obj.ID:X8})");
+            SendObjMaintList(session, "Known", target, target.PhysicsObj.ObjMaint.GetKnownObjectsCount(), target.PhysicsObj.ObjMaint.GetKnownObjectsValues(), parameters);
         }
 
         /// <summary>
@@ -1695,10 +1692,166 @@ namespace ACE.Server.Command.Handlers
             if (target == null)
                 return;
 
-            Console.WriteLine($"\nVisible objects to {target.Name}: {target.PhysicsObj.ObjMaint.GetVisibleObjectsCount()}");
+            SendObjMaintList(session, "Visible", target, target.PhysicsObj.ObjMaint.GetVisibleObjectsCount(), target.PhysicsObj.ObjMaint.GetVisibleObjectsValues(), parameters);
+        }
 
-            foreach (var obj in target.PhysicsObj.ObjMaint.GetVisibleObjectsValues())
-                Console.WriteLine($"{obj.Name} ({obj.ID:X8})");
+        /// <summary>
+        /// Sends an ObjMaint list to the in-game chat (and the console).
+        /// Optional 2nd parameter filters by name substring, or by hex guid (exact match).
+        /// </summary>
+        private static void SendObjMaintList(Session session, string label, WorldObject target, int count, IEnumerable<ACE.Server.Physics.PhysicsObj> objs, string[] parameters)
+        {
+            var filter = parameters.Length > 1 ? parameters[1] : null;
+            var lines = new List<string>();
+
+            foreach (var obj in objs)
+            {
+                var line = $"{obj.Name} ({obj.ID:X8})";
+                if (filter == null || line.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                    lines.Add(line);
+            }
+
+            var header = $"{label} objects to {target.Name}: {count}" + (filter != null ? $" (showing {lines.Count} matching '{filter}')" : "");
+            Console.WriteLine($"\n{header}");
+            session.Network.EnqueueSend(new GameMessageSystemChat(header, ChatMessageType.Broadcast));
+
+            const int maxLines = 40; // keep chat readable
+            foreach (var line in lines.Take(maxLines))
+            {
+                Console.WriteLine(line);
+                session.Network.EnqueueSend(new GameMessageSystemChat(line, ChatMessageType.Broadcast));
+            }
+            if (lines.Count > maxLines)
+                session.Network.EnqueueSend(new GameMessageSystemChat($"... {lines.Count - maxLines} more, add a name/guid filter as the 2nd parameter", ChatMessageType.Broadcast));
+        }
+
+        private const double ResendObjsPlayerCooldownSeconds = 15;
+        private const float ResendObjsPlayerRadius = 40.0f;
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<uint, DateTime> ResendObjsLastUse = new System.Collections.Concurrent.ConcurrentDictionary<uint, DateTime>();
+
+        /// <summary>
+        /// CUSTOM: re-sends CreateObject for the objects a player already knows about, to fix client-side
+        /// "invisible object" desyncs. Safe to run from the server console on a timer (session == null).
+        /// Default = non-player creatures only (monsters/NPCs); -all = every known object.
+        /// </summary>
+        [CommandHandler("resendobjs", AccessLevel.Player, CommandHandlerFlag.None, 0,
+            "Re-sends nearby monsters to your client (fixes monsters you can't see)",
+            "Players: no parameters (nearby monsters, 15s cooldown)\n" +
+            "Staff / console: <player name | *> [-all] [-near[=meters]]\n" +
+            "  <player name> : one online player; * : every online player\n" +
+            "  -all          : resend every known object, not just non-player creatures\n" +
+            "  -near[=m]     : only objects within m meters of the player (default 40)")]
+        public static void HandleResendObjs(Session session, params string[] parameters)
+        {
+            // console (session == null) and Developer+ get the full options;
+            // everyone else can only refresh their own nearby monsters, rate limited
+            var isStaff = session == null || session.AccessLevel >= AccessLevel.Developer;
+
+            if (!isStaff)
+            {
+                var self = session.Player;
+                if (self == null || self.CurrentLandblock == null)
+                    return;
+
+                var now = DateTime.UtcNow;
+                if (ResendObjsLastUse.TryGetValue(self.Guid.Full, out var last) && (now - last).TotalSeconds < ResendObjsPlayerCooldownSeconds)
+                {
+                    var wait = (int)Math.Ceiling(ResendObjsPlayerCooldownSeconds - (now - last).TotalSeconds);
+                    CommandHandlerHelper.WriteOutputInfo(session, $"Please wait {wait} second(s) before using this again.");
+                    return;
+                }
+                ResendObjsLastUse[self.Guid.Full] = now;
+
+                // ignore any supplied options: self only, monsters only, fixed radius
+                parameters = new[] { "-near=" + ResendObjsPlayerRadius.ToString(CultureInfo.InvariantCulture) };
+            }
+
+            var allObjects = parameters.Any(p => p.Equals("-all", StringComparison.OrdinalIgnoreCase));
+
+            // -near or -near=<meters>
+            float? nearRadius = null;
+            var nearParam = parameters.FirstOrDefault(p => p.StartsWith("-near", StringComparison.OrdinalIgnoreCase));
+            if (nearParam != null)
+            {
+                nearRadius = 40.0f;
+                var eq = nearParam.IndexOf('=');
+                if (eq >= 0)
+                {
+                    if (!float.TryParse(nearParam.Substring(eq + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) || parsed <= 0)
+                    {
+                        CommandHandlerHelper.WriteOutputInfo(session, $"Invalid -near radius: {nearParam}");
+                        return;
+                    }
+                    nearRadius = parsed;
+                }
+            }
+
+            var playerName = string.Join(" ", parameters.Where(p => !p.Equals("-all", StringComparison.OrdinalIgnoreCase) && !p.StartsWith("-near", StringComparison.OrdinalIgnoreCase))).Trim();
+
+            List<Player> targets;
+
+            if (!isStaff)
+                targets = new List<Player> { session.Player };
+            else if (playerName == "*")
+                targets = PlayerManager.GetAllOnline();
+            else if (playerName.Length == 0)
+            {
+                CommandHandlerHelper.WriteOutputInfo(session, "Usage: resendobjs <player name | *> [-all] [-near[=meters]]");
+                return;
+            }
+            else
+            {
+                var player = PlayerManager.GetOnlinePlayer(playerName);
+                if (player == null)
+                {
+                    CommandHandlerHelper.WriteOutputInfo(session, $"Player {playerName} was not found.");
+                    return;
+                }
+                targets = new List<Player> { player };
+            }
+
+            foreach (var target in targets)
+            {
+                var player = target; // capture
+
+                // run on the player's own action queue so it is thread-safe vs. the world tick
+                player.EnqueueAction(new ActionEventDelegate(() =>
+                {
+                    if (player.Session == null || player.PhysicsObj == null || player.CurrentLandblock == null)
+                        return;
+
+                    var sent = 0;
+                    var radiusSquared = nearRadius.HasValue ? nearRadius.Value * nearRadius.Value : (float?)null;
+                    var inDungeon = player.CurrentLandblock.PhysicsLandblock != null && player.CurrentLandblock.PhysicsLandblock.IsDungeon;
+
+                    foreach (var physObj in player.PhysicsObj.ObjMaint.GetKnownObjectsValues())
+                    {
+                        var wo = physObj?.WeenieObj?.WorldObject;
+
+                        if (wo == null || wo.IsDestroyed || wo.Guid == player.Guid)
+                            continue;
+
+                        if (!allObjects && (!(wo is Creature) || wo is Player))
+                            continue;
+
+                        if (radiusSquared.HasValue)
+                        {
+                            // positions in different dungeon landblocks aren't comparable
+                            if (inDungeon && wo.Location.Landblock != player.Location.Landblock)
+                                continue;
+
+                            if (player.Location.SquaredDistanceTo(wo.Location) > radiusSquared.Value)
+                                continue;
+                        }
+
+                        // TrackObject skips server-only (Visibility) objects unless the player has adminvision
+                        player.TrackObject(wo);
+                        sent++;
+                    }
+
+                    CommandHandlerHelper.WriteOutputInfo(session, $"resendobjs: re-sent {sent} object(s) to {player.Name}{(nearRadius.HasValue ? $" (within {nearRadius.Value:0.#}m)" : "")}.");
+                }));
+            }
         }
 
         /// <summary>

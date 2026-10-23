@@ -153,6 +153,7 @@ namespace ACE.Entity.Models
                     into categories
                     //select categories.OrderByDescending(c => c.LayerId).First();
                     select categories.OrderByDescending(c => c.PowerLevel)
+                        .ThenByDescending(c => c.Duration != -1)    // at equal power, timed (self/player-cast) buffs beat gear (equip, Duration -1) buffs
                         .ThenByDescending(c => Level8AuraSelfSpells.Contains(c.SpellId))
                         .ThenByDescending(c => setSpells.Contains(c.SpellId) ? c.SpellId : c.StartTime).First();
 
@@ -182,6 +183,7 @@ namespace ACE.Entity.Models
                     into categories
                     //select categories.OrderByDescending(c => c.LayerId).First();
                     select categories.OrderByDescending(c => c.PowerLevel)
+                        .ThenByDescending(c => c.Duration != -1)    // at equal power, timed (self/player-cast) buffs beat gear (equip, Duration -1) buffs
                         .ThenByDescending(c => Level8AuraSelfSpells.Contains(c.SpellId))
                         .ThenByDescending(c => setSpells.Contains(c.SpellId) ? c.SpellId : c.StartTime).First();
 
@@ -227,6 +229,7 @@ namespace ACE.Entity.Models
                     into categories
                     //select categories.OrderByDescending(c => c.LayerId).First();
                     select categories.OrderByDescending(c => c.PowerLevel)
+                        .ThenByDescending(c => c.Duration != -1)    // at equal power, timed (self/player-cast) buffs beat gear (equip, Duration -1) buffs
                         .ThenByDescending(c => Level8AuraSelfSpells.Contains(c.SpellId))
                         .ThenByDescending(c => setSpells.Contains(c.SpellId) ? c.SpellId : c.StartTime).First();
 

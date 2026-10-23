@@ -119,6 +119,11 @@ namespace ACE.Server.Factories.Tables
                     ( SpellId.CANTRIPWEAPONEXPERTISE1,             2.0f ),
 
                     ( SpellId.CantripSalvaging1,                   2.0f ),
+                    ( SpellId.CantripDirtyFightingProwess1,        2.0f ),
+                    ( SpellId.CantripDualWieldAptitude1,           2.0f ),
+                    ( SpellId.CantripRecklessnessProwess1,         2.0f ),
+                    ( SpellId.CantripShieldAptitude1,              2.0f ),
+                    ( SpellId.CantripSneakAttackProwess1,          2.0f ),
                 };
             }
             else if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
