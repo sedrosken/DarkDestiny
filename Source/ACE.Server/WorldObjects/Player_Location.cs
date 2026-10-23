@@ -28,6 +28,7 @@ namespace ACE.Server.WorldObjects
     partial class Player
     {
         private static readonly Position MarketplaceDrop = DatabaseManager.World.GetCachedWeenie("portalmarketplace")?.GetPosition(PositionType.Destination) ?? new Position(0x016C01BC, 49.206f, -31.935f, 0.005f, 0, 0, -0.707107f, 0.707107f);
+        private static readonly Position SubDrop = new Position(0x01C90234, 75.240158f, -30.138903f, 0.005000f, 0.000000f, 0.000000f, -0.998830f, -0.048363f);
 
         /// <summary>
         /// Teleports the player to position
@@ -283,6 +284,66 @@ namespace ACE.Server.WorldObjects
 
             // Set the chain to run
             mpChain.EnqueueChain();
+        }
+
+        public void HandleActionTeleToSub()
+        {
+            if (IsOlthoiPlayer)
+            {
+                Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.OlthoiCanOnlyRecallToLifestone));
+                return;
+            }
+
+            if (PKTimerActive && ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+            {
+                Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
+                return;
+            }
+
+            if (RecallsDisabled)
+            {
+                Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.ExitTrainingAcademyToUseCommand));
+                return;
+            }
+
+            if (TooBusyToRecall)
+            {
+                Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
+                return;
+            }
+
+            if (CombatMode != CombatMode.NonCombat)
+            {
+                var updateCombatMode = new GameMessagePrivateUpdatePropertyInt(this, PropertyInt.CombatMode, (int)CombatMode.NonCombat);
+                SetCombatMode(CombatMode.NonCombat);
+                Session.Network.EnqueueSend(updateCombatMode);
+            }
+
+            EnqueueBroadcast(new GameMessageSystemChat($"{Name} is recalling to the sub.", ChatMessageType.Recall), LocalBroadcastRange, ChatMessageType.Recall);
+
+            // same animation + delay as /mp
+            SendMotionAsCommands(MotionCommand.MarketplaceRecall, MotionStance.NonCombat);
+
+            var startPos = new Position(Location);
+
+            var subChain = new ActionChain();
+            subChain.AddDelaySeconds(14);   // matches the mp delay
+
+            IsBusy = true;
+            subChain.AddAction(this, () =>
+            {
+                IsBusy = false;
+                var endPos = new Position(Location);
+                if (startPos.SquaredDistanceTo(endPos) > RecallMoveThresholdSq)
+                {
+                    Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveMovedTooFar));
+                    return;
+                }
+
+                Teleport(SubDrop);
+            });
+
+            subChain.EnqueueChain();
         }
 
         private static readonly Motion motionAllegianceHometownRecall = new Motion(MotionStance.NonCombat, MotionCommand.AllegianceHometownRecall);

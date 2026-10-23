@@ -77,30 +77,47 @@ namespace ACE.Server.WorldObjects
                 this, PropertyInt.AugmentationIncreasedCarryingCapacity, GetEffectiveCarryingCapacityAugs()));
         }
 
+        /// <summary>
+        /// Maximum burden, as a multiple of carrying capacity, that a player may reach by picking up / receiving items.
+        /// 3.0 = 300% (stock behavior). 0 or less = no cap. The client burden bar tops out at 300% regardless.
+        /// Note: GetBurdenMod() already drops run / jump / defense to 0 at 200%, so players past that are immobile.
+        /// </summary>
+        public static readonly float MaxBurdenMultiplier = 0.0f;
+
+        private long GetMaxBurdenLong()
+        {
+            if (MaxBurdenMultiplier <= 0.0f)
+                return long.MaxValue;
+
+            return (long)(GetEncumbranceCapacity() * (double)MaxBurdenMultiplier);
+        }
+
         public bool HasEnoughBurdenToAddToInventory(WorldObject worldObject)
         {
             // We can still pick up null items, for some reason, we have the conditional for that
-            return (EncumbranceVal + (worldObject.EncumbranceVal ?? 0) <= (GetEncumbranceCapacity() * 3));
+            return HasEnoughBurdenToAddToInventory(worldObject.EncumbranceVal ?? 0);
         }
 
         public bool HasEnoughBurdenToAddToInventory(int totalEncumbranceToCheck)
         {
-            return (EncumbranceVal + totalEncumbranceToCheck <= (GetEncumbranceCapacity() * 3));
+            return ((long)(EncumbranceVal ?? 0) + totalEncumbranceToCheck <= GetMaxBurdenLong());
         }
 
         public int GetAvailableBurden()
         {
-            return (GetEncumbranceCapacity() * 3) - EncumbranceVal ?? 0;
+            var available = GetMaxBurdenLong() - (EncumbranceVal ?? 0);
+
+            return (int)Math.Clamp(available, int.MinValue, int.MaxValue);
         }
 
         public bool HasEnoughBurdenToAddToInventory(List<WorldObject> worldObjects)
         {
-            var burdenTotal = 0;
+            long burdenTotal = 0;
 
             foreach (var worldObject in worldObjects)
                 burdenTotal += worldObject.EncumbranceVal ?? 0;
 
-            return (EncumbranceVal + burdenTotal <= (GetEncumbranceCapacity() * 3));
+            return ((long)(EncumbranceVal ?? 0) + burdenTotal <= GetMaxBurdenLong());
         }
 
         /// <summary>

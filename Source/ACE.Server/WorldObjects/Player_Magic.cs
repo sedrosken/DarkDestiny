@@ -714,8 +714,72 @@ namespace ACE.Server.WorldObjects
             else
                 castTime = EnqueueMotionMagic(castChain, MagicState.CastGesture, CastSpeed);
 
+            // FastTick casts only release when the physics engine reports OnMotionDone for the cast gesture
+            // (HandleMotionDone_Magic). If that callback is lost, nothing ever calls DoCastSpell / FinishCast,
+            // the Ready motion is never broadcast, and the client freezes at the apex of the gesture.
+            // This watchdog runs after the gesture should have finished and releases the cast if it is still waiting.
+            if (FastTick)
+            {
+                var castNum = MagicState.CastNum;
+
+                castChain.AddAction(this, () =>
+                {
+                    var watchdog = new ActionChain();
+                    watchdog.AddDelaySeconds(CastGestureWatchdogGrace);
+                    watchdog.AddAction(this, () => CastGestureWatchdog(castNum));
+                    watchdog.EnqueueChain();
+                });
+            }
+
             //Console.WriteLine($"Cast Gesture: " + MagicState.CastGesture);
             //Console.WriteLine($"Cast time: " + castTime);
+        }
+
+        /// <summary>
+        /// Seconds past the expected end of the cast gesture before the watchdog releases a stuck cast
+        /// </summary>
+        public static float CastGestureWatchdogGrace = 1.0f;
+
+        private void CastGestureWatchdog(int castNum)
+        {
+            // a different cast is running, or this one already resolved normally
+            if (!MagicState.IsCasting || MagicState.CastNum != castNum)
+                return;
+
+            // gesture done and waiting on a turn: that path has its own completion (OnMoveComplete_Magic / CheckTurn)
+            if (MagicState.CastMotionDone)
+                return;
+
+            var physicsObj = PhysicsObj;
+            log.Warn($"[CAST WATCHDOG] {Name} (0x{Guid}) cast #{castNum} {MagicState.CastSpellParams?.Spell?.Name} ({MagicState.CastSpellParams?.Spell?.Id}): " +
+                $"no OnMotionDone for {MagicState.CastGesture} -- forcing release. " +
+                $"CombatMode={CombatMode} Stance={CurrentMotionState?.Stance} IsCombatCasting={MagicState.IsCombatCasting} " +
+                $"IsMovingOrAnimating={physicsObj?.IsMovingOrAnimating} IsAnimating={physicsObj?.IsAnimating} " +
+                $"InterpActions={physicsObj?.MovementManager?.MotionInterpreter?.InterpretedState?.GetNumActions()} " +
+                $"PendingMotions={physicsObj?.MovementManager?.MotionInterpreter?.PendingMotions?.Count} " +
+                $"CurrAnim={physicsObj?.PartArray?.Sequence?.CurrAnim?.Value?.Anim?.ID:X8} " +
+                $"AnimQueue={DescribeAnimQueue()}");
+
+            // same thing HandleMotionDone_Magic would have done
+            MagicState.CastMotionDone = true;
+            MagicState.AlwaysTurn = true;
+
+            DoCastSpell(MagicState);
+        }
+
+        /// <summary>
+        /// Dumps the server-side animation completion queue (MotionTableManager.PendingAnimations).
+        /// Each entry fires its OnMotionDone only after NumAnims animations have completed, strictly in order,
+        /// so one entry whose animations never play blocks every motion-done queued behind it.
+        /// </summary>
+        public string DescribeAnimQueue()
+        {
+            var mtm = PhysicsObj?.PartArray?.MotionTableManager;
+            if (mtm?.PendingAnimations == null)
+                return "n/a";
+
+            var entries = mtm.PendingAnimations.Select(a => $"{(MotionCommand)a.Motion}:{a.NumAnims}");
+            return $"count={mtm.PendingAnimations.Count} counter={mtm.AnimationCounter} [{string.Join(", ", entries)}]";
         }
 
         // 20 from MoveToManager threshold?
@@ -804,7 +868,12 @@ namespace ACE.Server.WorldObjects
                     }
                     else
                     {
-                        if (PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.TurnCommand == 0)
+                        var turnCommand = PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.TurnCommand;
+
+                        log.Warn($"[CAST TURN] {Name} (0x{Guid}) cast #{MagicState.CastNum} {spell.Name} -> {target.Name} (0x{target.Guid}): " +
+                            $"outside spellcast_max_angle at release, TurnCommand=0x{turnCommand:X8} -> {(turnCommand == 0 ? "TurnTo_Magic" : "PendingTurnRelease")}");
+
+                        if (turnCommand == 0)
                             TurnTo_Magic(target);
                         else
                             MagicState.PendingTurnRelease = true;

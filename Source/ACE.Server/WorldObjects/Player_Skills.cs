@@ -807,11 +807,11 @@ namespace ACE.Server.WorldObjects
                     switch (heritageGroup)
                     {
                         case HeritageGroup.Aluvian:
-                            if (skill == Skill.Dagger || skill == Skill.AssessPerson)
+                            if (skill == Skill.Dagger)
                                 return false;
                             break;
                         case HeritageGroup.Gharundim:
-                            if (skill == Skill.Staff || skill == Skill.ItemTinkering)
+                            if (skill == Skill.Staff)
                                 return false;
                             break;
                         case HeritageGroup.Sho:
