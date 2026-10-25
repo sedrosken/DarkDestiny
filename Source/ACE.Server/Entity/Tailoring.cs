@@ -308,7 +308,7 @@ namespace ACE.Server.Entity
             {
                 target.DefaultCombatStyle = source.DefaultCombatStyle;  // unused currently, keeping this around in case its needed..
                 target.W_AttackType = source.W_AttackType;
-                target.W_WeaponType = GetWeaponTypeOrSkill(source); // CUSTOM (classic): fall back to WeaponSkill
+                target.W_WeaponType = source.W_WeaponType;
             }
             else if (source is MissileLauncher)
                 target.DefaultCombatStyle = source.DefaultCombatStyle;
@@ -373,7 +373,7 @@ namespace ACE.Server.Entity
                 return;
             }
 
-            if (target is MeleeWeapon && GetWeaponTypeOrSkill(target) == WeaponType.Undef) // CUSTOM (classic): fall back to WeaponSkill
+            if (target is MeleeWeapon && target.W_WeaponType == WeaponType.Undef)
             {
                 // 'difficult to master' weapons were not tailorable
                 player.SendUseDoneEvent(WeenieError.YouDoNotPassCraftingRequirements);
@@ -409,12 +409,6 @@ namespace ACE.Server.Entity
         {
             //Console.WriteLine($"TailorReduceArmor({player.Name}, {source.Name}, {target.Name})");
 
-            // Verify requirements - Can only reduce LootGen Armor
-            if (target.ItemWorkmanship == null)
-            {
-                player.SendUseDoneEvent(WeenieError.YouDoNotPassCraftingRequirements);
-                return;
-            }
 
             var validLocations = target.ValidLocations ?? EquipMask.None;
             var clothingPriority = CoverageMask.Unknown;
@@ -545,7 +539,7 @@ namespace ACE.Server.Entity
             {
                 case ItemType.MeleeWeapon:
 
-                    if (source.W_WeaponType != GetWeaponTypeOrSkill(target) || // CUSTOM (classic): fall back to WeaponSkill
+                    if (source.W_WeaponType != target.W_WeaponType ||
                         source.W_DamageType != target.W_DamageType)
                     {
                         player.SendUseDoneEvent(WeenieError.YouDoNotPassCraftingRequirements);
@@ -697,19 +691,6 @@ namespace ACE.Server.Entity
         public const uint LeatherBoots = 42422;
         public const uint Tentacles = 44863;
         public const uint DarkHeart = 51451;
-
-        // CUSTOM (classic): classic weapon weenies lack PropertyInt.WeaponType (353); fall back to WeaponSkill like Player.GetWeaponType
-        private static WeaponType GetWeaponTypeOrSkill(WorldObject wo)
-        {
-            if (wo.W_WeaponType != WeaponType.Undef)
-                return wo.W_WeaponType;
-
-            var weaponSkill = wo.GetProperty(PropertyInt.WeaponSkill);
-            if (weaponSkill != null && Player.SkillToWeaponType.TryGetValue((Skill)weaponSkill, out var converted))
-                return converted;
-
-            return WeaponType.Undef;
-        }
 
         /// <summary>
         /// Returns TRUE if the input wcid is a tailoring kit

@@ -53,6 +53,7 @@ namespace ACE.Server.WorldObjects
         private const double TickSeconds = 2.0;
         private const float RewarpDistance = 40f;            // further than this from owner -> respawn at owner
         private const float SpeechRange = 20f;
+        public const double GiftCooldownSeconds = 60 * 60;   // must own a companion this long before gifting it
 
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -60,8 +61,11 @@ namespace ACE.Server.WorldObjects
         {
             public uint Wcid { get; set; }
             public double ExpiresAt { get; set; }                 // unix seconds
+            public double AcquiredAt { get; set; }                // unix seconds -- when the CURRENT owner got it (0 = old save)
             [System.Text.Json.Serialization.JsonIgnore]
             public Companion Live;
+            [System.Text.Json.Serialization.JsonIgnore]
+            public bool GiftPending;
         }
 
         private class State
@@ -178,6 +182,7 @@ namespace ACE.Server.WorldObjects
             {
                 Wcid = CompanionWcids[Random.Shared.Next(CompanionWcids.Length)],
                 ExpiresAt = Time.GetUnixTime() + LifetimeSeconds,
+                AcquiredAt = Time.GetUnixTime(),
             };
 
             lock (state) state.Entries.Add(entry);
@@ -296,6 +301,141 @@ namespace ACE.Server.WorldObjects
             chain.AddDelaySeconds(TickSeconds);
             chain.AddAction(player, () => Tick(player, gen));
             chain.EnqueueChain();
+        }
+
+        // =====================================================================
+        // Gifting: /giftcompanion <player>  (hands a LIVE companion + its remaining time to someone else)
+        // =====================================================================
+
+        /// <summary>
+        /// Gifts the companion the giver has selected (falls back to the one with the most time left).
+        /// Recipient must be online; no yes/no -- they can't refuse. Remaining time carries over; the recipient
+        /// is the one robbed when it expires.
+        /// </summary>
+        public static void TryGift(Player giver, string targetName)
+        {
+            EnsureLoaded();
+
+            if (!states.TryGetValue(giver.Guid.Full, out var gState))
+            {
+                giver.SendMessage("You don't have any companions to give away.");
+                return;
+            }
+
+            var recipient = PlayerManager.GetOnlinePlayer(targetName);
+            if (recipient == null)
+            {
+                giver.SendMessage($"{targetName} is not online.");
+                return;
+            }
+            if (recipient == giver)
+            {
+                giver.SendMessage("You can't gift a companion to yourself.");
+                return;
+            }
+
+            Entry entry;
+            lock (gState)
+            {
+                var available = gState.Entries.Where(e => !e.GiftPending).ToList();
+                if (available.Count == 0)
+                {
+                    giver.SendMessage(gState.Entries.Count == 0
+                        ? "You don't have any companions to give away."
+                        : "That companion is already on its way to someone.");
+                    return;
+                }
+
+                var now = Time.GetUnixTime();
+                var selected = giver.CurrentAppraisalTarget;
+                var picked = available.FirstOrDefault(e => e.Live != null && selected.HasValue && e.Live.Guid.Full == selected.Value);
+
+                if (picked != null)
+                {
+                    var wait = GiftWait(picked, now);
+                    if (wait > 0)
+                    {
+                        giver.SendMessage($"You have to keep {picked.Live.Name} for at least an hour before gifting her. ({FormatTime(wait)} to go)");
+                        return;
+                    }
+                    entry = picked;
+                }
+                else
+                {
+                    var ready = available.Where(e => GiftWait(e, now) <= 0).ToList();
+                    if (ready.Count == 0)
+                    {
+                        var soonest = available.Min(e => GiftWait(e, now));
+                        giver.SendMessage($"You have to keep a companion for at least an hour before gifting it. ({FormatTime(soonest)} to go)");
+                        return;
+                    }
+                    entry = ready.OrderByDescending(e => e.ExpiresAt).First();
+                }
+
+                entry.GiftPending = true;
+            }
+
+            // no asking -- it just shows up (runs on the recipient's landblock)
+            new ActionChain(recipient, () => AcceptGift(giver, recipient, entry)).EnqueueChain();
+        }
+
+        private static void AcceptGift(Player giver, Player recipient, Entry entry)
+        {
+            var gState = states.GetOrAdd(giver.Guid.Full, _ => new State());
+            var rState = states.GetOrAdd(recipient.Guid.Full, _ => new State());
+
+            lock (rState)
+            {
+                if (rState.Entries.Count >= MaxPerPlayer)
+                {
+                    entry.GiftPending = false;
+                    giver.SendMessage($"{recipient.Name} already has {MaxPerPlayer} companions and can't take any more.");
+                    return;
+                }
+            }
+
+            // still the giver's? (could have expired while the question was open)
+            lock (gState)
+            {
+                if (!gState.Entries.Remove(entry))
+                {
+                    giver.SendMessage("That companion isn't available anymore.");
+                    return;
+                }
+            }
+
+            entry.GiftPending = false;
+            entry.AcquiredAt = Time.GetUnixTime();   // new owner's 1-hour hold starts now
+            var name = entry.Live?.Name ?? "companion";
+
+            var old = entry.Live;
+            entry.Live = null;
+            if (old != null && !old.IsDestroyed)
+                new ActionChain(old, () => { if (!old.IsDestroyed) old.Destroy(); }).EnqueueChain();   // on its own landblock
+
+            lock (rState) rState.Entries.Add(entry);
+            Save();
+
+            Spawn(recipient, entry);
+            StartLoop(recipient);
+
+            giver.SendMessage($"Your {name} has gone off with {recipient.Name}.");
+            recipient.SendMessage($"{giver.Name} gave you a {name}. ({TimeLeft(entry)} left)");
+        }
+
+        private static string TimeLeft(Entry e) => FormatTime(e.ExpiresAt - Time.GetUnixTime());
+
+        /// <summary>Seconds until this companion can be gifted (0 or less = ready).</summary>
+        private static double GiftWait(Entry e, double now)
+        {
+            var acquired = e.AcquiredAt > 0 ? e.AcquiredAt : e.ExpiresAt - LifetimeSeconds;   // old saves: use purchase time
+            return acquired + GiftCooldownSeconds - now;
+        }
+
+        private static string FormatTime(double secs)
+        {
+            var t = TimeSpan.FromSeconds(Math.Max(0, Math.Ceiling(secs)));
+            return t.TotalHours >= 1 ? $"{(int)t.TotalHours}h {t.Minutes}m" : $"{Math.Max(1, (int)Math.Ceiling(t.TotalMinutes))}m";
         }
 
         // =====================================================================

@@ -426,7 +426,7 @@ namespace ACE.Server.Entity
                 var armorRendingMod = WorldObject.GetArmorRendingMod(attacker, attackSkill, pkBattle);
 
                 if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
-                    ignoreArmorMod = Math.Min(ignoreArmorMod, armorRendingMod);
+                    ignoreArmorMod = Math.Max(0.34f, ignoreArmorMod + armorRendingMod - 1.0f); // cleaving and rending ignored % add together, capped at 66% ignored (was Math.Min)
                 else if (ignoreArmorMod < 1.0f)
                     ignoreArmorMod = 0.375f; // Equivalent to -125 at 200 AL armor.
                 else
@@ -544,11 +544,9 @@ namespace ACE.Server.Entity
 
             var damageBeforeShieldMod = DamageBeforeMitigation * ArmorMod * ResistanceMod * DamageResistanceRatingMod;
 
-            // specialized defense skill mitigation (PvE only)
-            var specDefenseMod = GetSpecializedDefenseMod(defender, CombatType == CombatType.Missile ? Skill.MissileDefense : Skill.MeleeDefense, pkBattle);
-
             // calculate final output damage
-            Damage = damageBeforeShieldMod * ShieldMod * specDefenseMod;
+            // (specialized defense now feeds in through the damage resist rating, see Creature.GetSpecDefenseBonus)
+            Damage = damageBeforeShieldMod * ShieldMod;
 
             if (attacker == defender)
                 Damage *= 1.33f; // Self-damage does extra damage.
@@ -805,40 +803,6 @@ namespace ACE.Server.Entity
                 evadeChance = Math.Min(evadeChance, 0.90f + ((CombatType == CombatType.Missile ? playerDefender.CachedMissileDefenseCapBonus : playerDefender.CachedMeleeDefenseCapBonus) * 0.01));
 
             return (float)evadeChance;
-        }
-
-        /// <summary>
-        /// Returns the damage multiplier from a player defender's specialized Defense skill.
-        /// The reduction scales linearly with the defender's BASE skill, from 0 up to
-        /// specialized_defense_damage_reduction at the skill's cap, and only applies when the
-        /// skill is Specialized. PvE only - never applies to PK/PvP combat or to non-player defenders.
-        /// </summary>
-        public static float GetSpecializedDefenseMod(Creature defender, Skill defenseSkillType, bool pvp)
-        {
-            if (pvp || !(defender is Player))
-                return 1.0f;
-
-            var defenseSkill = defender.GetCreatureSkill(defenseSkillType);
-            if (defenseSkill == null || defenseSkill.AdvancementClass != SkillAdvancementClass.Specialized)
-                return 1.0f;
-
-            string capProperty;
-            switch (defenseSkillType)
-            {
-                case Skill.MeleeDefense: capProperty = "specialized_defense_cap_melee"; break;
-                case Skill.MissileDefense: capProperty = "specialized_defense_cap_missile"; break;
-                case Skill.MagicDefense: capProperty = "specialized_defense_cap_magic"; break;
-                default: return 1.0f;
-            }
-
-            var cap = PropertyManager.GetDouble(capProperty).Item;
-            if (cap <= 0.0)
-                return 1.0f;
-
-            var scale = Math.Min(1.0, defenseSkill.Base / cap);
-            var reduction = PropertyManager.GetDouble("specialized_defense_damage_reduction").Item * scale;
-
-            return (float)Math.Max(0.0, 1.0 - reduction);
         }
 
         /// <summary>

@@ -273,12 +273,14 @@ namespace ACE.Server.WorldObjects
 
                 salvageBag.Value = Math.Min((salvageBag.Value ?? 0) + addedValue, 75000);
 
-                // a bit different here, since ACE handles overages
-                if (message != null)
-                {
-                    message.Workmanship += item.ItemWorkmanship ?? 0.0f;
-                    message.NumItemsInMaterial++;
-                }
+            }
+
+            // a bit different here, since ACE handles overages
+            // (done once per source item, not once per destination bag)
+            if (message != null)
+            {
+                message.Workmanship += item.ItemWorkmanship ?? 0.0f;
+                message.NumItemsInMaterial += item.ItemType == ItemType.TinkeringMaterial ? Math.Max(item.NumItemsInMaterial ?? 1, 1) : 1;
             }
         }
 
@@ -355,7 +357,14 @@ namespace ACE.Server.WorldObjects
             // is this a bag of salvage?
             // if so, return its existing structure
             if (salvageItem.ItemType == ItemType.TinkeringMaterial)
-                return salvageItem.Structure.Value;
+            {
+                // report the combined bag's structure too, merged into the same material line as any salvaged items
+                var bagMessage = salvageResults.GetMessage(salvageItem.MaterialType ?? ACE.Entity.Enum.MaterialType.Unknown, Skill.Salvaging);
+                bagMessage.Amount += (uint)(salvageItem.Structure ?? 0);
+                message = bagMessage;
+
+                return salvageItem.Structure ?? 0;
+            }
 
             var workmanship = salvageItem.Workmanship ?? 1.0f;
             var stackSize = salvageItem.StackSize ?? 1;

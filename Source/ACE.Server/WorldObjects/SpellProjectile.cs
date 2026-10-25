@@ -643,9 +643,6 @@ namespace ACE.Server.WorldObjects
             // Possible 2x + damage bonus for the slayer property
             var slayerMod = GetWeaponCreatureSlayerModifier(weapon, sourceCreature, target);
 
-            // specialized Magic Defense mitigation (PvE only)
-            var specDefenseMod = GetSpecializedMagicDefenseMod(target, isPvP);
-
             // life magic projectiles: ie., martyr's hecatomb
             if (Spell.MetaSpellType == ACE.Entity.Enum.SpellType.LifeProjectile)
             {
@@ -672,7 +669,7 @@ namespace ACE.Server.WorldObjects
 
                 resistanceMod = (float)Math.Max(0.0f, target.GetResistanceMod(resistanceType, this, null, weaponResistanceMod));
 
-                finalDamage = (lifeMagicDamage + critDamageBonus) * elementalDamageMod * slayerMod * resistanceMod * absorbMod * specDefenseMod;
+                finalDamage = (lifeMagicDamage + critDamageBonus) * elementalDamageMod * slayerMod * resistanceMod * absorbMod;
             }
             // war/void magic projectiles
             else
@@ -765,7 +762,7 @@ namespace ACE.Server.WorldObjects
 
                 finalDamage = baseDamage + critDamageBonus + skillBonus;
 
-                finalDamage *= elementalDamageMod * slayerMod * resistanceMod * absorbMod * specDefenseMod;
+                finalDamage *= elementalDamageMod * slayerMod * resistanceMod * absorbMod;
             }
 
             if (shieldMod != 1.0f && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
@@ -816,15 +813,6 @@ namespace ACE.Server.WorldObjects
                 ShowInfo(target, Spell, attackSkill, criticalChance, criticalHit, critDefended, overpower, weaponCritDamageMod, skillBonus, baseDamage, critDamageBonus, elementalDamageMod, slayerMod, weaponResistanceMod, resistanceMod, absorbMod, LifeProjectileDamage, lifeMagicDamage, finalDamage);
             }
             return finalDamage;
-        }
-
-        /// <summary>
-        /// Returns the damage multiplier from the target's specialized Magic Defense skill.
-        /// Scaling and PvE-only rules live in DamageEvent.GetSpecializedDefenseMod.
-        /// </summary>
-        public static float GetSpecializedMagicDefenseMod(Creature target, bool isPvP)
-        {
-            return DamageEvent.GetSpecializedDefenseMod(target, Skill.MagicDefense, isPvP);
         }
 
         public static float GetAbsorbMod(WorldObject source, Creature target)

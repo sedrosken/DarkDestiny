@@ -1205,11 +1205,19 @@ namespace ACE.Server.WorldObjects
                 armorCleavingMod = (float)IgnoreArmor;
             else
             {
-                // FIXME: data
-                var maxSpellLevel = GetMaxSpellLevel();
+                var rolledIgnoreArmor = (float)IgnoreArmor;
 
-                // thanks to moro for this formula
-                armorCleavingMod = 1.0f - (0.1f + maxSpellLevel * 0.05f);
+                if (rolledIgnoreArmor >= 1.0f)
+                {
+                    // Legacy on/off flag (quest/weenie weapons authored with IgnoreArmor = 1.0): keep the old spell-level scaling.
+                    // thanks to moro for this formula
+                    armorCleavingMod = 1.0f - (0.1f + GetMaxSpellLevel() * 0.05f);
+                }
+                else
+                {
+                    // Rolled value (0.0 = ignore 100% of armor AL, 1.0 = ignore none), clamped so a rolled weapon never ignores more than 40%.
+                    armorCleavingMod = Math.Max(rolledIgnoreArmor, 0.6f);
+                }
             }
 
             if (isPvP && armorCleavingMod < 1.0f)
