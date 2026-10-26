@@ -121,6 +121,8 @@ namespace ACE.Server.Network
 
             foreach (var message in messages)
             {
+                NetDiag.Outbound(session, message); // TEMP diagnostic
+
                 var grp = message.Group;
                 var currentBundleLock = currentBundleLocks[(int) grp];
                 lock (currentBundleLock)
@@ -145,6 +147,8 @@ namespace ACE.Server.Network
 
             foreach (var message in messages)
             {
+                NetDiag.Outbound(session, message); // TEMP diagnostic
+
                 var grp = message.Group;
                 var currentBundleLock = currentBundleLocks[(int)grp];
                 lock (currentBundleLock)

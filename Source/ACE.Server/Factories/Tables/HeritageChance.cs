@@ -215,18 +215,20 @@ namespace ACE.Server.Factories.Tables
                     heritageProfile17,
                     heritageProfile18,
                     heritageProfile19,
-                    heritageProfile20
+                    heritageProfile20,
+                    heritageProfile21,      // added - target of the 19 -> 21 viamontian conversion (armor only)
                 };
             }
         }
 
-        public static TreasureHeritageGroup Roll(int heritageProfile, TreasureRoll treasureRoll, bool addViamontian = false)
+        /// <param name="allowViamontianInfiltration">when true, Infiltration-and-earlier rulesets honor addViamontian (used by ArmorWcids so diforsa / tenassa / alduressa / olthoi alduressa can drop)</param>
+        public static TreasureHeritageGroup Roll(int heritageProfile, TreasureRoll treasureRoll, bool addViamontian = false, bool allowViamontianInfiltration = false)
         {
             if (treasureRoll.Heritage != TreasureHeritageGroup.Invalid)
                 return treasureRoll.Heritage; // We have already been assigned an heritage, use that.
             else
             {
-                if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
+                if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration && !allowViamontianInfiltration)
                     addViamontian = false;
 
                 if (heritageProfile < 1 || heritageProfile > heritageProfiles.Count)

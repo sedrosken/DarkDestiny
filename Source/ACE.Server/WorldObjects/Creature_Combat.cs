@@ -421,6 +421,11 @@ namespace ACE.Server.WorldObjects
                 var staff = GetCreatureSkill(Skill.Staff);
                 var sword = GetCreatureSkill(Skill.Sword);
                 var unarmed = GetCreatureSkill(Skill.UnarmedCombat);
+                // EoR-imported creatures carry consolidated weapon skills; include them so they attack with their real skill value
+                var heavy = GetCreatureSkill(Skill.HeavyWeapons);
+                var light = GetCreatureSkill(Skill.LightWeapons);
+                var finesse = GetCreatureSkill(Skill.FinesseWeapons);
+                var twohand = GetCreatureSkill(Skill.TwoHandedCombat);
 
                 maxMelee = axe;
                 if (dagger.Current > maxMelee.Current)
@@ -435,6 +440,14 @@ namespace ACE.Server.WorldObjects
                     maxMelee = sword;
                 if (unarmed.Current > maxMelee.Current)
                     maxMelee = unarmed;
+                if (heavy.Current > maxMelee.Current)
+                    maxMelee = heavy;
+                if (light.Current > maxMelee.Current)
+                    maxMelee = light;
+                if (finesse.Current > maxMelee.Current)
+                    maxMelee = finesse;
+                if (twohand.Current > maxMelee.Current)
+                    maxMelee = twohand;
 
                 CachedHighestMeleeSkill = maxMelee.Skill;
             }
@@ -455,12 +468,16 @@ namespace ACE.Server.WorldObjects
                 var bow = GetCreatureSkill(Skill.Bow);
                 var crossbow = GetCreatureSkill(Skill.Crossbow);
                 var thrown = GetCreatureSkill(Skill.ThrownWeapon);
+                // EoR-imported creatures carry the consolidated missile skill; include it
+                var missile = GetCreatureSkill(Skill.MissileWeapons);
 
                 maxMissile = bow;
                 if (crossbow.Current > maxMissile.Current)
                     maxMissile = crossbow;
                 if (thrown.Current > maxMissile.Current)
                     maxMissile = thrown;
+                if (missile.Current > maxMissile.Current)
+                    maxMissile = missile;
 
                 CachedHighestMissileSkill = maxMissile.Skill;
             }

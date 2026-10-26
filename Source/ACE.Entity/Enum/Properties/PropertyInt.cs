@@ -732,6 +732,13 @@ namespace ACE.Entity.Enum.Properties
         /// See SetCrystalType in Creature_SetCrystals.cs.
         /// </summary>
         SetCrystal                               = 10042,
+
+        /// <summary>
+        /// Infiltration: the player's free racial weapon skill (Skill enum value) after a training-hall
+        /// SwapRacialWeaponSkill trade. Null = the heritage default (Aluvian Dagger / Gharu'ndim Staff / Sho Unarmed).
+        /// This skill cannot be untrained for a credit refund.
+        /// </summary>
+        RacialWeaponSkill                        = 10043,
     }
 
     public static class PropertyIntExtensions

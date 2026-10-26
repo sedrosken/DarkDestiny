@@ -102,7 +102,8 @@ namespace ACE.Entity.Enum.Properties
 
         // CustomDM
         LeyLineTriggerSpellId            = 10000,
-        LeyLineCastSpellId               = 10001
+        LeyLineCastSpellId               = 10001,
+        OffHandClothingBase              = 10002   // custom: ClothingBase used when a body-look weapon (PropertyBool 9030) is in the off-hand slot
     }
 
     public static class PropertyDataIdExtensions

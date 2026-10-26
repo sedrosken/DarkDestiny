@@ -204,5 +204,6 @@ namespace ACE.Entity.Enum.Properties
         AiIncapableOfAnyMotion            = 9027,
         IsVendorGeneratedItem             = 9028,
         BlockSpellExtraction              = 9029,
+        WeaponUsesClothingBase            = 9030,   // weapon's ClothingBase paints the wielder's body (claws)
     }
 }

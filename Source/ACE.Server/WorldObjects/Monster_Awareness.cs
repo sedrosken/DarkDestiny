@@ -407,6 +407,11 @@ namespace ACE.Server.WorldObjects
         public List<Creature> GetAttackTargets()
         {
             var visibleTargets = new List<Creature>();
+
+            // AI npc calming down after a rage: pick no new targets, walk home
+            if (ACE.Server.Managers.AiNpcManager.IsCalming(this))
+                return visibleTargets;
+
             var wiEnabled = WiFlagEnabled;
 
             foreach (var creature in PhysicsObj.ObjMaint.GetVisibleTargetsValuesOfTypeCreature())

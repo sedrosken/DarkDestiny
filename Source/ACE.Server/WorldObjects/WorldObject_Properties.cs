@@ -1497,12 +1497,18 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public void setVisualClothingPriority()
         {
-            if (ClothingBase.HasValue && (CurrentWieldedLocation & (EquipMask.Armor | EquipMask.Extremity)) != 0)
+            if (ClothingBase.HasValue && ((CurrentWieldedLocation & (EquipMask.Armor | EquipMask.Extremity)) != 0 || IsBodyLookWeapon))
             {
                 ClothingTable item = DatManager.PortalDat.ReadFromDat<ClothingTable>((uint)ClothingBase);
                 VisualClothingPriority = item.GetVisualPriority();
             }
         }
+
+        // custom: weapon whose ClothingBase also paints the wielder's body (claw weapons, PropertyBool 9030)
+        public bool IsBodyLookWeapon =>
+            ClothingBase.HasValue
+            && (GetProperty(PropertyBool.WeaponUsesClothingBase) ?? false)
+            && (CurrentWieldedLocation & (EquipMask.MeleeWeapon | EquipMask.Shield)) != 0;
 
         public bool? TopLayerPriority
         {

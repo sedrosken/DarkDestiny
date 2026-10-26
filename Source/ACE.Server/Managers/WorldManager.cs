@@ -60,6 +60,7 @@ namespace ACE.Server.Managers
             var thread = new Thread(() =>
             {
                 LandblockManager.PreloadConfigLandblocks();
+                AiNpcManager.StartWanderers();
                 UpdateWorld();
             });
             thread.Name = "World Manager";

@@ -1104,7 +1104,10 @@ namespace ACE.Server.WorldObjects
 
                 var distSquared = Location.SquaredDistanceTo(creature.Location);
                 if (distSquared <= rangeSquared)
+                {
                     creature.EmoteManager.OnHearChat(this, message);
+                    AiNpcManager.OnHearChat(creature, this, message);
+                }
             }
         }
 

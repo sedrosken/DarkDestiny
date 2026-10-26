@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using ACE.Entity.Enum;
@@ -15,7 +16,8 @@ namespace ACE.Server.Network.Structure
         {
             MaterialType = message.MaterialType;
             Workmanship = message.Workmanship / message.NumItemsInMaterial;
-            Units = message.Amount;
+            // display only: bags max at 100 units, so never report more than that in the client message
+            Units = Math.Min(message.Amount, 100u);
         }
     }
 

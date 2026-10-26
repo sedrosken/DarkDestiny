@@ -109,7 +109,7 @@ namespace ACE.Server.WorldObjects
             }
 
             // get all the Armor Items, and any Clothing items that might be equipped (robes, slippers, gloves, kasa, etc) so we can calculate their priority
-            var armorItems = EquippedObjects.Values.Where(x => (x.ItemType == ItemType.Armor || (x.CurrentWieldedLocation & (EquipMask.Armor | EquipMask.Extremity)) != 0)).ToList();
+            var armorItems = EquippedObjects.Values.Where(x => (x.ItemType == ItemType.Armor || (x.CurrentWieldedLocation & (EquipMask.Armor | EquipMask.Extremity)) != 0 || x.IsBodyLookWeapon)).ToList();
             foreach (var w in armorItems)
                 w.setVisualClothingPriority();
 
@@ -150,10 +150,16 @@ namespace ACE.Server.WorldObjects
                     continue;
 
                 // We can wield things that are not part of our model, only use those items that can cover our model.
-                if ((w.CurrentWieldedLocation & (EquipMask.Clothing | EquipMask.Armor | EquipMask.Cloak)) != 0)
+                if ((w.CurrentWieldedLocation & (EquipMask.Clothing | EquipMask.Armor | EquipMask.Cloak)) != 0 || w.IsBodyLookWeapon)
                 {
                     if (w.ClothingBase.HasValue)
-                        item = DatManager.PortalDat.ReadFromDat<ClothingTable>((uint)w.ClothingBase);
+                    {
+                        // custom: body-look weapon (armblade) in the off-hand slot uses its off-hand ClothingBase (PropertyDataId 10002) if set
+                        var cbId = (uint)w.ClothingBase;
+                        if (w.IsBodyLookWeapon && w.CurrentWieldedLocation == EquipMask.Shield && w.GetProperty(ACE.Entity.Enum.Properties.PropertyDataId.OffHandClothingBase) is uint offHandCb)
+                            cbId = offHandCb;
+                        item = DatManager.PortalDat.ReadFromDat<ClothingTable>(cbId);
+                    }
                     else
                     {
                         objDesc = AddSetupAsClothingBase(objDesc, w);

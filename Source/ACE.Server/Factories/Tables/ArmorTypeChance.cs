@@ -221,9 +221,10 @@ namespace ACE.Server.Factories.Tables
                     ( TreasureArmorType.Leather,        0.22f ),
                     ( TreasureArmorType.StuddedLeather, 0.22f ),
                     ( TreasureArmorType.Chainmail,      0.22f ),
-                    ( TreasureArmorType.Platemail,      0.22f ),
-                    ( TreasureArmorType.HeritageLow,    0.06f ),
-                    ( TreasureArmorType.Covenant,       0.06f ),
+                    ( TreasureArmorType.Platemail,      0.22f ),    // + diforsa (viamontian)
+                    ( TreasureArmorType.HeritageLow,    0.05f ),    // + tenassa (viamontian)
+                    ( TreasureArmorType.Covenant,       0.05f ),
+                    ( TreasureArmorType.Overrobe,       0.02f ),    // added
                 };
 
                 T4_Chances = new ChanceTable<TreasureArmorType>()
@@ -232,52 +233,72 @@ namespace ACE.Server.Factories.Tables
                     ( TreasureArmorType.StuddedLeather, 0.16f ),
                     ( TreasureArmorType.Chainmail,      0.17f ),
                     ( TreasureArmorType.Platemail,      0.17f ),
-                    ( TreasureArmorType.HeritageLow,    0.17f ),
-                    ( TreasureArmorType.Covenant,       0.17f ),
+                    ( TreasureArmorType.HeritageLow,    0.16f ),
+                    ( TreasureArmorType.Covenant,       0.16f ),
+                    ( TreasureArmorType.Overrobe,       0.02f ),    // added
                 };
 
                 T5_Chances = new ChanceTable<TreasureArmorType>()
                 {
                     ( TreasureArmorType.Leather,        0.15f ),
-                    ( TreasureArmorType.StuddedLeather, 0.16f ),
+                    ( TreasureArmorType.StuddedLeather, 0.15f ),
                     ( TreasureArmorType.Chainmail,      0.16f ),
                     ( TreasureArmorType.Platemail,      0.16f ),
-                    ( TreasureArmorType.HeritageLow,    0.16f ),
+                    ( TreasureArmorType.HeritageLow,    0.15f ),
                     ( TreasureArmorType.Covenant,       0.16f ),
-                    ( TreasureArmorType.HeritageHigh,   0.05f ),
+                    ( TreasureArmorType.HeritageHigh,   0.05f ),    // + alduressa (viamontian)
+                    ( TreasureArmorType.Overrobe,       0.02f ),    // added
                 };
 
                 T6_Chances = new ChanceTable<TreasureArmorType>()
                 {
-                    ( TreasureArmorType.Leather,        0.15f ),
-                    ( TreasureArmorType.StuddedLeather, 0.15f ),
-                    ( TreasureArmorType.Chainmail,      0.15f ),
-                    ( TreasureArmorType.Platemail,      0.15f ),
-                    ( TreasureArmorType.HeritageLow,    0.15f ),
-                    ( TreasureArmorType.Covenant,       0.15f ),
+                    ( TreasureArmorType.Leather,        0.12f ),
+                    ( TreasureArmorType.StuddedLeather, 0.12f ),
+                    ( TreasureArmorType.Chainmail,      0.12f ),
+                    ( TreasureArmorType.Platemail,      0.12f ),
+                    ( TreasureArmorType.HeritageLow,    0.12f ),
+                    ( TreasureArmorType.Covenant,       0.12f ),
                     ( TreasureArmorType.HeritageHigh,   0.10f ),
+                    ( TreasureArmorType.Olthoi,         0.03f ),    // added - moved down from t7 for infiltration
+                    ( TreasureArmorType.OlthoiHeritage, 0.05f ),    // added - moved down from t7 for infiltration
+                    ( TreasureArmorType.Haebrean,       0.04f ),    // added
+                    ( TreasureArmorType.KnorrAcademy,   0.02f ),    // added
+                    ( TreasureArmorType.Sedgemail,      0.02f ),    // added
+                    ( TreasureArmorType.Overrobe,       0.02f ),    // added - t6+ table includes empyrean over-robe
                 };
 
                 T7_Chances = new ChanceTable<TreasureArmorType>()
                 {
-                    ( TreasureArmorType.Leather,        0.15f ),
-                    ( TreasureArmorType.StuddedLeather, 0.15f ),
-                    ( TreasureArmorType.Chainmail,      0.15f ),
-                    ( TreasureArmorType.Platemail,      0.15f ),
-                    ( TreasureArmorType.HeritageLow,    0.15f ),
-                    ( TreasureArmorType.Covenant,       0.15f ),
+                    ( TreasureArmorType.Leather,        0.12f ),
+                    ( TreasureArmorType.StuddedLeather, 0.12f ),
+                    ( TreasureArmorType.Chainmail,      0.12f ),
+                    ( TreasureArmorType.Platemail,      0.12f ),
+                    ( TreasureArmorType.HeritageLow,    0.12f ),
+                    ( TreasureArmorType.Covenant,       0.12f ),
                     ( TreasureArmorType.HeritageHigh,   0.10f ),
+                    ( TreasureArmorType.Olthoi,         0.03f ),    // added
+                    ( TreasureArmorType.OlthoiHeritage, 0.05f ),    // added - olthoi celdon/amuli/koujia/alduressa
+                    ( TreasureArmorType.Haebrean,       0.04f ),    // added
+                    ( TreasureArmorType.KnorrAcademy,   0.02f ),    // added
+                    ( TreasureArmorType.Sedgemail,      0.02f ),    // added
+                    ( TreasureArmorType.Overrobe,       0.02f ),    // added
                 };
 
                 T8_Chances = new ChanceTable<TreasureArmorType>()
                 {
-                    ( TreasureArmorType.Leather,        0.15f ),
-                    ( TreasureArmorType.StuddedLeather, 0.15f ),
-                    ( TreasureArmorType.Chainmail,      0.15f ),
-                    ( TreasureArmorType.Platemail,      0.15f ),
-                    ( TreasureArmorType.HeritageLow,    0.15f ),
-                    ( TreasureArmorType.Covenant,       0.15f ),
+                    ( TreasureArmorType.Leather,        0.10f ),
+                    ( TreasureArmorType.StuddedLeather, 0.10f ),
+                    ( TreasureArmorType.Chainmail,      0.10f ),
+                    ( TreasureArmorType.Platemail,      0.10f ),
+                    ( TreasureArmorType.HeritageLow,    0.11f ),
+                    ( TreasureArmorType.Covenant,       0.11f ),
                     ( TreasureArmorType.HeritageHigh,   0.10f ),
+                    ( TreasureArmorType.Olthoi,         0.06f ),    // added
+                    ( TreasureArmorType.OlthoiHeritage, 0.12f ),    // added
+                    ( TreasureArmorType.Haebrean,       0.04f ),    // added
+                    ( TreasureArmorType.KnorrAcademy,   0.02f ),    // added
+                    ( TreasureArmorType.Sedgemail,      0.02f ),    // added
+                    ( TreasureArmorType.Overrobe,       0.02f ),    // added
                 };
 
                 // we have to refresh this list or it will still contain the previous values.

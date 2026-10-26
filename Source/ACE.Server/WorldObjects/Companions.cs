@@ -439,6 +439,118 @@ namespace ACE.Server.WorldObjects
         }
 
         // =====================================================================
+        // Dismissing: /dismisscompanion  (she leaves... angrily, and attacks you)
+        // =====================================================================
+
+        public const string DismissLine = "You think you can just throw me away like a piece of trash?  Just wait til Lingrad hears about this!";
+        private const double ScornedLifetimeSeconds = 3 * 60;   // scorned one vanishes after this if nobody kills her
+
+        /// <summary>
+        /// Dismisses the companion the player has selected (falls back to the one with the LEAST time left).
+        /// She's removed from the player's list, says her line, and a hostile copy of her attacks the player.
+        /// </summary>
+        public static void TryDismiss(Player player)
+        {
+            EnsureLoaded();
+
+            if (!states.TryGetValue(player.Guid.Full, out var state))
+            {
+                player.SendMessage("You don't have any companions to dismiss.");
+                return;
+            }
+
+            Entry entry;
+            lock (state)
+            {
+                var available = state.Entries.Where(e => !e.GiftPending).ToList();
+                if (available.Count == 0)
+                {
+                    player.SendMessage(state.Entries.Count == 0
+                        ? "You don't have any companions to dismiss."
+                        : "That companion is already on her way to someone else.");
+                    return;
+                }
+
+                var selected = player.CurrentAppraisalTarget;
+                entry = available.FirstOrDefault(e => e.Live != null && selected.HasValue && e.Live.Guid.Full == selected.Value)
+                    ?? available.OrderBy(e => e.ExpiresAt).First();
+
+                state.Entries.Remove(entry);
+            }
+            Save();
+
+            var old = entry.Live;
+            entry.Live = null;
+
+            new ActionChain(player, () => SpawnScorned(player, entry.Wcid, old)).EnqueueChain();
+        }
+
+        private static void SpawnScorned(Player player, uint wcid, Companion old)
+        {
+            var weenie = DatabaseManager.World.GetCachedWeenie(wcid);
+            if (weenie == null)
+            {
+                log.Error($"Companions.SpawnScorned - weenie {wcid} not found");
+                if (old != null && !old.IsDestroyed) old.Destroy();
+                return;
+            }
+
+            // a plain Creature (NOT a Pet) so it runs normal monster AI
+            var c = new Creature(weenie, GuidManager.NewDynamicGuid());
+            c.Biota.WeenieType = WeenieType.Creature;
+
+            // stand where she was (same face/hair/skin) -- else in front of the player
+            var oldAlive = old != null && !old.IsDestroyed && old.Location != null && old.CurrentLandblock == player.CurrentLandblock;
+            if (oldAlive)
+            {
+                c.Location = new Position(old.Location);
+                c.EyesTextureDID = old.EyesTextureDID;
+                c.DefaultEyesTextureDID = old.DefaultEyesTextureDID;
+                c.NoseTextureDID = old.NoseTextureDID;
+                c.DefaultNoseTextureDID = old.DefaultNoseTextureDID;
+                c.MouthTextureDID = old.MouthTextureDID;
+                c.DefaultMouthTextureDID = old.DefaultMouthTextureDID;
+                c.HeadObjectDID = old.HeadObjectDID;
+                c.SkinPaletteDID = old.SkinPaletteDID;
+                c.HairPaletteDID = old.HairPaletteDID;
+                c.EyesPaletteDID = old.EyesPaletteDID;
+            }
+            else
+            {
+                c.Location = player.Location.InFrontOf(2.0f, true);
+                c.Location.LandblockId = new LandblockId(c.Location.GetCell());
+            }
+
+            if (old != null && !old.IsDestroyed)
+                old.Destroy();
+
+            c.Home = new Position(c.Location);
+            c.Attackable = true;
+            c.PlayerKillerStatus = PlayerKillerStatus.Creature;
+            c.Tolerance = Tolerance.Target;      // locked onto the dismisser -- won't go after bystanders
+            c.NoCorpse = true;                   // no corpse / no loot
+            c.TimeToRot = -1;
+            c.SetMonsterState();                 // re-evaluate now that she's attackable + not a pet
+
+            if (!c.EnterWorld())
+            {
+                c.Destroy();
+                return;
+            }
+
+            Say(c, DismissLine);
+
+            c.AttackTarget = player;
+            c.WakeUp(false);
+
+            // cleanup if she's still around later
+            var cleanup = new ActionChain();
+            cleanup.AddDelaySeconds(ScornedLifetimeSeconds);
+            cleanup.AddAction(c, () => { if (!c.IsDestroyed && c.IsAlive) c.Destroy(); });
+            cleanup.EnqueueChain();
+        }
+
+        // =====================================================================
         // Blackjack reward: a token every BlackjackWinsPerToken winning hands
         // =====================================================================
 

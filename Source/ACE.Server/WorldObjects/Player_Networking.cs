@@ -150,6 +150,8 @@ namespace ACE.Server.WorldObjects
 
             HandleDBUpdates();
 
+            HandleRacialWeaponSkillMigration();
+
             if (ServerManager.ShutdownInitiated)
             {
                 var actionChain = new ActionChain();

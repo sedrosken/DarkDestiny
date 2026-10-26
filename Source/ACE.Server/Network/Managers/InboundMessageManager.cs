@@ -125,6 +125,8 @@ namespace ACE.Server.Network.Managers
         /// </summary>
         public static void HandleGameAction(GameActionType opcode, ClientMessage message, Session session)
         {
+            NetDiag.Inbound(session, opcode); // TEMP diagnostic
+
             if (actionHandlers.TryGetValue(opcode, out var actionHandlerInfo))
             {
                 // It's possible that before this work is executed by WorldManager, and after it was enqueued here, the session.Player was set to null

@@ -643,6 +643,10 @@ namespace ACE.Server.WorldObjects
                 {
                     playerTarget.Session.Network.EnqueueSend(new GameEventMagicUpdateEnchantment(playerTarget.Session, new Enchantment(playerTarget, addResult.Enchantment)));
 
+                    // gear enchantment that lost to a timed buff in the same category: make the client agree
+                    if (equip)
+                        playerTarget.EnchantmentManager.SyncClientWinner(addResult.Enchantment);
+
                     playerTarget.HandleSpellHooks(spell);
                 }
 
@@ -2020,9 +2024,12 @@ namespace ACE.Server.WorldObjects
 
             var heightOffset = CalculatePreOffset(spell, spellType, target);
 
+            var cylDist = float.NaN;
+            var targetHorizDist = float.NaN;
+
             if (target != null)
             {
-                var cylDist = GetCylinderDistance(target);
+                cylDist = GetCylinderDistance(target);
                 //Console.WriteLine($"CylDist: {cylDist}");
                 if (cylDist < 0.6f)
                     radsum = PhysicsObj.GetPhysicsRadius() + radius;
@@ -2032,6 +2039,31 @@ namespace ACE.Server.WorldObjects
                 radsum *= 0.6f;
 
             baseOffset.Y += radsum;
+
+            // DarkDestiny: never spawn a single-target projectile past the target's center.
+            // If the target is closer than the spawn offset, the projectile would otherwise
+            // appear behind the target and have to fly backward to reach it.
+            // Clamping puts the spawn inside the target, so world-entry collision registers the hit.
+            if (target != null && spell.NumProjectiles == 1 && spellType != ProjectileSpellType.Strike)
+            {
+                var globOffset = PhysicsObj.Position.GetOffset(target.PhysicsObj.Position);
+                targetHorizDist = new Vector2(globOffset.X, globOffset.Y).Length();
+
+                // heightOffset.Y (<= 0) is added below, so account for it here
+                var maxForward = Math.Max(0.0f, targetHorizDist - heightOffset.Y);
+
+                if (baseOffset.Y > maxForward)
+                    baseOffset.Y = maxForward;
+            }
+
+            if (this is Player debugPlayer && debugPlayer.DebugSpell)
+            {
+                debugPlayer.Session.Network.EnqueueSend(new GameMessageSystemChat(
+                    $"[SpellSpawn] {spell.Name} ({spellType}) casterR={PhysicsObj.GetPhysicsRadius():0.00} projR={radius:0.00} " +
+                    $"cylDist={cylDist:0.00} targetDist={targetHorizDist:0.00} spawnFwd={baseOffset.Y + heightOffset.Y:0.00} " +
+                    $"target={(target?.Name ?? "none")} targetScale={(target?.ObjScale ?? 1.0f):0.00} targetPhysR={(target?.PhysicsObj?.GetPhysicsRadius() ?? 0.0f):0.00}",
+                    ChatMessageType.Broadcast));
+            }
 
             baseOffset += heightOffset;
 
@@ -2320,9 +2352,16 @@ namespace ACE.Server.WorldObjects
             if (!weenie.PropertiesFloat.TryGetValue(PropertyFloat.DefaultScale, out var scale))
                 scale = 1.0f;
 
-            //var result = (float)(setup.Spheres[0].Radius * scale);
-
-            var setupRadius = setup.Radius;
+            // Use the projectile's collision sphere (same as upstream ACE).
+            // setup.Radius is the whole setup's bounding radius; when it is larger than the collision sphere
+            // it pushes the spawn point (2x caster radius + 2x projectile radius) out past adjacent monsters.
+            float setupRadius;
+            if (setup.Spheres.Count > 0)
+                setupRadius = setup.Spheres[0].Radius;
+            else if (setup.CylSpheres.Count > 0)
+                setupRadius = setup.CylSpheres[0].Radius;
+            else
+                setupRadius = setup.Radius;
 
             var result = (float)(setupRadius * scale);
 

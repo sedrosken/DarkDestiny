@@ -314,7 +314,7 @@ namespace ACE.Server.WorldObjects
 
                 // temple untraining 'always trained' skills:
                 // cannot be untrained, but skill XP can be recovered
-                if (IsSkillUntrainable(skill, HeritageGroup))
+                if (IsSkillUntrainable(skill, HeritageGroup, CurrentRacialWeaponSkill))
                 {
                     creatureSkill.AdvancementClass = SkillAdvancementClass.Untrained;
                     creatureSkill.InitLevel = 0;
@@ -383,7 +383,7 @@ namespace ACE.Server.WorldObjects
             Skill.UnarmedCombat     // Sho
         };
 
-        private static Skill GetHeritageWeaponSkill(HeritageGroup heritage)
+        public static Skill GetHeritageWeaponSkill(HeritageGroup heritage)
         {
             switch (heritage)
             {
@@ -391,6 +391,74 @@ namespace ACE.Server.WorldObjects
                 case HeritageGroup.Gharundim: return Skill.Staff;
                 case HeritageGroup.Sho:       return Skill.UnarmedCombat;
                 default:                      return Skill.None;
+            }
+        }
+
+        /// <summary>
+        /// Resolves a racial weapon skill from the stored PropertyInt.RacialWeaponSkill value (may be null)
+        /// and heritage. Usable for offline players.
+        /// </summary>
+        public static Skill GetRacialWeaponSkill(HeritageGroup heritage, int? storedRacialWeaponSkill)
+        {
+            if (storedRacialWeaponSkill.HasValue && RacialWeaponSkills.Contains((Skill)storedRacialWeaponSkill.Value))
+                return (Skill)storedRacialWeaponSkill.Value;
+
+            return GetHeritageWeaponSkill(heritage);
+        }
+
+        /// <summary>
+        /// CUSTOM: the player's current free racial weapon skill (heritage default until swapped).
+        /// </summary>
+        public Skill CurrentRacialWeaponSkill
+        {
+            get => GetRacialWeaponSkill(HeritageGroup, GetProperty(PropertyInt.RacialWeaponSkill));
+            set
+            {
+                if (value == GetHeritageWeaponSkill(HeritageGroup))
+                    RemoveProperty(PropertyInt.RacialWeaponSkill);
+                else
+                    SetProperty(PropertyInt.RacialWeaponSkill, (int)value);
+            }
+        }
+
+        /// <summary>
+        /// CUSTOM: runs on login. Characters that swapped before RacialWeaponSkill existed still have
+        /// the heritage default recorded, which is the bug that let them untrain the swapped skill for credits.
+        /// Infer the real racial skill from what's trained; flag anything that can't be resolved.
+        /// </summary>
+        public void HandleRacialWeaponSkillMigration()
+        {
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.Infiltration)
+                return;
+
+            if (GetProperty(PropertyInt.RacialWeaponSkill) != null)
+                return;
+
+            var heritageSkill = GetHeritageWeaponSkill(HeritageGroup);
+            if (heritageSkill == Skill.None)
+                return;
+
+            var heritageCs = GetCreatureSkill(heritageSkill);
+            if (heritageCs != null && heritageCs.AdvancementClass >= SkillAdvancementClass.Trained)
+                return;     // never swapped (or swapped back) -- heritage default is correct
+
+            var trained = RacialWeaponSkills
+                .Where(s => s != heritageSkill)
+                .Select(s => GetCreatureSkill(s))
+                .Where(cs => cs != null && cs.AdvancementClass >= SkillAdvancementClass.Trained)
+                .ToList();
+
+            if (trained.Count == 1)
+            {
+                CurrentRacialWeaponSkill = trained[0].Skill;
+                log.Info($"[RacialSkill] {Name} (0x{Guid}) migrated racial weapon skill {heritageSkill} -> {trained[0].Skill}");
+            }
+            else
+            {
+                // 0 = swapped skill was already untrained for a refund (exploited)
+                // 2 = swapped, then bought the other one -- can't tell which is the free one
+                log.Warn($"[RacialSkill] {Name} (0x{Guid}) heritage {HeritageGroup}: {heritageSkill} untrained and {trained.Count} other racial weapon skill(s) trained " +
+                         $"({string.Join(", ", trained.Select(t => t.Skill))}). Needs manual review / skill credit check.");
             }
         }
 
@@ -417,39 +485,16 @@ namespace ACE.Server.WorldObjects
                 return false;
             }
 
-            // find which racial weapon skill(s) the player currently holds, other than the target
-            var candidates = new List<CreatureSkill>();
-            foreach (var s in RacialWeaponSkills)
-            {
-                if (s == targetSkill)
-                    continue;
-                var cs = GetCreatureSkill(s);
-                if (cs != null && cs.AdvancementClass >= SkillAdvancementClass.Trained)
-                    candidates.Add(cs);
-            }
+            // only ever trade the player's current free racial skill (which follows previous swaps),
+            // never a weapon skill they trained with their own credits
+            var racialSkill = CurrentRacialWeaponSkill;
+            var source = racialSkill != Skill.None ? GetCreatureSkill(racialSkill) : null;
 
-            if (candidates.Count == 0)
+            if (source == null || source.AdvancementClass < SkillAdvancementClass.Trained)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat(
                     "You have no starting weapon skill to trade.", ChatMessageType.Broadcast));
                 return false;
-            }
-
-            CreatureSkill source;
-            if (candidates.Count == 1)
-                source = candidates[0];
-            else
-            {
-                // more than one weapon skill trained -> only ever trade the player's own heritage racial
-                // skill, never a weapon skill they trained themselves with their own credits
-                var heritageSkill = GetHeritageWeaponSkill(HeritageGroup);
-                source = candidates.FirstOrDefault(c => c.Skill == heritageSkill);
-                if (source == null)
-                {
-                    Session.Network.EnqueueSend(new GameMessageSystemChat(
-                        "You have more than one weapon skill trained; I can only trade a fresh initiate's single racial skill.", ChatMessageType.Broadcast));
-                    return false;
-                }
             }
 
             var sac = source.AdvancementClass;      // Trained or Specialized
@@ -471,6 +516,9 @@ namespace ACE.Server.WorldObjects
             source.ExperienceSpent = 0;
             source.Ranks = 0;
             source.InitLevel = 0;
+
+            // the free racial skill is now the target; the old one becomes a normal (credit-bought) skill
+            CurrentRacialWeaponSkill = targetSkill;
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
                 UpdateCustomSkillFormulae(true);
@@ -793,7 +841,9 @@ namespace ACE.Server.WorldObjects
             Skill.Salvaging
         };
 
-        public static bool IsSkillUntrainable(Skill skill, HeritageGroup heritageGroup)
+        /// <param name="racialWeaponSkill">the player's current racial weapon skill (after any swap).
+        /// Skill.None = fall back to the heritage default.</param>
+        public static bool IsSkillUntrainable(Skill skill, HeritageGroup heritageGroup, Skill racialWeaponSkill = Skill.None)
         {
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR)
                 return !AlwaysTrained.Contains(skill);
@@ -804,21 +854,11 @@ namespace ACE.Server.WorldObjects
 
                 if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
                 {
-                    switch (heritageGroup)
-                    {
-                        case HeritageGroup.Aluvian:
-                            if (skill == Skill.Dagger)
-                                return false;
-                            break;
-                        case HeritageGroup.Gharundim:
-                            if (skill == Skill.Staff)
-                                return false;
-                            break;
-                        case HeritageGroup.Sho:
-                            if (skill == Skill.UnarmedCombat)
-                                return false;
-                            break;
-                    }
+                    // the free racial weapon skill follows the swap, not the heritage
+                    var racialSkill = racialWeaponSkill != Skill.None ? racialWeaponSkill : GetHeritageWeaponSkill(heritageGroup);
+
+                    if (racialSkill != Skill.None && skill == racialSkill)
+                        return false;
                 }
                 return true;
             }
@@ -1185,7 +1225,7 @@ namespace ACE.Server.WorldObjects
             IsSkillSpecializedViaAugmentation(creatureSkill.Skill, out var skillIsSpecializedViaAugmentation);
 
             var typeOfSkill = creatureSkill.AdvancementClass.ToString().ToLower() + " ";
-            var untrainable = IsSkillUntrainable(skill, HeritageGroup);
+            var untrainable = IsSkillUntrainable(skill, HeritageGroup, CurrentRacialWeaponSkill);
             var creditRefund = (creatureSkill.AdvancementClass == SkillAdvancementClass.Specialized && !(skillIsSpecializedViaAugmentation && !untrainable)) || untrainable;
 
             if (creatureSkill.AdvancementClass == SkillAdvancementClass.Specialized && !(skillIsSpecializedViaAugmentation && !untrainable))

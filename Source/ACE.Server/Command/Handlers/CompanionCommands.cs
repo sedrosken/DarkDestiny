@@ -21,5 +21,21 @@ namespace ACE.Server.Command.Handlers
 
             Companions.TryGift(player, string.Join(" ", parameters).Trim());
         }
+
+        /// <summary>
+        /// /dismisscompanion -- sends one of your companions away (she doesn't take it well and attacks you).
+        /// Select the companion first to choose which one; otherwise the one with the least time left goes.
+        /// </summary>
+        [CommandHandler("dismisscompanion", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, 0,
+            "Dismisses one of your companions. She will not be happy about it.",
+            "\nSelect a companion first to choose which one is dismissed.")]
+        public static void HandleDismissCompanion(Session session, params string[] parameters)
+        {
+            var player = session?.Player;
+            if (player == null)
+                return;
+
+            Companions.TryDismiss(player);
+        }
     }
 }

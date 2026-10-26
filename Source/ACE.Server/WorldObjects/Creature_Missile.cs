@@ -343,6 +343,35 @@ namespace ACE.Server.WorldObjects
         }
 
         /// <summary>
+        /// Max horizontal target speed (m/s) used when leading a moving target
+        /// </summary>
+        public const float MaxLeadSpeed = 15.0f;
+
+        /// <summary>
+        /// Returns a sanitized target velocity for leading projectiles.
+        /// CachedVelocity is (position delta / physics quantum), so a single step-up, step-down,
+        /// ground snap or position correction over a tiny quantum can produce a huge spike,
+        /// mostly in Z. Feeding that into the solvers produces wild up/down aim angles.
+        /// </summary>
+        public static Vector3 GetTargetLeadVelocity(WorldObject target)
+        {
+            var velocity = target?.PhysicsObj?.CachedVelocity ?? Vector3.Zero;
+
+            if (float.IsNaN(velocity.X) || float.IsNaN(velocity.Y) || float.IsNaN(velocity.Z))
+                return Vector3.Zero;
+
+            // ignore vertical motion entirely; terrain following / stepping / hovering is noise for aiming purposes
+            velocity.Z = 0.0f;
+
+            var speed = velocity.Length();
+
+            if (speed > MaxLeadSpeed)
+                velocity *= MaxLeadSpeed / speed;
+
+            return velocity;
+        }
+
+        /// <summary>
         /// Calculates the velocity to launch the projectile from origin to dest
         /// </summary>
         public Vector3 GetProjectileVelocity(WorldObject target, Vector3 origin, Vector3 dir, Vector3 dest, float speed, out float time, bool useGravity = true)
@@ -353,7 +382,7 @@ namespace ACE.Server.WorldObjects
 
             var gravity = useGravity ? -PhysicsGlobals.Gravity : 0.00001f;
 
-            var targetVelocity = target.PhysicsObj.CachedVelocity;
+            var targetVelocity = GetTargetLeadVelocity(target);
 
             if (!targetVelocity.Equals(Vector3.Zero))
             {
@@ -482,10 +511,18 @@ namespace ACE.Server.WorldObjects
 
         public static MotionCommand GetAimLevel(Vector3 velocity)
         {
+            var aimLevel = MotionCommand.AimLevel;
+
+            // a failed solve returns Vector3.Zero -> Normalize() gives NaN -> every comparison below
+            // is false and the old code fell through to AimLow90 (aiming straight at the ground)
+            if (velocity.LengthSquared() < PhysicsGlobals.EPSILON)
+                return aimLevel;
+
             // get z-angle?
             var zAngle = Vector3.Normalize(velocity).Z * 90.0f;
 
-            var aimLevel = MotionCommand.AimLevel;
+            if (float.IsNaN(zAngle))
+                return aimLevel;
 
             if (zAngle >= 82.5f)
                 aimLevel = MotionCommand.AimHigh90;

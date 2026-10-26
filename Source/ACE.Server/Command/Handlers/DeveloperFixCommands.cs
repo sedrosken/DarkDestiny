@@ -414,6 +414,19 @@ namespace ACE.Server.Command.Handlers
                 var heritageGroup = DatManager.PortalDat.CharGen.HeritageGroups[heritage];
                 var adjustedSkillCosts = heritageGroup.Skills.ToDictionary(s => (Skill)s.SkillNum, s => s);
 
+                // Infiltration racial weapon skill swap: the heritage cost entry follows the swapped skill
+                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
+                {
+                    var heritageWeaponSkill = Player.GetHeritageWeaponSkill((HeritageGroup)heritage);
+                    var racialWeaponSkill = Player.GetRacialWeaponSkill((HeritageGroup)heritage, player.GetProperty(PropertyInt.RacialWeaponSkill));
+
+                    if (racialWeaponSkill != heritageWeaponSkill && adjustedSkillCosts.TryGetValue(heritageWeaponSkill, out var racialCost))
+                    {
+                        adjustedSkillCosts.Remove(heritageWeaponSkill);
+                        adjustedSkillCosts[racialWeaponSkill] = racialCost;
+                    }
+                }
+
                 var startCredits = (int)heritageGroup.SkillCredits;
 
                 var levelCredits = GetAdditionalCredits(player.Level ?? 1);
@@ -629,7 +642,9 @@ namespace ACE.Server.Command.Handlers
 
                 var sac = skill.Value.SAC;
 
-                if (sac != SkillAdvancementClass.Trained || !Player.IsSkillUntrainable(skill.Key, (HeritageGroup)player.Heritage))
+                var racialSkill = Player.GetRacialWeaponSkill((HeritageGroup)player.Heritage, player.GetProperty(PropertyInt.RacialWeaponSkill));
+
+                if (sac != SkillAdvancementClass.Trained || !Player.IsSkillUntrainable(skill.Key, (HeritageGroup)player.Heritage, racialSkill))
                     continue;
 
                 refundXP += skill.Value.PP;
