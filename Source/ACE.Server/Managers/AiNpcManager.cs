@@ -692,6 +692,7 @@ namespace ACE.Server.Managers
             if (wo == null) { log.Warn($"AiNpcManager: could not create wcid {wcid}"); w.NextMove = DateTime.UtcNow.AddMinutes(5); return; }
 
             wo.Location = pos;
+            wo.TimeToRot = -1;   // objects made by code (not by a generator) rot away after ~5 min unless told not to
             // keep her landblock loaded while she's there, so she isn't unloaded when nobody is around
             var block = LandblockManager.GetLandblock(pos.LandblockId, false, true);
 

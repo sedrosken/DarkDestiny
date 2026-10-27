@@ -60,6 +60,42 @@ namespace ACE.Server.Physics.Animation
             }
         }
 
+        /// <summary>
+        /// Pending entries only complete when the Sequence finishes link animations (AnimDoneHook -> AnimationDone).
+        /// If the Sequence is already sitting on its cyclic animation, there are no link animations left to finish,
+        /// so any entry still waiting on NumAnims can never complete and blocks every OnMotionDone queued behind it
+        /// (e.g. a cast gesture). Call this AFTER a physics update, once that update's anim hooks have been processed.
+        /// Returns the number of entries flushed.
+        /// </summary>
+        public int FlushStrandedAnimations(Sequence sequence)
+        {
+            if (PendingAnimations.Count == 0 || sequence == null || !sequence.is_first_cyclic())
+                return 0;
+
+            var waiting = false;
+            uint totalAnims = 0;
+            foreach (var entry in PendingAnimations)
+            {
+                if (entry.NumAnims > 0)
+                    waiting = true;
+
+                totalAnims += entry.NumAnims;
+            }
+
+            if (!waiting)
+                return 0;
+
+            var count = PendingAnimations.Count;
+
+            // same drain HandleEnterWorld uses, but as completed motions.
+            // bounded to the entries present now, in case an OnMotionDone handler queues new motions mid-drain
+            var maxIterations = totalAnims + (uint)count + 1;
+            for (var i = 0; i < maxIterations && PendingAnimations.Count > 0; i++)
+                AnimationDone(true);
+
+            return count;
+        }
+
         public void CheckForCompletedMotions()
         {
             while (PendingAnimations.First != null)

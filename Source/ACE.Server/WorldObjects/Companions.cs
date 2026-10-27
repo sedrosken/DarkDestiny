@@ -526,7 +526,9 @@ namespace ACE.Server.WorldObjects
 
             c.Home = new Position(c.Location);
             c.Attackable = true;
-            c.PlayerKillerStatus = PlayerKillerStatus.Creature;
+            // NPK = "default monster" status: Player.CheckPKStatusVsTarget only skips the PK-type match for NPK targets.
+            // PlayerKillerStatus.Creature (= Unprotected) made every player fail with "not the same type of player killer".
+            c.PlayerKillerStatus = PlayerKillerStatus.NPK;
             c.Tolerance = Tolerance.Target;      // locked onto the dismisser -- won't go after bystanders
             c.NoCorpse = true;                   // no corpse / no loot
             c.TimeToRot = -1;

@@ -455,6 +455,9 @@ namespace ACE.Server.WorldObjects
 
             PhysicsObj.update_object();
 
+            // release animation-completion entries that can no longer complete (see MotionTableManager.FlushStrandedAnimations)
+            FlushStrandedAnimations("tick");
+
             // sync ace position?
             Location.Rotation = PhysicsObj.Position.Frame.Orientation;
 
@@ -505,6 +508,27 @@ namespace ACE.Server.WorldObjects
 
             if (MagicState.IsCasting && MagicState.PendingTurnRelease)
                 CheckTurn();
+        }
+
+        public static bool LogStrandedAnimations = true;
+
+        public int FlushStrandedAnimations(string source)
+        {
+            var partArray = PhysicsObj?.PartArray;
+            var mtm = partArray?.MotionTableManager;
+
+            // cheap early-outs; this runs every physics tick while the player is animating
+            if (mtm == null || mtm.PendingAnimations.Count == 0 || !partArray.Sequence.is_first_cyclic())
+                return 0;
+
+            var before = LogStrandedAnimations ? DescribeAnimQueue() : null;
+
+            var flushed = mtm.FlushStrandedAnimations(partArray.Sequence);
+
+            if (flushed > 0 && LogStrandedAnimations)
+                log.Warn($"[ANIM FLUSH] {Name} (0x{Guid}) ({source}) flushed {flushed} stranded entries, casting={MagicState.IsCasting} {MagicState.CastGesture} -- {before}");
+
+            return flushed;
         }
 
         /// <summary>

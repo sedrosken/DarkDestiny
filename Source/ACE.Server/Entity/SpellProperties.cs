@@ -279,6 +279,21 @@ namespace ACE.Server.Entity
                 OverrideDuration = source.Duration;
         }
 
+        /// <summary>
+        /// Dark Destiny: flat multiplier on war/void projectile damage, used by the specialization perk
+        /// for spells with no higher-level version to take power from (walls).
+        /// </summary>
+        public float SpecDamageMod { get; private set; } = 1.0f;
+
+        /// <summary>
+        /// Applies the specialization perk as a flat damage multiplier instead of next-level power.
+        /// </summary>
+        public void ApplySpecDamageMod(float mod)
+        {
+            SpecDamageMod = mod;
+            IsSpecializationUpgraded = true;
+        }
+
         /// <summary>The spell id whose DB row currently supplies this spell's power numbers (== Id until ApplyPowerFrom).</summary>
         public SpellId PowerSpellId => (SpellId)PowerSpell.Id;
 

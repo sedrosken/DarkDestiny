@@ -12,9 +12,24 @@ namespace ACE.Server.Network.GameEvent.Events
         {
             Writer.Write((uint)skill);
             Writer.Write(0);    // not salvagable item guid list?
-            Writer.Write(messages.Count);
+
+            // bags hold at most 100 units: report one line per bag (e.g. 172 steel => 100 + 72)
+            const uint maxPerBag = 100;
+            var results = new List<SalvageResult>();
             foreach (var message in messages)
-                Writer.Write(new SalvageResult(message));
+            {
+                var remaining = message.Amount;
+                do
+                {
+                    var units = System.Math.Min(remaining, maxPerBag);
+                    results.Add(new SalvageResult(message, units));
+                    remaining -= units;
+                } while (remaining > 0);
+            }
+
+            Writer.Write(results.Count);
+            foreach (var result in results)
+                Writer.Write(result);
 
             Writer.Write(skill == Skill.Salvaging ? session.Player.AugmentationBonusSalvage * 25 : 0);
         }

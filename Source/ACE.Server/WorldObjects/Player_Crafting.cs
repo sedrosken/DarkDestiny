@@ -273,23 +273,24 @@ namespace ACE.Server.WorldObjects
 
                 salvageBag.Value = Math.Min((salvageBag.Value ?? 0) + addedValue, 75000);
 
-            }
-
-            // a bit different here, since ACE handles overages
-            // (done once per source item, not once per destination bag)
-            if (message != null)
-            {
-                message.Workmanship += item.ItemWorkmanship ?? 0.0f;
-                message.NumItemsInMaterial += item.ItemType == ItemType.TinkeringMaterial ? Math.Max(item.NumItemsInMaterial ?? 1, 1) : 1;
+                // a bit different here, since ACE handles overages
+                if (message != null)
+                {
+                    message.Workmanship += item.ItemWorkmanship ?? 0.0f;
+                    message.NumItemsInMaterial++;
+                }
             }
         }
 
+        /// <summary>Hard cap on units in a single salvage bag, regardless of the bag's MaxStructure.</summary>
+        public const int MaxSalvageBagStructure = 100;
+
         public int TryAddSalvage(WorldObject salvageBag, WorldObject item, int tryAmount)
         {
-            var maxStructure = salvageBag.MaxStructure ?? 100;
+            var maxStructure = Math.Min((int)(salvageBag.MaxStructure ?? 100), MaxSalvageBagStructure);
             var structure = salvageBag.Structure ?? 0;
 
-            var space = maxStructure - structure;
+            var space = Math.Max(maxStructure - structure, 0);
 
             var amount = Math.Min(tryAmount, space);
 
@@ -349,7 +350,7 @@ namespace ACE.Server.WorldObjects
 
         public int GetStructure(WorldObject salvageItem, SalvageResults salvageResults, ref SalvageMessage message)
         {
-            // Yield is based on the Salvaging skill only, capped at the item's workmanship unless the player has Ciandra's Fortune.
+            // Yield is based on the Salvaging skill only (172 = 75% of max buffed skill 258; max skill yields ~150% of workmanship).
 
             // You can also significantly increase the amount of material returned by training the Ciandra's Fortune augmentation.
             // This augmentation can be trained 4 times, each time providing an additional 25% bonus to the amount of material returned.
@@ -357,14 +358,7 @@ namespace ACE.Server.WorldObjects
             // is this a bag of salvage?
             // if so, return its existing structure
             if (salvageItem.ItemType == ItemType.TinkeringMaterial)
-            {
-                // report the combined bag's structure too, merged into the same material line as any salvaged items
-                var bagMessage = salvageResults.GetMessage(salvageItem.MaterialType ?? ACE.Entity.Enum.MaterialType.Unknown, Skill.Salvaging);
-                bagMessage.Amount += (uint)(salvageItem.Structure ?? 0);
-                message = bagMessage;
-
-                return salvageItem.Structure ?? 0;
-            }
+                return salvageItem.Structure.Value;
 
             var workmanship = salvageItem.Workmanship ?? 1.0f;
             var stackSize = salvageItem.StackSize ?? 1;
@@ -375,11 +369,11 @@ namespace ACE.Server.WorldObjects
             // yield is based on the Salvaging skill only
             var salvageSkill = GetCreatureSkill(Skill.Salvaging).Current;
 
-            // take augs into account; without Ciandra's Fortune, units per item are capped at the item's workmanship
+            // take augs into account (no workmanship cap)
             var unitsPerItem = CalcNumUnits((int)salvageSkill, workmanship, AugmentationBonusSalvage);
 
-            if (AugmentationBonusSalvage == 0)
-                unitsPerItem = Math.Min(unitsPerItem, (int)Math.Round(workmanship));
+            // hard cap of 100 units per item, even with Ciandra's Fortune
+            unitsPerItem = Math.Min(unitsPerItem, 100);
 
             var addStructure = unitsPerItem * stackSize;
 
@@ -409,13 +403,14 @@ namespace ACE.Server.WorldObjects
             // https://web.archive.org/web/20170130213649/http://www.thejackcat.com/AC/Shopping/Crafts/Salvage_old.htm
             // https://web.archive.org/web/20170130194012/http://www.thejackcat.com/AC/Shopping/Crafts/Salvage.htm
 
-            return 1 + (int)Math.Floor(skill / 194.0f * workmanship * (1.0f + 0.25f * numAugs));
+            // no flat +1 bonus; clamp to a minimum of 1 unit per item
+            return Math.Max(1, (int)Math.Floor(skill / 172.0f * workmanship * (1.0f + 0.25f * numAugs)));
         }
 
         public WorldObject GetSalvageBag(MaterialType materialType, List<WorldObject> salvageBags, float minWorkmanship = float.MinValue, float maxWorkmanship = float.MaxValue)
         {
             // first try finding the first non-filled salvage bag, for this material type
-            var existing = salvageBags.FirstOrDefault(i => (i.GetProperty(PropertyInt.MaterialType) ?? 0) == (int)materialType && (i.Structure ?? 0) < (i.MaxStructure ?? 0) && i.Workmanship >= minWorkmanship && i.Workmanship <= maxWorkmanship);
+            var existing = salvageBags.FirstOrDefault(i => (i.GetProperty(PropertyInt.MaterialType) ?? 0) == (int)materialType && (i.Structure ?? 0) < Math.Min((int)(i.MaxStructure ?? 0), MaxSalvageBagStructure) && i.Workmanship >= minWorkmanship && i.Workmanship <= maxWorkmanship);
 
             if (existing != null)
                 return existing;

@@ -762,6 +762,9 @@ namespace ACE.Server.WorldObjects
 
                 finalDamage = baseDamage + critDamageBonus + skillBonus;
 
+                // Dark Destiny: specialization perk for spells with no next level (walls)
+                finalDamage *= Spell.SpecDamageMod;
+
                 finalDamage *= elementalDamageMod * slayerMod * resistanceMod * absorbMod;
             }
 

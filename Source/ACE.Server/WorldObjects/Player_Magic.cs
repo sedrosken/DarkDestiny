@@ -1121,6 +1121,27 @@ namespace ACE.Server.WorldObjects
         }
 
         /// <summary>
+        /// Dark Destiny: specialization perk damage multiplier for wall spells (no level 8 walls exist in the data).
+        /// </summary>
+        public const float SpecWallDamageMod = 1.14f;
+
+        /// <summary>
+        /// Dark Destiny: spec-upgrade targets for spells that aren't in SpellLevelProgression.
+        /// Level 7 war rings have no progression list, so map each one to its "II" (level 8) version for power numbers.
+        /// Walls have no higher-level version in the data; they get SpecWallDamageMod instead.
+        /// </summary>
+        private static readonly Dictionary<SpellId, SpellId> SpecUpgradeOverrides = new Dictionary<SpellId, SpellId>()
+        {
+            { SpellId.AcidRing,      SpellId.SearingDiscII },          // Searing Disc            -> Searing Disc II
+            { SpellId.BladeRing,     SpellId.HorizonsBladesII },       // Horizon's Blades        -> Horizon's Blades II
+            { SpellId.FlameRing,     SpellId.CassiusRingOfFireII },    // Cassius' Ring of Fire   -> Cassius' Ring of Fire II
+            { SpellId.ForceRing,     SpellId.NuhmudirasSpinesII },     // Nuhmudira's Spines      -> Nuhmudira's Spines II
+            { SpellId.FrostRing,     SpellId.HaloOfFrostII },          // Halo of Frost           -> Halo of Frost II
+            { SpellId.LightningRing, SpellId.EyeOfTheStormII },        // Eye of the Storm        -> Eye of the Storm II
+            { SpellId.ShockwaveRing, SpellId.TectonicRiftsII },        // Tectonic Rifts          -> Tectonic Rifts II
+        };
+
+        /// <summary>
         /// Dark Destiny specialization perk:
         /// if the player has the spell's school specialized, returns the next-level version of the spell
         /// (Level I -> II ... VII -> VIII). Returns the original spell if there is no next level.
@@ -1134,12 +1155,26 @@ namespace ACE.Server.WorldObjects
             if (skill == null || skill.AdvancementClass != SkillAdvancementClass.Specialized)
                 return spell;
 
-            var spellId = (SpellId)spell.Id;
-            var level = SpellLevelProgression.GetSpellLevel(spellId);
-            if (level <= 0)
+            // walls have no higher-level version to take power from -> flat damage bonus instead
+            if (spell.Category >= SpellCategory.AcidWall && spell.Category <= SpellCategory.SlashingWall)
+            {
+                spell.ApplySpecDamageMod(SpecWallDamageMod);
                 return spell;
+            }
 
-            var nextId = SpellLevelProgression.GetSpellAtLevel(spellId, level + 1);
+            var spellId = (SpellId)spell.Id;
+
+            SpellId nextId;
+
+            if (!SpecUpgradeOverrides.TryGetValue(spellId, out nextId))
+            {
+                var level = SpellLevelProgression.GetSpellLevel(spellId);
+                if (level <= 0)
+                    return spell;
+
+                nextId = SpellLevelProgression.GetSpellAtLevel(spellId, level + 1);
+            }
+
             if (nextId == SpellId.Undef || nextId == spellId)
                 return spell;
 
@@ -1151,9 +1186,6 @@ namespace ACE.Server.WorldObjects
             // and just take the next level's power numbers (BaseIntensity, Variance, StatModVal, Duration,
             // Boost, Transfer, Dispel strength, ...). OverrideSchool/IntensityMod stay on the original object.
             spell.ApplyPowerFrom(nextSpell);
-
-            // DIAGNOSTIC - remove once verified. Proves this build is running and shows identity vs power source.
-            log.Info($"[SpecUpgrade] {Name}: cast {spell.Name} ({spell.Id}) -> reports {spell.Name} ({spell.Id}), power from {nextSpell.Name} ({nextSpell.Id}), BaseIntensity {spell.BaseIntensity}, Variance {spell.Variance}");
 
             return spell;
         }

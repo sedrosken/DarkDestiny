@@ -12,12 +12,11 @@ namespace ACE.Server.Network.Structure
         public double Workmanship;
         public uint Units;
 
-        public SalvageResult(SalvageMessage message)
+        public SalvageResult(SalvageMessage message, uint units)
         {
             MaterialType = message.MaterialType;
             Workmanship = message.Workmanship / message.NumItemsInMaterial;
-            // display only: bags max at 100 units, so never report more than that in the client message
-            Units = Math.Min(message.Amount, 100u);
+            Units = units;
         }
     }
 
