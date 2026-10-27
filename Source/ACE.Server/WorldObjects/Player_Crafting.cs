@@ -350,7 +350,7 @@ namespace ACE.Server.WorldObjects
 
         public int GetStructure(WorldObject salvageItem, SalvageResults salvageResults, ref SalvageMessage message)
         {
-            // Yield is based on the Salvaging skill only (172 = 75% of max buffed skill 258; max skill yields ~150% of workmanship).
+            // Yield is based on the Salvaging skill only (capped at workmanship x (1 + 0.25 per Ciandra's Fortune rank)).
 
             // You can also significantly increase the amount of material returned by training the Ciandra's Fortune augmentation.
             // This augmentation can be trained 4 times, each time providing an additional 25% bonus to the amount of material returned.
@@ -369,8 +369,12 @@ namespace ACE.Server.WorldObjects
             // yield is based on the Salvaging skill only
             var salvageSkill = GetCreatureSkill(Skill.Salvaging).Current;
 
-            // take augs into account (no workmanship cap)
+            // take augs into account
             var unitsPerItem = CalcNumUnits((int)salvageSkill, workmanship, AugmentationBonusSalvage);
+
+            // units per item are capped at workmanship x (1.0 + 0.25 per Ciandra's Fortune rank), minimum 1
+            var workmanshipCap = (int)Math.Round(workmanship * (1.0f + 0.25f * AugmentationBonusSalvage));
+            unitsPerItem = Math.Max(1, Math.Min(unitsPerItem, workmanshipCap));
 
             // hard cap of 100 units per item, even with Ciandra's Fortune
             unitsPerItem = Math.Min(unitsPerItem, 100);
@@ -404,7 +408,7 @@ namespace ACE.Server.WorldObjects
             // https://web.archive.org/web/20170130194012/http://www.thejackcat.com/AC/Shopping/Crafts/Salvage.htm
 
             // no flat +1 bonus; clamp to a minimum of 1 unit per item
-            return Math.Max(1, (int)Math.Floor(skill / 172.0f * workmanship * (1.0f + 0.25f * numAugs)));
+            return Math.Max(1, (int)Math.Floor(skill / 194.0f * workmanship * (1.0f + 0.25f * numAugs)));
         }
 
         public WorldObject GetSalvageBag(MaterialType materialType, List<WorldObject> salvageBags, float minWorkmanship = float.MinValue, float maxWorkmanship = float.MaxValue)
