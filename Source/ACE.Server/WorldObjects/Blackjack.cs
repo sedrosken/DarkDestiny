@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using ACE.Entity.Enum;
+using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
@@ -26,6 +27,7 @@ namespace ACE.Server.WorldObjects
         public const uint StandButtonWcid = 9871097;
         public const uint ChipWcid        = 9871098;
         public const uint ChipPouchWcid   = 9871101;
+        public const uint WinTokenWcid    = 9871191;   // Win Token: 1 per winning hand (free hand included)
 
         // ---- Number plaques (scoreboard) ----
         public const uint PlayerTensWcid  = 9871103;
@@ -46,12 +48,13 @@ namespace ACE.Server.WorldObjects
         private const int DeckCount = 6;
         private const int MaxHands = 4;                         // re-split up to 4 hands total
         private const float SpeechRange = 20f;
-        private const string ControlsHint = "Pull the lever to HIT, press the button to STAND.";
+        private const string ControlsHint = "Pull the Hit Lever to HIT, pull the Stand Lever to STAND.";
 
         private static readonly ConcurrentDictionary<uint, Game> gamesByPlayer = new ConcurrentDictionary<uint, Game>();
         private static readonly ConcurrentDictionary<uint, Game> gamesByDealer = new ConcurrentDictionary<uint, Game>();
         private static readonly ConcurrentDictionary<uint, Shoe> shoes = new ConcurrentDictionary<uint, Shoe>();
         private static readonly ConcurrentDictionary<uint, int> owedChips = new ConcurrentDictionary<uint, int>();
+        private static readonly ConcurrentDictionary<uint, int> owedTokens = new ConcurrentDictionary<uint, int>();
         private static readonly ConcurrentDictionary<uint, int> plaqueDigits = new ConcurrentDictionary<uint, int>();
 
         // =====================================================================
@@ -80,6 +83,7 @@ namespace ACE.Server.WorldObjects
         private static void OnDealerUse(Player player, WorldObject dealer)
         {
             PayOwedChips(player);
+            PayOwedTokens(player);
 
             if (gamesByPlayer.TryGetValue(player.Guid.Full, out var myGame))
             {
@@ -248,6 +252,7 @@ namespace ACE.Server.WorldObjects
                 Pay(game, game.Free ? win : game.Hands[0].Bet + win);
                 Say(game.Dealer, $"BLACKJACK! Pays {win} chips.");
                 Companions.OnBlackjackWins(game.Player, game.Dealer, 1);
+                PayTokens(game, 1);
                 Motion(game.Dealer, MotionCommand.ClapHands);
                 PlaySound(game, ACE.Entity.Enum.Sound.RaiseTrait);
                 EndGame(game);
@@ -537,6 +542,7 @@ namespace ACE.Server.WorldObjects
             }
 
             Companions.OnBlackjackWins(game.Player, game.Dealer, wins);
+            PayTokens(game, wins);
 
             if (wins > losses)
             {
@@ -699,8 +705,99 @@ namespace ACE.Server.WorldObjects
             }
         }
 
+        private static void PayTokens(Game game, int amount)
+        {
+            if (amount <= 0) return;
+            var player = game.Player;
+            if (player == null)
+            {
+                owedTokens.AddOrUpdate(game.PlayerGuid, amount, (_, v) => v + amount);
+                return;
+            }
+            player.SendMessage($"You receive {amount} Win Token{(amount > 1 ? "s" : "")}.");
+            GiveTokens(player, amount);
+        }
+
+        private static void PayOwedTokens(Player player)
+        {
+            if (owedTokens.TryRemove(player.Guid.Full, out var owed) && owed > 0)
+            {
+                player.SendMessage($"The dealer hands over {owed} Win Tokens you were owed.");
+                GiveTokens(player, owed);
+            }
+        }
+
+        /// <summary>
+        /// Tops up stacks the player already carries (main pack + side packs) before creating new ones.
+        /// Needed because the stock merge in Container.TryAddToInventory only runs on the CustomDM ruleset.
+        /// Returns the amount that didn't fit.
+        /// </summary>
+        private static int AddToExistingStacks(Player player, uint wcid, int amount)
+        {
+            var changed = false;
+
+            foreach (var stack in player.GetInventoryItemsOfWCID(wcid))
+            {
+                if (amount <= 0) break;
+
+                var room = (stack.MaxStackSize ?? 1) - (stack.StackSize ?? 1);
+                if (room <= 0) continue;
+
+                if (player.FindObject(stack.Guid.Full, Player.SearchLocations.MyInventory, out var container, out var root, out _) == null)
+                    continue;
+
+                var add = Math.Min(room, amount);
+                stack.SetStackSize((stack.StackSize ?? 1) + add);
+
+                if (container != null)
+                {
+                    container.EncumbranceVal += (stack.StackUnitEncumbrance ?? 0) * add;
+                    container.Value += (stack.StackUnitValue ?? 0) * add;
+                }
+                if (root != null && root != container)
+                {
+                    root.EncumbranceVal += (stack.StackUnitEncumbrance ?? 0) * add;
+                    root.Value += (stack.StackUnitValue ?? 0) * add;
+                }
+
+                player.Session.Network.EnqueueSend(new GameMessageSetStackSize(stack));
+                amount -= add;
+                changed = true;
+            }
+
+            if (changed)
+                player.Session.Network.EnqueueSend(new GameMessagePrivateUpdatePropertyInt(player, PropertyInt.EncumbranceVal, player.EncumbranceVal ?? 0));
+
+            return amount;
+        }
+
+        private static void GiveTokens(Player player, int amount)
+        {
+            amount = AddToExistingStacks(player, WinTokenWcid, amount);
+
+            while (amount > 0)
+            {
+                var tokens = WorldObjectFactory.CreateNewWorldObject(WinTokenWcid);
+                if (tokens == null) return;
+
+                var stack = Math.Min(amount, Math.Max(1, (int)(tokens.MaxStackSize ?? 1)));
+                tokens.SetStackSize(stack);
+
+                if (!player.TryCreateInInventoryWithNetworking(tokens, out _, true))
+                {
+                    tokens.Destroy();
+                    owedTokens.AddOrUpdate(player.Guid.Full, amount, (_, v) => v + amount);
+                    player.SendMessage($"Your pack is full. Use the dealer to collect your {amount} Win Tokens.");
+                    return;
+                }
+                amount -= stack;
+            }
+        }
+
         private static void GiveChips(Player player, int amount)
         {
+            amount = AddToExistingStacks(player, ChipWcid, amount);
+
             while (amount > 0)
             {
                 var chips = WorldObjectFactory.CreateNewWorldObject(ChipWcid);

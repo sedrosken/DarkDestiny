@@ -275,7 +275,7 @@ namespace ACE.Server.WorldObjects
         public override void HandleActionUseOnTarget(Player player, WorldObject target)
         {
             // should tailoring kit / aetheria be subtyped?
-            if (Tailoring.IsTailoringKit(WeenieClassId))
+            if (Tailoring.IsTailoringKit(WeenieClassId) || (GetProperty(PropertyBool.UniversalTailoringKit) ?? false))
             {
                 Tailoring.UseObjectOnTarget(player, this, target);
                 return;

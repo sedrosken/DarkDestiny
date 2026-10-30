@@ -27,6 +27,7 @@ namespace ACE.Server.Factories.Tables
                 {
                     ( SpellId.DefenderSelf1,      0.25f ),
                     ( SpellId.HermeticLinkSelf1,  0.50f ),
+                    ( SpellId.SpiritDrinkerSelf1, 0.25f ),  // Roll() skips casters with no W_DamageType
                 };
             }
         }

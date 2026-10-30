@@ -465,10 +465,7 @@ namespace ACE.Server.Factories.Tables.Wcids
                 itemSpells.Remove(SpellId.SwiftKillerOther1);
                 itemSpells.Remove(SpellId.DefenderOther1);
                 itemSpells.Remove(SpellId.HermeticLinkOther1);
-
-                itemSpells.Remove(SpellId.SpiritDrinkerSelf1);
-                itemSpells.Remove(SpellId.SpiritDrinkerOther1);
-                itemSpells.Remove(SpellId.SpiritLoather1);
+                itemSpells.Remove(SpellId.SpiritDrinkerOther1);   // only Aura-era "Other" scrolls exist (46846+); keep Self + Loather like the other weapon buffs
             }
 
             allSpells = new List<SpellId>();

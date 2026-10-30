@@ -137,7 +137,14 @@ namespace ACE.Server.Entity
         }
 
         public static void DoTailoring(Player player, WorldObject source, WorldObject target)
-        { 
+        {
+            // custom: universal look kits (PropertyBool 9031) apply onto any armor/clothing slot
+            if (source.GetProperty(PropertyBool.UniversalTailoringKit) ?? false)
+            {
+                UniversalArmorApply(player, source, target);
+                return;
+            }
+
             switch (source.WeenieClassId)
             {
                 case ArmorTailoringKit:
@@ -524,6 +531,40 @@ namespace ACE.Server.Entity
 
             target.SaveBiotaToDatabase();
 
+            player.SendUseDoneEvent();
+        }
+
+        /// <summary>
+        /// Custom: universal look kit — applies the kit's ClothingBase/palette onto any armor or clothing piece,
+        /// ignoring ClothingPriority. Target keeps its own name, icon, setup and stats.
+        /// </summary>
+        public static void UniversalArmorApply(Player player, WorldObject source, WorldObject target)
+        {
+            if ((target.ItemType & (ItemType.Armor | ItemType.Clothing)) == 0 || (target.ValidLocations ?? EquipMask.None) == EquipMask.None)
+            {
+                player.SendUseDoneEvent(WeenieError.YouDoNotPassCraftingRequirements);
+                return;
+            }
+
+            if (source.ClothingBase == null)
+            {
+                player.SendUseDoneEvent(WeenieError.ActionCancelled);
+                return;
+            }
+
+            player.UpdateProperty(target, PropertyDataId.ClothingBase, source.ClothingBase);
+            player.UpdateProperty(target, PropertyInt.PaletteTemplate, source.PaletteTemplate);
+            player.UpdateProperty(target, PropertyFloat.Shade, source.Shade);
+            player.UpdateProperty(target, PropertyFloat.Shade2, source.Shade2);
+            player.UpdateProperty(target, PropertyFloat.Shade3, source.Shade3);
+            player.UpdateProperty(target, PropertyFloat.Shade4, source.Shade4);
+            player.UpdateProperty(target, PropertyFloat.Translucency, source.Translucency);
+
+            player.Session.Network.EnqueueSend(new GameMessageSystemChat("You tailor the appearance onto your armor.", ChatMessageType.Broadcast));
+            player.Session.Network.EnqueueSend(new GameMessageUpdateObject(target));
+
+            player.TryConsumeFromInventoryWithNetworking(source, 1);
+            target.SaveBiotaToDatabase();
             player.SendUseDoneEvent();
         }
 

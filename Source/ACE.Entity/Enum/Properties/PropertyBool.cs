@@ -205,5 +205,6 @@ namespace ACE.Entity.Enum.Properties
         IsVendorGeneratedItem             = 9028,
         BlockSpellExtraction              = 9029,
         WeaponUsesClothingBase            = 9030,   // weapon's ClothingBase paints the wielder's body (claws)
+        UniversalTailoringKit             = 9031,   // look kit: applies its ClothingBase onto ANY armor/clothing slot
     }
 }
