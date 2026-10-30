@@ -1,0 +1,33 @@
+{
+  "ClothingBaseEffects": {
+    "0x2000001": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x00000010",
+          "ModelId": "0x0100FF0B",
+          "CloTextureEffects": []
+        }
+      ]
+    },
+    "0x200004E": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x00000010",
+          "ModelId": "0x0100FF0B",
+          "CloTextureEffects": []
+        }
+      ]
+    }
+  },
+  "ClothingSubPalEffects": {
+    "9999": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [],
+          "PaletteSet": "0x0F00021F"
+        }
+      ]
+    }
+  }
+}

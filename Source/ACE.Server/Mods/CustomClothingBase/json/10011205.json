@@ -1,0 +1,40 @@
+{
+  "Name": "Olthoi Buttski",
+  "ClothingBaseEffects": {
+    "0x2000001": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000001F",
+          "ModelId": "0x01002CD5",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05002073",
+              "NewTexture": "0x05001F59"
+            }
+          ]
+        }
+      ]
+    },
+    "0x200004E": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000001F",
+          "ModelId": "0x01002CD5",
+          "CloTextureEffects": [
+            {
+              "OldTexture": "0x05002073",
+              "NewTexture": "0x05001F59"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ClothingSubPalEffects": {
+    "4": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": []
+    }
+  },
+  "Id": "0x10011205"
+}

@@ -1,0 +1,21 @@
+{
+  "Name": "Emberfall Cudgel",
+  "ClothingBaseEffects": {
+    "0x020016E6": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x00000000",
+          "ModelId": "0x01004255",
+          "CloTextureEffects": []
+        }
+      ]
+    }
+  },
+  "ClothingSubPalEffects": {
+    "4": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": []
+    }
+  },
+  "Id": "0x10011206"
+}

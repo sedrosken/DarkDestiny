@@ -1,0 +1,63 @@
+{
+  "ClothingBaseEffects": {
+    "0x2000001": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x0100FF09",
+          "CloTextureEffects": []
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x0100FF0A",
+          "CloTextureEffects": []
+        },
+        {
+          "Index": "0x0000000F",
+          "ModelId": "0x010001EC",
+          "CloTextureEffects": []
+        },
+        {
+          "Index": "0x0000000C",
+          "ModelId": "0x010001EC",
+          "CloTextureEffects": []
+        }
+      ]
+    },
+    "0x200004E": {
+      "CloObjectEffects": [
+        {
+          "Index": "0x0000000E",
+          "ModelId": "0x0100FF0D",
+          "CloTextureEffects": []
+        },
+        {
+          "Index": "0x0000000B",
+          "ModelId": "0x0100FF0E",
+          "CloTextureEffects": []
+        },
+        {
+          "Index": "0x0000000F",
+          "ModelId": "0x010001EC",
+          "CloTextureEffects": []
+        },
+        {
+          "Index": "0x0000000C",
+          "ModelId": "0x010001EC",
+          "CloTextureEffects": []
+        }
+      ]
+    }
+  },
+  "ClothingSubPalEffects": {
+    "9999": {
+      "Icon": "0x00000000",
+      "CloSubPalettes": [
+        {
+          "Ranges": [],
+          "PaletteSet": "0x0F00021F"
+        }
+      ]
+    }
+  }
+}
