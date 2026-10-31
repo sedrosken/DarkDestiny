@@ -512,12 +512,14 @@ namespace ACE.Server.Command.Handlers
                     continue;
                 }
 
-                if (specCreditsSpent > 70)
+                var specCreditLimit = Player.GetSpecializedCreditLimit(player.GetProperty(PropertyInt.AugmentationSpecializedCreditLimit));
+
+                if (specCreditsSpent > specCreditLimit)
                 {
                     // if the player has already spent more skill credits than they should have,
                     // unfortunately this situation requires a partial reset..
 
-                    Console.WriteLine($"{player.Name} (0x{player.Guid}) has spent {specCreditsSpent} skill credits on specialization, {specCreditsSpent - 70} over the limit of 70. To fix this situation, specialized skill reset will need to be applied{fixStr}");
+                    Console.WriteLine($"{player.Name} (0x{player.Guid}) has spent {specCreditsSpent} skill credits on specialization, {specCreditsSpent - specCreditLimit} over the limit of {specCreditLimit}. To fix this situation, specialized skill reset will need to be applied{fixStr}");
                     foundIssues = true;
 
                     if (fix)

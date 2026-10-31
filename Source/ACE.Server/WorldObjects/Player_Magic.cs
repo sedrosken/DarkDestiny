@@ -1126,6 +1126,24 @@ namespace ACE.Server.WorldObjects
         public const float SpecWallDamageMod = 1.14f;
 
         /// <summary>
+        /// Dark Destiny: specialization perk damage multiplier for the level 8 "II" war rings
+        /// (no higher ring exists in the data to take power from).
+        /// </summary>
+        public const float SpecRingIIDamageMod = 1.15f;
+
+        private static readonly HashSet<SpellId> SpecRingIISpells = new HashSet<SpellId>()
+        {
+            SpellId.SearingDiscII,          // 6189
+            SpellId.HorizonsBladesII,       // 6190
+            SpellId.CassiusRingOfFireII,    // 6191
+            SpellId.NuhmudirasSpinesII,     // 6192
+            SpellId.HaloOfFrostII,          // 6193
+            SpellId.EyeOfTheStormII,        // 6194
+            SpellId.TectonicRiftsII,        // 6196
+            SpellId.EyeOfTheStormIIAlt,     // 6197 (duplicate Eye of the Storm II row)
+        };
+
+        /// <summary>
         /// Dark Destiny: spec-upgrade targets for spells that aren't in SpellLevelProgression.
         /// Level 7 war rings have no progression list, so map each one to its "II" (level 8) version for power numbers.
         /// Walls have no higher-level version in the data; they get SpecWallDamageMod instead.
@@ -1159,6 +1177,13 @@ namespace ACE.Server.WorldObjects
             if (spell.Category >= SpellCategory.AcidWall && spell.Category <= SpellCategory.SlashingWall)
             {
                 spell.ApplySpecDamageMod(SpecWallDamageMod);
+                return spell;
+            }
+
+            // level 8 "II" rings are the top of the ring line -> flat damage bonus instead
+            if (SpecRingIISpells.Contains((SpellId)spell.Id))
+            {
+                spell.ApplySpecDamageMod(SpecRingIIDamageMod);
                 return spell;
             }
 

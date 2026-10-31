@@ -739,6 +739,12 @@ namespace ACE.Entity.Enum.Properties
         /// This skill cannot be untrained for a credit refund.
         /// </summary>
         RacialWeaponSkill                        = 10043,
+
+        /// <summary>
+        /// Prestige Rune of Expertise: extra skill credits the player may invest in specialized skills,
+        /// on top of the base limit of 70. +2 per rune turned in to Maester Kobe, max 4 runes (+8).
+        /// </summary>
+        AugmentationSpecializedCreditLimit       = 10044,
     }
 
     public static class PropertyIntExtensions

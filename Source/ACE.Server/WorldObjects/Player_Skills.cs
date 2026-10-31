@@ -375,6 +375,24 @@ namespace ACE.Server.WorldObjects
             return true;
         }
 
+        // CUSTOM: Prestige Rune of Expertise - raises the specialized skill credit limit.
+        public const int BaseSpecializedCreditLimit = 70;
+        public const int MaxSpecializedCreditLimitBonus = 8;    // 4 runes x 2 credits
+
+        /// <summary>
+        /// Returns the specialized credit limit for a stored PropertyInt.AugmentationSpecializedCreditLimit value.
+        /// Usable for offline players.
+        /// </summary>
+        public static int GetSpecializedCreditLimit(int? storedBonus)
+        {
+            return BaseSpecializedCreditLimit + Math.Clamp(storedBonus ?? 0, 0, MaxSpecializedCreditLimitBonus);
+        }
+
+        /// <summary>
+        /// CUSTOM: total skill credits this player may have invested in specialized skills.
+        /// </summary>
+        public int SpecializedCreditLimit => GetSpecializedCreditLimit(GetProperty(PropertyInt.AugmentationSpecializedCreditLimit));
+
         // CUSTOM: the three heritage starting weapon skills the training-hall swap NPCs trade between.
         private static readonly List<Skill> RacialWeaponSkills = new List<Skill>()
         {

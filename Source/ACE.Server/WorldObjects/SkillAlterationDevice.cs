@@ -187,7 +187,8 @@ namespace ACE.Server.WorldObjects
                         return false;
                     }
 
-                    // ensure player won't exceed limit of 70 specialized credits after operation
+                    // ensure player won't exceed their specialized credit limit after operation
+                    // (70 base, +2 per Rune of Expertise up to +8)
                     var specializedCost = skillBase.SpecializedCost;
 
                     if (DatManager.PortalDat.CharGen.HeritageGroups.TryGetValue((uint)player.Heritage, out var heritageGroup))
@@ -199,7 +200,7 @@ namespace ACE.Server.WorldObjects
                             specializedCost = heritageAdjustedCost.PrimaryCost;
                     }
 
-                    if (GetTotalSpecializedCredits(player) + specializedCost > 70)
+                    if (GetTotalSpecializedCredits(player) + specializedCost > player.SpecializedCreditLimit)
                     {
                         player.Session.Network.EnqueueSend(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.TooManyCreditsInSpecializedSkills, skill.Skill.ToSentence()));
                         return false;

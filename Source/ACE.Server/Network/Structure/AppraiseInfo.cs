@@ -136,6 +136,37 @@ namespace ACE.Server.Network.Structure
             if (PropertiesFloat.ContainsKey(PropertyFloat.AbsorbMagicDamage) || wo.HasImbuedEffect(ImbuedEffectType.IgnoreSomeMagicProjectileDamage))
                 PropertiesFloat[PropertyFloat.AbsorbMagicDamage] = 1;
 
+            // Natural imbues (loot daggers = Critical Strike, thrown = Crippling Blow) live in ImbuedEffect2+.
+            // The client prints "This item cannot be further imbued" for ANY imbue slot it receives, which is
+            // wrong while the player tinker slot (ImbuedEffect) is still empty. Hide 2-5 until slot 1 is used,
+            // and describe the natural imbue in the Use text instead.
+            if (wo.ImbuedEffect == ImbuedEffectType.Undef)
+            {
+                var natural = (ImbuedEffectType)(
+                    (wo.GetProperty(PropertyInt.ImbuedEffect2) ?? 0) |
+                    (wo.GetProperty(PropertyInt.ImbuedEffect3) ?? 0) |
+                    (wo.GetProperty(PropertyInt.ImbuedEffect4) ?? 0) |
+                    (wo.GetProperty(PropertyInt.ImbuedEffect5) ?? 0));
+
+                if (natural != ImbuedEffectType.Undef)
+                {
+                    PropertiesInt.Remove(PropertyInt.ImbuedEffect2);
+                    PropertiesInt.Remove(PropertyInt.ImbuedEffect3);
+                    PropertiesInt.Remove(PropertyInt.ImbuedEffect4);
+                    PropertiesInt.Remove(PropertyInt.ImbuedEffect5);
+
+                    var names = System.Enum.GetValues(typeof(ImbuedEffectType)).Cast<ImbuedEffectType>()
+                        .Where(f => f != ImbuedEffectType.Undef && ((uint)f & ((uint)f - 1)) == 0 && natural.HasFlag(f))
+                        .Select(f => System.Text.RegularExpressions.Regex.Replace(f.ToString(), "(?<=[a-z])(?=[A-Z])", " "));
+
+                    var line = $"Natural Imbue: {string.Join(", ", names)}. This item can still be imbued.";
+
+                    PropertiesString[PropertyString.Use] = PropertiesString.TryGetValue(PropertyString.Use, out var existingUse) && !string.IsNullOrEmpty(existingUse)
+                        ? $"{existingUse}\n\n{line}"
+                        : line;
+                }
+            }
+
             if (wo is PressurePlate)
             {
                 if (PropertiesInt.ContainsKey(PropertyInt.ResistLockpick))
