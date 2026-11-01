@@ -244,6 +244,25 @@ namespace ACE.Server.WorldObjects
             SalvageMessage message = null;
             var amountProduced = GetStructure(item, salvageResults, ref message);
 
+            // record workmanship for the chat result BEFORE the loop:
+            // TryAddSalvage mutates a source bag's NumItemsInMaterial / ItemWorkmanship on overflow,
+            // and the loop can run more than once per item (spills into a 2nd bag)
+            if (message != null)
+            {
+                if (item.ItemType == ItemType.TinkeringMaterial)
+                {
+                    // combining bags: weight by the number of items that went into the source bag
+                    var bagItems = Math.Max(item.NumItemsInMaterial ?? 1, 1);
+                    message.Workmanship += (item.Workmanship ?? 0.0f) * bagItems;
+                    message.NumItemsInMaterial += bagItems;
+                }
+                else
+                {
+                    message.Workmanship += item.ItemWorkmanship ?? 0.0f;
+                    message.NumItemsInMaterial++;
+                }
+            }
+
             var remaining = amountProduced;
 
             while (remaining > 0)
@@ -272,13 +291,6 @@ namespace ACE.Server.WorldObjects
                 var addedValue = (int)Math.Round((item.Value ?? 0) * valueFactor);
 
                 salvageBag.Value = Math.Min((salvageBag.Value ?? 0) + addedValue, 75000);
-
-                // a bit different here, since ACE handles overages
-                if (message != null)
-                {
-                    message.Workmanship += item.ItemWorkmanship ?? 0.0f;
-                    message.NumItemsInMaterial++;
-                }
             }
         }
 
@@ -358,7 +370,15 @@ namespace ACE.Server.WorldObjects
             // is this a bag of salvage?
             // if so, return its existing structure
             if (salvageItem.ItemType == ItemType.TinkeringMaterial)
-                return salvageItem.Structure.Value;
+            {
+                var bagStructure = (int)(salvageItem.Structure ?? 0);
+
+                // combining bags also gets a chat result line
+                message = salvageResults.GetMessage(salvageItem.MaterialType ?? ACE.Entity.Enum.MaterialType.Unknown, Skill.Salvaging);
+                message.Amount += (uint)bagStructure;
+
+                return bagStructure;
+            }
 
             var workmanship = salvageItem.Workmanship ?? 1.0f;
             var stackSize = salvageItem.StackSize ?? 1;
