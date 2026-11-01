@@ -15,7 +15,8 @@ namespace ACE.Server.Factories.Entity
 
     public class ChanceTable<T> : List<(T result, float chance)>
     {
-        private bool verified;
+        private volatile bool verified;
+        private readonly object verifyLock = new object();
         private ChanceTableType TableType;
         private float TotalWeight = 1.0f;
         private const decimal threshold = 0.0000001M;
@@ -29,6 +30,18 @@ namespace ACE.Server.Factories.Entity
         private static int CompareByInverseChance((T result, float chance) x, (T result, float chance) y)
         {
             return -x.chance.CompareTo(y.chance);
+        }
+
+        private void EnsureVerified()
+        {
+            if (verified)
+                return;
+
+            lock (verifyLock)
+            {
+                if (!verified)
+                    VerifyTable();
+            }
         }
 
         private void VerifyTable()
@@ -59,8 +72,7 @@ namespace ACE.Server.Factories.Entity
 
         public T PseudoRandomRoll(int seed)
         {
-            if (!verified)
-                VerifyTable();
+            EnsureVerified();
 
             var total = 0.0f;
 
@@ -82,8 +94,7 @@ namespace ACE.Server.Factories.Entity
 
         public T Roll(float qualityMod = 0.0f, bool invertedQualityMod = false)
         {
-            if (!verified)
-                VerifyTable();
+            EnsureVerified();
 
             var total = 0.0f;
 
