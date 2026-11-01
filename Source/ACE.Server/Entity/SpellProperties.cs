@@ -46,10 +46,7 @@ namespace ACE.Server.Entity
         /// </summary>
         public SpellCategory Category { get => _spellBase.Category; }
 
-        // ACE.Server/Entity/SpellProperties.cs — find this line (~line 52):
-public SpellFlags Flags { get => (SpellFlags)_spellBase.Bitfield; }
 
-// replace it with:
 public SpellFlags Flags
 {
     get
