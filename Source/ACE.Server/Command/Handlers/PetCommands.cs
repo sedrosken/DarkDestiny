@@ -19,10 +19,13 @@ namespace ACE.Server.Command.Handlers
         ///   /pet magic    -- focus on casting spells (falls back to melee when it can't)
         ///   /pet melee    -- focus on melee, never cast
         ///   /pet auto     -- choose attacks automatically (default)
+        ///   /pet battle <name> -- challenge another player's pet (or accept their challenge)
+        ///   /pet accept   -- accept a pet battle challenge
+        ///   /pet forfeit  -- give up a pet battle / withdraw a challenge
         /// </summary>
         [CommandHandler("pet", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, 1,
             "Commands your summoned pet.",
-            "<attack | follow | stay | stop | come | status | damage | magic | melee | auto>\n" +
+            "<attack | follow | stay | stop | come | status | damage | magic | melee | auto | battle <name> | accept | forfeit>\n" +
             "Example: select a monster, then /pet attack")]
         public static void HandlePet(Session session, params string[] parameters)
         {
@@ -50,7 +53,40 @@ namespace ACE.Server.Command.Handlers
                 return;
             }
 
-            switch (parameters[0].ToLowerInvariant())
+            var sub = parameters[0].ToLowerInvariant();
+
+            // ---- pet battles ----
+            switch (sub)
+            {
+                case "battle":
+                case "duel":
+                    if (parameters.Length < 2)
+                    {
+                        CommandHandlerHelper.WriteOutputInfo(session, "Usage: /pet battle <player name>");
+                        return;
+                    }
+                    PetBattle.Challenge(player, string.Join(" ", parameters, 1, parameters.Length - 1));
+                    return;
+
+                case "accept":
+                    PetBattle.Accept(player);
+                    return;
+
+                case "forfeit":
+                case "surrender":
+                    PetBattle.Forfeit(player);
+                    return;
+            }
+
+            // orders that would pull the pet off its opponent are blocked mid-battle
+            if (PetBattle.IsInBattle(player) && (sub == "attack" || sub == "kill" || sub == "stay" || sub == "hold"
+                || sub == "stop" || sub == "off" || sub == "come" || sub == "here"))
+            {
+                CommandHandlerHelper.WriteOutputInfo(session, "Your pet is in a battle! Use /pet forfeit to give up.");
+                return;
+            }
+
+            switch (sub)
             {
                 case "attack":
                 case "kill":
@@ -115,7 +151,7 @@ namespace ACE.Server.Command.Handlers
 
                 default:
                     CommandHandlerHelper.WriteOutputInfo(session,
-                        "Usage: /pet <attack | follow | stay | stop | come | status | damage | magic | melee | auto>");
+                        "Usage: /pet <attack | follow | stay | stop | come | status | damage | magic | melee | auto | battle <name> | accept | forfeit>");
                     break;
             }
         }

@@ -257,6 +257,10 @@ namespace ACE.Server.WorldObjects
             if (PhysicsObj?.ObjMaint == null)
                 return false;
 
+            // /pet battle: stay locked on the opposing pet (ends the battle if it's gone)
+            if (PetBattle.TryEngageOpponent(this))
+                return true;
+
             // Stay: hold position, don't go looking for a fight (still defends if hit).
             if (Mode == PetMode.Stay)
                 return false;
@@ -1055,6 +1059,9 @@ namespace ACE.Server.WorldObjects
         {
             if (petDieHandled) return;
             petDieHandled = true;
+
+            // /pet battle: this pet lost
+            PetBattle.OnPetDefeated(this);
 
             var owner = P_PetOwner;
             var egg = P_PetDevice;

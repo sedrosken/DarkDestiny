@@ -29,6 +29,25 @@ namespace ACE.Server.Command.Handlers
     {
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        // myratings (debug) -- server-side rating breakdown
+        [CommandHandler("myratings", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Debug: shows server-side rating breakdown")]
+        public static void HandleMyRatings(Session session, params string[] parameters)
+        {
+            var p = session.Player;
+            var pet = p.CurrentActivePet as Pet;
+            var petType = pet?.P_PetDevice != null ? Pet.GetPetRatingType(pet.P_PetDevice) : Pet.PetRatingType.None;
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Active pet: {(pet == null ? "NONE" : $"{pet.Name}, device={(pet.P_PetDevice?.Name ?? "NULL")}, grants {petType}")}");
+            sb.AppendLine($"Dmg:  total {p.GetDamageRating()} | gear {p.GetEquippedItemsRatingSum(PropertyInt.GearDamage)} | pet {p.GetPetRatingBonus(Pet.PetRatingType.Damage)}");
+            sb.AppendLine($"DRR:  total {p.GetDamageResistRating()} | gear {p.GetEquippedItemsRatingSum(PropertyInt.GearDamageResist)} | pet {p.GetPetRatingBonus(Pet.PetRatingType.DamageReduction)}");
+            sb.AppendLine($"Crit: total {p.GetCritRating()} | gear {p.GetEquippedItemsRatingSum(PropertyInt.GearCrit)} | pet {p.GetPetRatingBonus(Pet.PetRatingType.CritChance)}");
+            sb.AppendLine($"CD:   total {p.GetCritDamageRating()} | gear {p.GetEquippedItemsRatingSum(PropertyInt.GearCritDamage)} | pet {p.GetPetRatingBonus(Pet.PetRatingType.CritDamage)}");
+            sb.AppendLine($"CDR:  total {p.GetCritDamageResistRating()} | gear {p.GetEquippedItemsRatingSum(PropertyInt.GearCritDamageResist)} | pet {p.GetPetRatingBonus(Pet.PetRatingType.CritDamageReduction)}");
+
+            CommandHandlerHelper.WriteOutputInfo(session, sb.ToString(), ChatMessageType.Broadcast);
+        }
+
         // pop
         [CommandHandler("pop", AccessLevel.Player, CommandHandlerFlag.None, 0,
             "Show current world population",
@@ -218,7 +237,6 @@ namespace ACE.Server.Command.Handlers
             session.Network.EnqueueSend(new GameMessageSystemChat($"IsMovingOrAnimating: {physicsObj.IsMovingOrAnimating}", ChatMessageType.Broadcast));
             session.Network.EnqueueSend(new GameMessageSystemChat($"PendingActions: {pendingActions.Count}", ChatMessageType.Broadcast));
             session.Network.EnqueueSend(new GameMessageSystemChat($"CurrAnim: {currAnim?.Value.Anim.ID:X8}", ChatMessageType.Broadcast));
-            session.Network.EnqueueSend(new GameMessageSystemChat($"AnimQueue: {session.Player.DescribeAnimQueue()}", ChatMessageType.Broadcast));
         }
 
         [CommandHandler("fixcast", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Fixes magic casting if locked up for an extended time")]

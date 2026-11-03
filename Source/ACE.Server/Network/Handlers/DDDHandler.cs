@@ -47,6 +47,7 @@ namespace ACE.Server.Network.Handlers
                 switch (entry.DatFileId)
                 {
                     case 1: // PORTAL
+                        if (entry.DatFileType != 0) break; // skip client_highres.dat (also id 1, type "HiFi")
                         clientPortalDatIntSet = entry.List;
                         if (entry.List.Iterations < DatManager.PortalDat.Iteration)
                         {
@@ -65,6 +66,7 @@ namespace ACE.Server.Network.Handlers
                         break;
                     case 2: // CELL
                         clientCellDatIntSet = entry.List;
+                        if (entry.List.Iterations == 0) break; // cell is sent on demand, 0 is fine
                         if (entry.List.Iterations < DatManager.CellDat.Iteration)
                         {
                             if (showDatWarning)

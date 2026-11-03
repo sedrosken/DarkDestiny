@@ -229,7 +229,8 @@ namespace ACE.Server.Factories.Tables
                     ( SpellId.CANTRIPWEAPONEXPERTISE1,             0.5f ),
                 };
 
-                // shields: same as armor, minus magic school aptitudes, Dual Wield, tinkering skills and Mana Conversion
+                // shields: same as armor, minus magic school aptitudes, Dual Wield, tinkering skills, Mana Conversion,
+                // and bow/crossbow (can't be wielded with a shield)
                 shieldCantrips = new ChanceTable<SpellId>(ChanceTableType.Weight)
                 {
                     ( SpellId.CANTRIPSTRENGTH1,                    1.0f ),
@@ -246,8 +247,6 @@ namespace ACE.Server.Factories.Tables
                     ( SpellId.CANTRIPSTAFFAPTITUDE1,               1.0f ),
                     ( SpellId.CANTRIPHEAVYWEAPONSAPTITUDE1,        1.0f ), // CANTRIPSWORDAPTITUDE1
                     ( SpellId.CANTRIPUNARMEDAPTITUDE1,             1.0f ),
-                    ( SpellId.CANTRIPMISSILEWEAPONSAPTITUDE1,      1.0f ), // CANTRIPBOWAPTITUDE1
-                    ( SpellId.CANTRIPCROSSBOWAPTITUDE1,            1.0f ),
                     ( SpellId.CANTRIPTHROWNAPTITUDE1,              1.0f ),
 
                     ( SpellId.CANTRIPIMPREGNABILITY1,              1.0f ),

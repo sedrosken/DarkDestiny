@@ -97,6 +97,13 @@ namespace ACE.Server.WorldObjects
             set { if (!value) RemoveProperty(PropertyBool.NonProjectileMagicImmune); else SetProperty(PropertyBool.NonProjectileMagicImmune, value); }
         }
 
+        /// <summary>
+        /// NonProjectileMagicImmune as enforced by the server.
+        /// Returns FALSE regardless of the weenie flag when ignore_nonprojectile_magic_immune is enabled.
+        /// Use this for combat checks; NonProjectileMagicImmune remains the raw stored value.
+        /// </summary>
+        public bool IsNonProjectileMagicImmune => NonProjectileMagicImmune && !PropertyManager.GetBool("ignore_nonprojectile_magic_immune").Item;
+
         public float GetResistanceMod(DamageType damageType, WorldObject attacker, WorldObject weapon, float weaponResistanceMod = 1.0f)
         {
             var ignoreMagicResist = (weapon?.IgnoreMagicResist ?? false) || (attacker?.IgnoreMagicResist ?? false);

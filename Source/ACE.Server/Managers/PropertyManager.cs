@@ -562,6 +562,8 @@ namespace ACE.Server.Managers
 
         public static readonly ReadOnlyDictionary<string, Property<bool>> DefaultBooleanProperties =
             DictOf(
+                ("ignore_nonprojectile_magic_immune", new Property<bool>(false, "if TRUE, the NonProjectileMagicImmune (\"life magic immune\") flag on creatures is ignored, so drains, harms, vulns etc. can land on them")),
+                ("drain_spell_line_of_sight", new Property<bool>(true, "if TRUE, players must have direct line of sight to the target to cast drain spells (Drain Health/Stamina/Mana Other). checked before and after windup")),
                 ("ip_account_limit_enabled", new Property<bool>(false, "if TRUE, at most ip_account_limit accounts per IP may be outside the Abandoned Mine landblock at once; extras are booted after ip_account_limit_grace_seconds unless they return")),
                 ("other_buff_cooldown_count_surpassed", new Property<bool>(false, "if TRUE, an Other buff cast that is surpassed/blocked by a stronger existing buff still counts toward the cooldown. defaults to FALSE (nothing was affected, so no cooldown)")),
                 ("other_buff_cooldown_enabled", new Property<bool>(true, "master switch for the per-spell cooldown on beneficial Other buffs")),

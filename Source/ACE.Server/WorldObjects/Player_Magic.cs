@@ -501,6 +501,15 @@ namespace ACE.Server.WorldObjects
                 return false;
             }
 
+            // custom: drain spells (target -> caster vital transfers) require line of sight.
+            // bootstrapped here so it runs both before windup and again at release.
+            if (IsDrainSpell(spell) && targetLoc != this && PropertyManager.GetBool("drain_spell_line_of_sight").Item && !HasDrainLineOfSight(targetLoc))
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat("You can't see your target well enough to drain it!", ChatMessageType.Magic));
+                SendSpellCastingDoneEvent(WeenieError.None);
+                return false;
+            }
+
             // bootstrapping this function for indoor/outdoor check, since it is called both before and after windup
             if (spell.Flags.HasFlag(SpellFlags.NotIndoor))
             {
@@ -519,6 +528,65 @@ namespace ACE.Server.WorldObjects
                 }
             }
             return true;
+        }
+
+        /// <summary>
+        /// Drain Health/Stamina/Mana Other and creature-specific variants: vitals flow from the target to the caster.
+        /// Matches the isDrain definition used by HandleCastSpell for transfers.
+        /// </summary>
+        public static bool IsDrainSpell(Spell spell)
+        {
+            return spell.MetaSpellType == SpellType.Transfer && spell.TransferFlags.HasFlag(TransferFlags.TargetSource | TransferFlags.CasterDestination);
+        }
+
+        /// <summary>
+        /// Line of sight for drains. Walls/floors always block, closed doors on the line block,
+        /// other creatures standing in the way do NOT block (unlike projectiles).
+        /// </summary>
+        public bool HasDrainLineOfSight(WorldObject target)
+        {
+            if (target == null || target.Location == null)
+                return false;
+
+            // clear solid line: nothing at all in the way
+            if (IsDirectVisible(target))
+                return true;
+
+            // ethereal ray ignores objects but still collides with level geometry
+            if (!IsDirectVisible(target, true))
+                return false;
+
+            // geometry is clear, but something solid was hit first: block only if it's a closed door / wall object
+            return !IsClosedDoorBetween(target);
+        }
+
+        private bool IsClosedDoorBetween(WorldObject target)
+        {
+            const float doorLineDist = 1.5f;
+
+            var end = Location.GetOffset(target.Location);
+            var lenSq = end.LengthSquared();
+
+            var doors = PhysicsObj.ObjMaint.GetVisibleObjectsValuesWhere(o => o.WeenieObj.WorldObject != null
+                && (o.WeenieObj.WorldObject.WeenieType == WeenieType.Door || o.WeenieObj.WorldObject.CreatureType == ACE.Entity.Enum.CreatureType.Wall));
+
+            foreach (var entry in doors)
+            {
+                var door = entry.WeenieObj.WorldObject;
+
+                if (door.IsOpen || door.Location == null || door == target)
+                    continue;
+
+                var p = Location.GetOffset(door.Location);
+
+                // closest point on caster->target segment
+                var t = lenSq > 0.0f ? Math.Clamp(System.Numerics.Vector3.Dot(p, end) / lenSq, 0.0f, 1.0f) : 0.0f;
+                var closest = end * t;
+
+                if (System.Numerics.Vector3.Distance(p, closest) < doorLineDist)
+                    return true;
+            }
+            return false;
         }
 
         public CastingPreCheckStatus GetCastingPreCheckStatus(Spell spell, uint magicSkill, bool isWeaponSpell)
@@ -1439,7 +1507,7 @@ namespace ACE.Server.WorldObjects
                         else if (spell.IsHarmful && targetCreature != null && targetCreature != this)
                             targetCreature.OnAttackReceived(this, CombatType.Magic, false, false);
 
-                        if (targetCreature != null && targetCreature.NonProjectileMagicImmune)
+                        if (targetCreature != null && targetCreature.IsNonProjectileMagicImmune)
                         {
                             Session.Network.EnqueueSend(new GameMessageSystemChat($"You fail to affect {targetCreature.Name} with {spell.Name}", ChatMessageType.Magic));
                             break;

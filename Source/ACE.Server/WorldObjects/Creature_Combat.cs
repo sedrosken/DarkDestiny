@@ -1595,8 +1595,8 @@ namespace ACE.Server.WorldObjects
 
                 if (sourcePet || targetPet)
                 {
-                    if (sourcePet && targetPet)     // combat pets can't damage other pets
-                        return false;
+                    if (sourcePet && targetPet)     // combat pets can't damage other pets...
+                        return PetBattle.AreBattling(this, target);   // ...unless their owners started a /pet battle
                     else if (sourcePet && target.PlayerKillerStatus == PlayerKillerStatus.PK || targetPet && PlayerKillerStatus == PlayerKillerStatus.PK)   // combat pets can't damage pk-only creatures (ie. faction banners)
                         return false;
                     else

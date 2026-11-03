@@ -197,6 +197,9 @@ namespace ACE.Server.Managers
             if (!Iterations.ContainsKey(datDatabaseType))
                 return;
 
+            if (datDatabaseType == DatDatabaseType.Cell && clientDatIterations.Iterations == 0)
+                return;
+
             // Generate a list of the missing iterations the client may have
             var missingIterations = GetMissingIterationsFromClient(datDatabaseType, clientDatIterations);
 
