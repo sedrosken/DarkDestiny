@@ -80,11 +80,23 @@ namespace ACE.Server.WorldObjects
             public ZooAnimal Live;
         }
 
+        /// <summary>One reward egg handed out by Jonathan.</summary>
+        public class Reward
+        {
+            public string Player { get; set; }      // who received it
+            public uint Wcid { get; set; }          // the random monster on the egg
+            public string Monster { get; set; }
+            public string ForDonation { get; set; } // the creature they donated to earn it
+            public double GivenAt { get; set; }     // unix seconds
+            public uint EggGuid { get; set; }       // the egg item's id
+        }
+
         public class Data
         {
             public Dictionary<string, Room> Rooms { get; set; } = new Dictionary<string, Room>();
             public float BigRadius { get; set; } = DefaultBigRadius;
             public List<Animal> Animals { get; set; } = new List<Animal>();
+            public List<Reward> Rewards { get; set; } = new List<Reward>();
         }
 
         private static Data data = new Data();
@@ -175,7 +187,7 @@ namespace ACE.Server.WorldObjects
             Say(npc, $"Thank you, {player.Name}! The {creatureName} will have a wonderful home here.");
 
             Spawn(animal);
-            GiveRandomEgg(player, npc);
+            GiveRandomEgg(player, npc, creatureName);
             return true;
         }
 
@@ -231,7 +243,7 @@ namespace ACE.Server.WorldObjects
                 System.Threading.Tasks.Task.Run(() => GetMonsterWcids());
         }
 
-        private static void GiveRandomEgg(Player player, WorldObject npc)
+        private static void GiveRandomEgg(Player player, WorldObject npc, string donatedName)
         {
             // The first build reads every creature weenie from the DB. Doing that on the game thread
             // froze the server long enough to drop the player's connection, so build it off-thread
@@ -241,15 +253,15 @@ namespace ACE.Server.WorldObjects
                 System.Threading.Tasks.Task.Run(() =>
                 {
                     GetMonsterWcids();
-                    new ActionChain(player, () => GiveRandomEggNow(player, npc)).EnqueueChain();
+                    new ActionChain(player, () => GiveRandomEggNow(player, npc, donatedName)).EnqueueChain();
                 });
                 return;
             }
 
-            GiveRandomEggNow(player, npc);
+            GiveRandomEggNow(player, npc, donatedName);
         }
 
-        private static void GiveRandomEggNow(Player player, WorldObject npc)
+        private static void GiveRandomEggNow(Player player, WorldObject npc, string donatedName)
         {
             if (player.Session == null)
                 return;   // logged off while the list was building
@@ -285,12 +297,26 @@ namespace ACE.Server.WorldObjects
                 Pet.ImprintCreature(egg, source);
                 Pet.EnsurePetXpDisplay(egg);
                 egg.SetProperty(PropertyBool.ZooGiftPet, true);
+                if (egg is PetDevice giftEgg)
+                    Pet.UpdatePetDeviceDescription(giftEgg);   // ID panel shows it came from the zoo
                 source.Destroy();
 
                 if (player.TryCreateInInventoryWithNetworking(egg, out _, true))
                 {
                     Say(npc, $"Here's a little something to raise yourself. Take good care of it!");
                     player.SendMessage($"{npc.Name} gives you {egg.Name}.");
+
+                    lock (dataLock)
+                        data.Rewards.Add(new Reward
+                        {
+                            Player = player.Name,
+                            Wcid = wcid,
+                            Monster = DatabaseManager.World.GetCachedWeenie(wcid)?.GetProperty(PropertyString.Name) ?? "?",
+                            ForDonation = donatedName,
+                            GivenAt = Time.GetUnixTime(),
+                            EggGuid = egg.Guid.Full,
+                        });
+                    Save();
                 }
                 else
                     egg.Destroy();
@@ -331,7 +357,9 @@ namespace ACE.Server.WorldObjects
             if (setup == null)
                 return 0f;
 
-            var r = setup.Spheres.Count > 0 ? setup.Spheres[0].Radius : setup.Radius;
+            var r = setup.Spheres.Count > 0 ? setup.Spheres[0].Radius
+                  : setup.CylSpheres.Count > 0 ? setup.CylSpheres[0].Radius
+                  : setup.Radius;
             var scale = (float)(creature.GetProperty(PropertyFloat.DefaultScale) ?? 1.0);
             return r * scale;
         }
@@ -479,6 +507,31 @@ namespace ACE.Server.WorldObjects
                     var live = a.Live != null && !a.Live.IsDestroyed ? "live" : "not spawned";
                     sb.AppendLine($"  {name} ({a.Wcid}) - room '{a.Room}' - by {a.Donor} - {live}");
                 }
+                sb.AppendLine($"{data.Rewards.Count} reward eggs given out (@zoo rewards to list them).");
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>Lists reward eggs, newest first. Optional player name filter.</summary>
+        public static string ListRewards(string playerName)
+        {
+            EnsureLoaded();
+            var sb = new System.Text.StringBuilder();
+            lock (dataLock)
+            {
+                var list = data.Rewards.AsEnumerable();
+                if (!string.IsNullOrWhiteSpace(playerName))
+                    list = list.Where(r => string.Equals(r.Player, playerName, StringComparison.OrdinalIgnoreCase));
+                var all = list.Reverse().ToList();
+
+                sb.AppendLine($"{all.Count} reward egg(s){(string.IsNullOrWhiteSpace(playerName) ? "" : $" for {playerName}")}:");
+                foreach (var r in all.Take(25))
+                {
+                    var when = DateTimeOffset.FromUnixTimeSeconds((long)r.GivenAt).LocalDateTime.ToString("yyyy-MM-dd HH:mm");
+                    sb.AppendLine($"  {when} - {r.Player} got {r.Monster} ({r.Wcid}) for donating {r.ForDonation}");
+                }
+                if (all.Count > 25)
+                    sb.AppendLine($"  ...and {all.Count - 25} older. Add a player name to narrow it down.");
             }
             return sb.ToString();
         }
@@ -639,7 +692,8 @@ namespace ACE.Server.WorldObjects
             var lvl = creature.GetProperty(PropertyInt.Level);
             if (lvl != null) Level = lvl.Value;
 
-            SetProperty(PropertyString.LongDesc, $"Donated to the zoo by {a.Donor}");
+            // Template (string 5) = the line under the name on a creature's ID panel (where an NPC's title shows)
+            SetProperty(PropertyString.Template, $"Donated by {a.Donor}");
 
             // harmless: nobody can attack it, it never fights, it's usable for the twitch
             Attackable = false;

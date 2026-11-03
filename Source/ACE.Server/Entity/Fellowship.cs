@@ -6,6 +6,7 @@ using System.Linq;
 using ACE.Common;
 using ACE.Entity;
 using ACE.Entity.Enum;
+using ACE.Server.Entity.Actions;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
@@ -583,14 +584,32 @@ namespace ACE.Server.Entity
                         CalculateLeadershipLoyaltyFellowshipExtraXP((ulong)perAmount, leadershipXpMod, member, out fellowXpMessage, out moddedAmount);
 
                     member.GrantXP((long)moddedAmount, fellowXpType, shareType, player == member ? xpMessage : fellowXpMessage, player == member ? extraNotSharedAmount : 0, player == member ? "" : player.Name);
+
+                    if (xpType == XpType.Quest && player != member)
+                        SendFellowQuestXpMessage(member, player, (long)moddedAmount, fellowXpMessage);
                 }
+                return;
+            }
+
+            // only fellows who can actually receive this XP count toward the split.
+            // Fellows out of range (other dungeon, indoors vs outdoors, 1200+ units away) used to still
+            // divide the pot: the earner's share was cut and the missing shares simply vanished.
+            fellowshipMembers = fellowshipMembers
+                .Where(kvp => kvp.Value == player || GetDistanceScalar(player, kvp.Value, xpType) > 0.0)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            // nobody else can receive it: grant it whole (shareType already has Fellowship removed, so no re-split)
+            if (fellowshipMembers.Count <= 1)
+            {
+                player.GrantXP((long)amount, xpType, shareType, xpMessage, extraNotSharedAmount);
+                return;
             }
 
             // divides XP evenly to all the sharable fellows within level range,
             // but with a significant boost to the amount of xp, based on # of fellowship members
-            else if (EvenShare)
+            if (EvenShare)
             {
-                var totalAmount = (ulong)Math.Round(amount * GetMemberSharePercent());
+                var totalAmount = (ulong)Math.Round(amount * GetMemberSharePercent(fellowshipMembers.Count));
 
                 foreach (var member in fellowshipMembers.Values)
                 {
@@ -604,9 +623,10 @@ namespace ACE.Server.Entity
                         CalculateLeadershipLoyaltyFellowshipExtraXP(shareAmount, leadershipXpMod, member, out fellowXpMessage, out moddedAmount);
 
                     member.GrantXP((long)moddedAmount, fellowXpType, shareType, player == member ? xpMessage : fellowXpMessage, player == member ? extraNotSharedAmount : 0, player == member ? "" : player.Name);
-                }
 
-                return;
+                    if (xpType == XpType.Quest && player != member)
+                        SendFellowQuestXpMessage(member, player, (long)moddedAmount, fellowXpMessage);
+                }
             }
 
             // divides XP to all sharable fellows within level range
@@ -629,8 +649,27 @@ namespace ACE.Server.Entity
                         CalculateLeadershipLoyaltyFellowshipExtraXP(playerTotal, leadershipXpMod, member, out fellowXpMessage, out moddedAmount);
 
                     member.GrantXP((long)moddedAmount, fellowXpType, shareType, player == member ? xpMessage : fellowXpMessage, player == member ? extraNotSharedAmount : 0, player == member ? "" : player.Name);
+
+                    if (xpType == XpType.Quest && player != member)
+                        SendFellowQuestXpMessage(member, player, (long)moddedAmount, fellowXpMessage);
                 }
             }
+        }
+
+        /// <summary>
+        /// Tells a fellow they received a share of the earner's quest XP.
+        /// CustomDM already announces every shared amount in Player.UpdateXpAndLevel, so this only runs on other rulesets.
+        /// Queued on the fellow's action queue so it lands right after the XP update GrantXP queued.
+        /// </summary>
+        private static void SendFellowQuestXpMessage(Player member, Player earner, long amount, string fellowXpMessage)
+        {
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM || amount <= 0)
+                return;
+
+            var extra = string.IsNullOrWhiteSpace(fellowXpMessage) ? "" : $" {fellowXpMessage.Trim()}";
+            var msg = $"Your fellow {earner.Name} shared {amount:N0} experience with you!{extra}";
+
+            member.EnqueueAction(new ActionEventDelegate(() => member.Session?.Network.EnqueueSend(new GameMessageSystemChat(msg, ChatMessageType.Broadcast))));
         }
 
         /// <summary>
@@ -679,9 +718,15 @@ namespace ACE.Server.Entity
 
         internal double GetMemberSharePercent()
         {
-            var fellowshipMembers = GetFellowshipMembers();
+            return GetMemberSharePercent(GetFellowshipMembers().Count);
+        }
 
-            switch (fellowshipMembers.Count)
+        /// <summary>
+        /// Even-share percent for a given number of fellows actually receiving the XP
+        /// </summary>
+        internal static double GetMemberSharePercent(int memberCount)
+        {
+            switch (memberCount)
             {
                 case 1:
                     return 1.0;

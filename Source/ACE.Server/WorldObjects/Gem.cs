@@ -38,7 +38,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// This is raised by Player.HandleActionUseItem.<para />
         /// The item should be in the players possession.
-        /// 
+        ///
         /// The OnUse method for this class is to use a contract to add a tracked quest to our quest panel.
         /// This gives the player access to information about the quest such as starting and ending NPC locations,
         /// and shows our progress for kill tasks as well as any timing information such as when we can repeat the
@@ -274,6 +274,13 @@ namespace ACE.Server.WorldObjects
 
         public override void HandleActionUseOnTarget(Player player, WorldObject target)
         {
+            // Workmanship Reduction Tools (PropertyInt 10043)
+            if (WorkmanshipTool.IsWorkmanshipTool(this))
+            {
+                WorkmanshipTool.UseObjectOnTarget(player, this, target);
+                return;
+            }
+
             // should tailoring kit / aetheria be subtyped?
             if (Tailoring.IsTailoringKit(WeenieClassId) || (GetProperty(PropertyBool.UniversalTailoringKit) ?? false))
             {
@@ -301,7 +308,7 @@ namespace ACE.Server.WorldObjects
         public override void OnActivate(WorldObject activator)
         {
             if (ItemUseable == Usable.Contained && activator is Player player)
-            {               
+            {
                 var containedItem = player.FindObject(Guid.Full, Player.SearchLocations.MyInventory | Player.SearchLocations.MyEquippedItems);
                 if (containedItem != null) // item is contained by player
                 {

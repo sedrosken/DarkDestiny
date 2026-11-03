@@ -745,6 +745,12 @@ namespace ACE.Entity.Enum.Properties
         /// on top of the base limit of 70. +2 per rune turned in to Maester Kobe, max 4 runes (+8).
         /// </summary>
         AugmentationSpecializedCreditLimit       = 10044,
+
+        /// <summary>
+        /// Workmanship Reduction Tool: number of workmanship grades removed from the target (1-4).
+        /// See WorkmanshipTool.cs.
+        /// </summary>
+        WorkmanshipReduction                     = 10045,
     }
 
     public static class PropertyIntExtensions

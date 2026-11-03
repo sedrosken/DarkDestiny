@@ -14,7 +14,7 @@ namespace ACE.Server.Command.Handlers
     {
         [CommandHandler("zoo", AccessLevel.Admin, CommandHandlerFlag.RequiresWorld, 1,
             "Pet zoo admin tools.",
-            "addroom <room> [radius] | radius <room> <meters> | clearroom <room> | info | bigradius <meters> | move <animal name> <room> | wakeup <animal name> on|off | remove <animal name> | respawn")]
+            "addroom <room> [radius] | radius <room> <meters> | clearroom <room> | info | bigradius <meters> | move <animal name> <room> | wakeup <animal name> on|off | rewards [player] | remove <animal name> | respawn")]
         public static void HandleZoo(Session session, params string[] parameters)
         {
             var player = session?.Player;
@@ -57,6 +57,9 @@ namespace ACE.Server.Command.Handlers
                         ? PetZoo.SetWakeOnApproach(string.Join(" ", rest[..^1]), rest[^1].ToLowerInvariant() == "on")
                         : "Usage: @zoo wakeup <animal name> on|off";
                     break;
+                case "rewards":
+                    msg = PetZoo.ListRewards(rest.Length > 0 ? string.Join(" ", rest) : null);
+                    break;
                 case "remove":
                     msg = rest.Length >= 1 ? PetZoo.RemoveAnimal(string.Join(" ", rest)) : "Usage: @zoo remove <animal name>";
                     break;
@@ -64,7 +67,7 @@ namespace ACE.Server.Command.Handlers
                     msg = PetZoo.RespawnAll();
                     break;
                 default:
-                    msg = "Usage: @zoo addroom|radius|clearroom|info|bigradius|move|wakeup|remove|respawn";
+                    msg = "Usage: @zoo addroom|radius|clearroom|info|bigradius|move|wakeup|rewards|remove|respawn";
                     break;
             }
 

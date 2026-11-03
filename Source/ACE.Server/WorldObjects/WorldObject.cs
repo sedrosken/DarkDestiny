@@ -573,6 +573,17 @@ namespace ACE.Server.WorldObjects
 
         public bool IsProjectileVisible(WorldObject proj)
         {
+            return IsProjectileVisible(proj, out _);
+        }
+
+        /// <summary>
+        /// Traces from a freshly spawned projectile back to this (the launcher).
+        /// If something blocks the line, blocker is the first object hit (null = level geometry).
+        /// </summary>
+        public bool IsProjectileVisible(WorldObject proj, out WorldObject blocker)
+        {
+            blocker = null;
+
             if (!(this is Creature) || (Ethereal ?? false))
                 return true;
 
@@ -596,7 +607,12 @@ namespace ACE.Server.WorldObjects
             if (transition == null) return false;
 
             // check if target object was reached
-            var isVisible = transition.CollisionInfo.CollideObject.FirstOrDefault(c => c.ID == PhysicsObj.ID) != null;
+            var collided = transition.CollisionInfo.CollideObject;
+            var isVisible = collided.FirstOrDefault(c => c.ID == PhysicsObj.ID) != null;
+
+            if (!isVisible)
+                blocker = collided.FirstOrDefault(c => c.ID != proj.PhysicsObj.ID)?.WeenieObj?.WorldObject;
+
             return isVisible;
         }
 

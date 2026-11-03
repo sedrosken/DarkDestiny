@@ -2297,6 +2297,9 @@ namespace ACE.Server.WorldObjects
 
                 if (!LandblockManager.AddObject(sp))
                 {
+                    if (sp.ProjectileSource is Player addDebugPlayer && addDebugPlayer.DebugSpell)
+                        addDebugPlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"[SpellSpawn] {spell.Name} #{i}: couldn't be placed at {sp.Location.ToLOCString()} (blocked spawn point), projectile dropped", ChatMessageType.Broadcast));
+
                     sp.Destroy();
                     continue;
                 }
@@ -2306,8 +2309,23 @@ namespace ACE.Server.WorldObjects
 
                 sp.EnqueueBroadcast(new GameMessageScript(sp.Guid, PlayScript.Launch, sp.GetProjectileScriptIntensity(spellType)));
 
-                if (!IsProjectileVisible(sp))
+                if (!IsProjectileVisible(sp, out var blocker))
                 {
+                    // close quarters: if a creature is what sits between the spawn point and the caster,
+                    // the projectile hit that creature on launch -- it didn't hit a wall. OnCollideObject
+                    // still applies the normal CanDamage / PK checks, same as a hit in flight.
+                    if (blocker is Creature blockingCreature && blockingCreature != this && blockingCreature != sp.ProjectileSource && !blockingCreature.IsDead)
+                    {
+                        if (sp.ProjectileSource is Player hitDebugPlayer && hitDebugPlayer.DebugSpell)
+                            hitDebugPlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"[SpellSpawn] {spell.Name} #{i}: launched inside/behind {blockingCreature.Name}, applying hit", ChatMessageType.Broadcast));
+
+                        sp.OnCollideObject(blockingCreature);
+                        continue;
+                    }
+
+                    if (sp.ProjectileSource is Player envDebugPlayer && envDebugPlayer.DebugSpell)
+                        envDebugPlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"[SpellSpawn] {spell.Name} #{i}: no line back to caster ({blocker?.Name ?? "level geometry"}), fizzled", ChatMessageType.Broadcast));
+
                     sp.OnCollideEnvironment();
                     continue;
                 }

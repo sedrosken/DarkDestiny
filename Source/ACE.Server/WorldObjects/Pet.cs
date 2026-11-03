@@ -62,6 +62,13 @@ namespace ACE.Server.WorldObjects
         // no new property/DB column is needed.
         public const PropertyDataId SourceWcidProp = PropertyDataId.LinkedPortalOne;
 
+        // Creatures that can't move or fight (trees), so their egg could never hatch. These
+        // summon as the creature itself, at full size, from level 1. Add WCIDs here.
+        public static readonly HashSet<uint> RootedCreatureWcids = new HashSet<uint>
+        {
+            4263,   // Tall Deru
+        };
+
         // A clothed humanoid's real look (armor/robes + the palette that rides with them)
         // is assembled from its equipped items into its finished ObjDesc at runtime -- none
         // of it lives on the base weenie. So at kill time we snapshot the monster's finished
@@ -256,6 +263,10 @@ namespace ACE.Server.WorldObjects
         {
             if (PhysicsObj?.ObjMaint == null)
                 return false;
+
+            // /pet battle: stay locked on the opposing pet (ends the battle if it's gone)
+            if (PetBattle.TryEngageOpponent(this))
+                return true;
 
             // Stay: hold position, don't go looking for a fight (still defends if hit).
             if (Mode == PetMode.Stay)
@@ -575,6 +586,9 @@ namespace ACE.Server.WorldObjects
             if (toNext > 0)
                 desc += $"{toNext:N0} XP to next level. ";
             desc += $"While summoned, grants its owner +{level} {PetRatingName(rating)}.";
+
+            if (egg.GetProperty(PropertyBool.ZooGiftPet) == true)
+                desc += "\n\nA gift from the Pet Zoo. It can never be donated to the zoo.";
 
             if (egg.GetProperty(PropertyString.LongDesc) != desc)
             {
@@ -1056,6 +1070,9 @@ namespace ACE.Server.WorldObjects
             if (petDieHandled) return;
             petDieHandled = true;
 
+            // /pet battle: this pet lost
+            PetBattle.OnPetDefeated(this);
+
             var owner = P_PetOwner;
             var egg = P_PetDevice;
             var shellWcid = egg?.PetClass != null ? (uint)egg.PetClass.Value : 0u;
@@ -1158,8 +1175,13 @@ namespace ACE.Server.WorldObjects
                 ? DatabaseManager.World.GetCachedWeenie(creatureWcid.Value) : null;
             var creatureName = creatureWeenie?.GetProperty(PropertyString.Name);
 
+            // Rooted creatures (trees etc.) can't fight to earn the XP that hatches an egg, so they
+            // skip the egg look and summon as themselves, full size. Listed by WCID -- NOT by
+            // PropertyBool.Stuck, which nearly every creature weenie has set.
+            var rootedCreature = creatureWcid != null && RootedCreatureWcids.Contains(creatureWcid.Value);
+
             // Appearance + size must be set before EnterWorld().
-            if (petLevel < HatchLevel)
+            if (petLevel < HatchLevel && !rootedCreature)
             {
                 // un-hatched: look like the egg (egg item's model), at the egg's own size
                 if (petDevice.SetupTableId != 0)
@@ -1220,7 +1242,7 @@ namespace ACE.Server.WorldObjects
                 }
 
                 petFullScale = fullScale;
-                ObjScale = ScaleForLevel(petLevel, fullScale);
+                ObjScale = rootedCreature ? fullScale : ScaleForLevel(petLevel, fullScale);
             }
             // scale attributes + skills to this level (native at 7, weaker below, stronger at 8-10).
             // Must run before EnterWorld so the pet spawns with the correct vitals. No-op for
@@ -1508,7 +1530,24 @@ namespace ACE.Server.WorldObjects
 
             var scale = ObjScale ?? 1.0f;
 
-            return PetRadiusCache[WeenieClassId] = setup.Spheres[0].Radius * scale;
+            // not every setup has collision spheres (some use cylspheres, some have neither);
+            // indexing Spheres[0] blindly threw ArgumentOutOfRangeException and aborted the summon
+            float baseRadius;
+            if (setup?.Spheres.Count > 0)
+                baseRadius = setup.Spheres[0].Radius;
+            else if (setup?.CylSpheres.Count > 0)
+                baseRadius = setup.CylSpheres[0].Radius;
+            else if (setup != null && setup.Radius > 0)
+                baseRadius = setup.Radius;
+            else if (setup?.SelectionSphere != null && setup.SelectionSphere.Radius > 0)
+                baseRadius = setup.SelectionSphere.Radius;
+            else
+            {
+                log.Warn($"{Name} ({WeenieClassId}) GetPetRadius(): setup 0x{SetupTableId:X8} has no usable radius, defaulting to 0.5");
+                baseRadius = 0.5f;
+            }
+
+            return PetRadiusCache[WeenieClassId] = baseRadius * scale;
         }
     }
 }
