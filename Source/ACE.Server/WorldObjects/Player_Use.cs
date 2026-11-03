@@ -302,6 +302,12 @@ namespace ACE.Server.WorldObjects
                 SendUseDoneEvent();
                 return;
             }
+            // Pet zoo animal: double-click makes it twitch
+            if (success && PetZoo.TryHandleUse(this, item))
+            {
+                SendUseDoneEvent();
+                return;
+            }
             // Blackjack table objects (dealer / hit lever / stand lever)
             if (success && Blackjack.TryHandleUse(this, item))
             {

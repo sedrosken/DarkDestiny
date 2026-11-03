@@ -3967,6 +3967,10 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            // Pet egg handed to Jonathan -> donated to the pet zoo
+            if (PetZoo.TryHandleGive(this, target, item))
+                return;
+
             if (IsOlthoiPlayer && target.CreatureType != ACE.Entity.Enum.CreatureType.Olthoi)
             {
                 Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full));

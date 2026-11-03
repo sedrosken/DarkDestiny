@@ -68,11 +68,11 @@ namespace ACE.Server.WorldObjects
         // ObjDesc and stash it on the egg (a compact string in the unused DateOfBirth slot --
         // an item never uses or shows it), then replay it on the hatched pet. This is what
         // makes shadows/pirates hatch wearing their clothes instead of naked.
-        private const PropertyString PetObjDescProp = PropertyString.DateOfBirth;
+        public const PropertyString PetObjDescProp = PropertyString.DateOfBirth;
 
         // deserialized snapshot of the imprinted creature's finished look; set in Init when
         // the pet hatches (if the egg carries one). When non-null, CalculateObjDesc replays it.
-        private ACE.Entity.ObjDesc capturedObjDesc;
+        protected ACE.Entity.ObjDesc capturedObjDesc;
 
         // the hatched creature's real (full) scale, remembered so in-place level-ups size correctly
         private float petFullScale = 1.0f;
@@ -256,10 +256,6 @@ namespace ACE.Server.WorldObjects
         {
             if (PhysicsObj?.ObjMaint == null)
                 return false;
-
-            // /pet battle: stay locked on the opposing pet (ends the battle if it's gone)
-            if (PetBattle.TryEngageOpponent(this))
-                return true;
 
             // Stay: hold position, don't go looking for a fight (still defends if hit).
             if (Mode == PetMode.Stay)
@@ -648,7 +644,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>Copies the imprinted creature's visual DIDs (setup, motion, sound,
         /// physics, clothing, palette) from its weenie onto this pet, so the hatched pet
         /// looks like that creature.</summary>
-        private void ApplyCreatureAppearance(ACE.Entity.Models.Weenie w)
+        protected void ApplyCreatureAppearance(ACE.Entity.Models.Weenie w)
         {
             if (w == null)
                 return;
@@ -1060,9 +1056,6 @@ namespace ACE.Server.WorldObjects
             if (petDieHandled) return;
             petDieHandled = true;
 
-            // /pet battle: this pet lost
-            PetBattle.OnPetDefeated(this);
-
             var owner = P_PetOwner;
             var egg = P_PetDevice;
             var shellWcid = egg?.PetClass != null ? (uint)egg.PetClass.Value : 0u;
@@ -1401,6 +1394,13 @@ namespace ACE.Server.WorldObjects
             //Console.WriteLine($"{Name}.HeartbeatStatic({currentUnixTime})");
 
             nextSlowTickTime += slowTickSeconds;
+
+            // pet zoo animals have no owner -- they wander instead of following
+            if (this is ZooAnimal zooAnimal)
+            {
+                zooAnimal.ZooSlowTick(currentUnixTime);
+                return;
+            }
 
             if (P_PetOwner?.PhysicsObj == null)
             {

@@ -429,6 +429,9 @@ namespace ACE.Server.Entity
                 CreateWorldObjectsCompleted = true;
 
                 PhysicsLandblock.SortObjects();
+
+                // spawn any pet zoo animals that live on this landblock
+                PetZoo.OnLandblockLoaded(this);
             }));
         }
 
