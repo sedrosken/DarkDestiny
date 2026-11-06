@@ -422,7 +422,7 @@ namespace ACE.Server.Command.Handlers
         /// <summary>
         /// Debug command to print out all of the active players connected too the server.
         /// </summary>
-        [CommandHandler("listplayers", AccessLevel.Developer, CommandHandlerFlag.None, 0, "Displays all of the active players connected too the server.")]
+        [CommandHandler("listplayers", AccessLevel.Player, CommandHandlerFlag.None, 0, "Displays all of the active players connected too the server.")]
         public static void HandleListPlayers(Session session, params string[] parameters)
         {
             string message = "";
@@ -453,11 +453,18 @@ namespace ACE.Server.Command.Handlers
             if (targetAccessLevel.HasValue)
                 message += $"Listing only {targetAccessLevel.Value.ToString()}s:\n";
 
+            // console (session == null) and staff see everything; regular players only see names of non-staff characters
+            var callerIsStaff = session == null || session.AccessLevel > AccessLevel.Player;
+
             foreach (var player in PlayerManager.GetAllOnline())
             {
                 if (targetAccessLevel.HasValue && player.Account.AccessLevel != ((uint)targetAccessLevel.Value))
                     continue;
-                message += $"{player.Name} : {player.Session.AccountId}\n";
+
+                if (!callerIsStaff && player.Account.AccessLevel > (uint)AccessLevel.Player)
+                    continue; // don't reveal staff (including hidden admins) to players
+
+                message += callerIsStaff ? $"{player.Name} : {player.Session.AccountId}\n" : $"{player.Name}\n";
                 playerCounter++;
             }
 
@@ -3472,7 +3479,7 @@ namespace ACE.Server.Command.Handlers
             wo.EnqueueBroadcast(new GameMessageScript(wo.Guid, (PlayScript)pscript));
         }
 
-        [CommandHandler("getinfo", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Shows basic info for the last appraised object.")]
+        [CommandHandler("getinfo", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Shows basic info for the last appraised object.")]
         public static void HandleGetInfo(Session session, params string[] parameters)
         {
             var wo = CommandHandlerHelper.GetLastAppraisedObject(session);

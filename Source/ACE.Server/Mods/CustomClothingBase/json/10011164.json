@@ -140,7 +140,7 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050002CC",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF58"
             }
           ]
         },
@@ -150,7 +150,7 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050002CC",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF58"
             }
           ]
         },
@@ -160,7 +160,7 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050002C4",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF58"
             }
           ]
         },
@@ -170,7 +170,7 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050002C4",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF58"
             }
           ]
         }
@@ -536,7 +536,7 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050002CC",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF58"
             }
           ]
         },
@@ -546,7 +546,7 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050002CC",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF58"
             }
           ]
         },
@@ -556,7 +556,7 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050002C4",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF58"
             }
           ]
         },
@@ -566,7 +566,7 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050002C4",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF58"
             }
           ]
         }

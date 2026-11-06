@@ -62,11 +62,11 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050003D5",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF5A"
             },
             {
               "OldTexture": "0x050003D4",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF5A"
             }
           ]
         }
@@ -242,11 +242,11 @@
           "CloTextureEffects": [
             {
               "OldTexture": "0x050003DE",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF5A"
             },
             {
               "OldTexture": "0x050003D6",
-              "NewTexture": "0x050032d3"
+              "NewTexture": "0x0500FF5A"
             }
           ]
         }
