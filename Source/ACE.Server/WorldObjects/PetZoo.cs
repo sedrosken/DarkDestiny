@@ -106,7 +106,7 @@ namespace ACE.Server.WorldObjects
         // Saved OUTSIDE the build folder so a rebuild/redeploy can't wipe it:
         //   Windows: C:\ProgramData\ACE\zoo.json
         // (The old location, next to ace.server.exe, is copied over once if it's still there.)
-        private static string DataFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "ACE");
+        private static string DataFolder => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonApplicationData), "ACE");
         private static string FilePath => Path.Combine(DataFolder, "zoo.json");
         private static string OldFilePath => Path.Combine(AppContext.BaseDirectory, "zoo.json");
 
