@@ -14,7 +14,7 @@ namespace ACE.Server.Command.Handlers
     {
         [CommandHandler("zoo", AccessLevel.Admin, CommandHandlerFlag.RequiresWorld, 1,
             "Pet zoo admin tools.",
-            "addroom <room> [radius] | radius <room> <meters> | clearroom <room> | info | bigradius <meters> | move <animal name> <room> | wakeup <animal name> on|off | rewards [player] | remove <animal name> | respawn")]
+            "addroom <room> [radius] | radius <room> <meters> | clearroom <room> | info | bigradius <meters> | move <animal name> <room> | wakeup <animal name> on|off | rewards [player] | block <wcid> | unblock <wcid> | blocked | rebuildpool | remove <animal name> | respawn")]
         public static void HandleZoo(Session session, params string[] parameters)
         {
             var player = session?.Player;
@@ -57,6 +57,16 @@ namespace ACE.Server.Command.Handlers
                         ? PetZoo.SetWakeOnApproach(string.Join(" ", rest[..^1]), rest[^1].ToLowerInvariant() == "on")
                         : "Usage: @zoo wakeup <animal name> on|off";
                     break;
+                case "block":
+                case "unblock":
+                    msg = rest.Length == 1 && uint.TryParse(rest[0], out var bw) ? PetZoo.Block(bw, cmd == "block") : $"Usage: @zoo {cmd} <wcid>";
+                    break;
+                case "blocked":
+                    msg = PetZoo.ListBlocked();
+                    break;
+                case "rebuildpool":
+                    msg = PetZoo.RebuildPool();
+                    break;
                 case "rewards":
                     msg = PetZoo.ListRewards(rest.Length > 0 ? string.Join(" ", rest) : null);
                     break;
@@ -67,7 +77,7 @@ namespace ACE.Server.Command.Handlers
                     msg = PetZoo.RespawnAll();
                     break;
                 default:
-                    msg = "Usage: @zoo addroom|radius|clearroom|info|bigradius|move|wakeup|rewards|remove|respawn";
+                    msg = "Usage: @zoo addroom|radius|clearroom|info|bigradius|move|wakeup|rewards|block|unblock|blocked|rebuildpool|remove|respawn";
                     break;
             }
 

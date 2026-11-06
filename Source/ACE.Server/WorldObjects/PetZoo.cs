@@ -95,6 +95,7 @@ namespace ACE.Server.WorldObjects
         {
             public Dictionary<string, Room> Rooms { get; set; } = new Dictionary<string, Room>();
             public float BigRadius { get; set; } = DefaultBigRadius;
+            public List<uint> Blocked { get; set; } = new List<uint>();   // monsters never given as reward eggs
             public List<Animal> Animals { get; set; } = new List<Animal>();
             public List<Reward> Rewards { get; set; } = new List<Reward>();
         }
@@ -102,7 +103,12 @@ namespace ACE.Server.WorldObjects
         private static Data data = new Data();
         private static readonly object dataLock = new object();
         private static bool loaded;
-        private static string FilePath => Path.Combine(AppContext.BaseDirectory, "zoo.json");
+        // Saved OUTSIDE the build folder so a rebuild/redeploy can't wipe it:
+        //   Windows: C:\ProgramData\ACE\zoo.json
+        // (The old location, next to ace.server.exe, is copied over once if it's still there.)
+        private static string DataFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "ACE");
+        private static string FilePath => Path.Combine(DataFolder, "zoo.json");
+        private static string OldFilePath => Path.Combine(AppContext.BaseDirectory, "zoo.json");
 
         public static bool IsRoofRoom(string name) => name.StartsWith("roof", StringComparison.OrdinalIgnoreCase);
 
@@ -266,7 +272,10 @@ namespace ACE.Server.WorldObjects
             if (player.Session == null)
                 return;   // logged off while the list was building
 
-            var list = GetMonsterWcids();
+            var pool = GetMonsterWcids();   // outside dataLock: may build the list on first use
+            List<uint> list;
+            lock (dataLock)
+                list = pool.Where(w => !data.Blocked.Contains(w)).ToList();
             if (list.Count == 0)
                 return;
 
@@ -513,6 +522,46 @@ namespace ACE.Server.WorldObjects
         }
 
         /// <summary>Lists reward eggs, newest first. Optional player name filter.</summary>
+        // ---- reward pool blocklist ----
+
+        public static string Block(uint wcid, bool block)
+        {
+            EnsureLoaded();
+            var name = DatabaseManager.World.GetCachedWeenie(wcid)?.GetProperty(PropertyString.Name);
+            if (name == null)
+                return $"No weenie {wcid} found.";
+
+            lock (dataLock)
+            {
+                if (block && !data.Blocked.Contains(wcid)) data.Blocked.Add(wcid);
+                if (!block) data.Blocked.Remove(wcid);
+            }
+            Save();
+            return block ? $"{name} ({wcid}) can no longer come from zoo reward eggs." : $"{name} ({wcid}) is back in the reward pool.";
+        }
+
+        public static string ListBlocked()
+        {
+            EnsureLoaded();
+            var sb = new System.Text.StringBuilder();
+            lock (dataLock)
+            {
+                sb.AppendLine($"{data.Blocked.Count} monster(s) blocked from reward eggs:");
+                foreach (var w in data.Blocked)
+                    sb.AppendLine($"  {DatabaseManager.World.GetCachedWeenie(w)?.GetProperty(PropertyString.Name) ?? "?"} ({w})");
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>Rebuilds the reward pool from the database (picks up creatures added since startup).</summary>
+        public static string RebuildPool()
+        {
+            lock (monsterLock)
+                monsterWcids = null;
+            System.Threading.Tasks.Task.Run(() => GetMonsterWcids());
+            return "Rebuilding the reward pool in the background; the server log shows the new count when done.";
+        }
+
         public static string ListRewards(string playerName)
         {
             EnsureLoaded();
@@ -614,6 +663,25 @@ namespace ACE.Server.WorldObjects
             npc.EnqueueBroadcast(new GameMessageHearSpeech(text, npc.Name, npc.Guid.Full, ChatMessageType.Speech), SpeechRange);
         }
 
+        // =====================================================================
+        // Persistence: shard database tables zoo_* (see PET_ZOO_GUIDE.md for the CREATE TABLE SQL).
+        // Whole state is small, so each save rewrites all zoo rows in one transaction, on a
+        // background thread (never blocks the game). A zoo.json from the old file-based version is
+        // imported once if the tables are empty.
+        // =====================================================================
+
+        private static bool loadFailed;          // tables missing/unreachable -> never save (would wipe)
+        private static readonly object saveLock = new object();
+        private static long saveVersion, writtenVersion;
+
+        private static MySqlConnector.MySqlConnection OpenShard()
+        {
+            var c = ConfigManager.Config.MySql.Shard;
+            var conn = new MySqlConnector.MySqlConnection($"server={c.Host};port={c.Port};user={c.Username};password={c.Password};database={c.Database};{c.ConnectionOptions}");
+            conn.Open();
+            return conn;
+        }
+
         private static void EnsureLoaded()
         {
             if (loaded) return;
@@ -622,32 +690,166 @@ namespace ACE.Server.WorldObjects
                 if (loaded) return;
                 try
                 {
-                    if (File.Exists(FilePath))
-                        data = JsonSerializer.Deserialize<Data>(File.ReadAllText(FilePath)) ?? new Data();
+                    data = LoadFromDb();
+                    log.Info($"PetZoo - loaded from shard DB: {data.Rooms.Count} rooms, {data.Animals.Count} animals, {data.Rewards.Count} rewards, {data.Blocked.Count} blocked");
+
+                    // one-time import from the old zoo.json
+                    if (data.Rooms.Count == 0 && data.Animals.Count == 0 && data.Rewards.Count == 0)
+                    {
+                        var json = File.Exists(FilePath) ? FilePath : File.Exists(OldFilePath) ? OldFilePath : null;
+                        if (json != null)
+                        {
+                            data = JsonSerializer.Deserialize<Data>(File.ReadAllText(json)) ?? new Data();
+                            WriteToDb(data);
+                            File.Move(json, json + ".imported", true);
+                            log.Info($"PetZoo - imported {json} into the shard DB (renamed to zoo.json.imported)");
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    log.Error($"PetZoo - failed to load {FilePath}: {ex.Message}");
+                    loadFailed = true;
+                    log.Error($"PetZoo - FAILED to load from the shard DB ({ex.Message}). Zoo changes will NOT be saved until this is fixed. Did the zoo_* tables get created?");
                 }
                 loaded = true;
             }
         }
 
+        private static Data LoadFromDb()
+        {
+            var d = new Data();
+            using var conn = OpenShard();
+
+            using (var cmd = new MySqlConnector.MySqlCommand("SELECT `key`, `value` FROM zoo_setting", conn))
+            using (var r = cmd.ExecuteReader())
+                while (r.Read())
+                    if (r.GetString(0) == "BigRadius" && float.TryParse(r.GetString(1), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var br))
+                        d.BigRadius = br;
+
+            using (var cmd = new MySqlConnector.MySqlCommand("SELECT name, radius FROM zoo_room", conn))
+            using (var r = cmd.ExecuteReader())
+                while (r.Read())
+                    d.Rooms[r.GetString(0)] = new Room { Radius = r.GetFloat(1) };
+
+            using (var cmd = new MySqlConnector.MySqlCommand("SELECT room, cell, x, y, z, qz, qw FROM zoo_room_point ORDER BY id", conn))
+            using (var r = cmd.ExecuteReader())
+                while (r.Read())
+                {
+                    if (!d.Rooms.TryGetValue(r.GetString(0), out var room))
+                        d.Rooms[r.GetString(0)] = room = new Room();
+                    room.Points.Add(new Point { Cell = r.GetUInt32(1), X = r.GetFloat(2), Y = r.GetFloat(3), Z = r.GetFloat(4), Qz = r.GetFloat(5), Qw = r.GetFloat(6) });
+                }
+
+            using (var cmd = new MySqlConnector.MySqlCommand("SELECT wcid, shell_wcid, donor, donated_at, obj_desc, room, wake_on_approach FROM zoo_animal ORDER BY donated_at", conn))
+            using (var r = cmd.ExecuteReader())
+                while (r.Read())
+                    d.Animals.Add(new Animal
+                    {
+                        Wcid = r.GetUInt32(0),
+                        ShellWcid = r.GetUInt32(1),
+                        Donor = r.GetString(2),
+                        DonatedAt = r.GetDouble(3),
+                        ObjDesc = r.IsDBNull(4) ? null : r.GetString(4),
+                        Room = r.GetString(5),
+                        WakeOnApproach = r.GetBoolean(6),
+                    });
+
+            using (var cmd = new MySqlConnector.MySqlCommand("SELECT player, wcid, monster, for_donation, given_at, egg_guid FROM zoo_reward ORDER BY id", conn))
+            using (var r = cmd.ExecuteReader())
+                while (r.Read())
+                    d.Rewards.Add(new Reward
+                    {
+                        Player = r.GetString(0),
+                        Wcid = r.GetUInt32(1),
+                        Monster = r.GetString(2),
+                        ForDonation = r.IsDBNull(3) ? null : r.GetString(3),
+                        GivenAt = r.GetDouble(4),
+                        EggGuid = r.GetUInt32(5),
+                    });
+
+            using (var cmd = new MySqlConnector.MySqlCommand("SELECT wcid FROM zoo_blocked", conn))
+            using (var r = cmd.ExecuteReader())
+                while (r.Read())
+                    d.Blocked.Add(r.GetUInt32(0));
+
+            return d;
+        }
+
+        private static void WriteToDb(Data d)
+        {
+            using var conn = OpenShard();
+            using var tx = conn.BeginTransaction();
+
+            void Exec(string sql, params (string, object)[] args)
+            {
+                using var cmd = new MySqlConnector.MySqlCommand(sql, conn, tx);
+                foreach (var (n, v) in args)
+                    cmd.Parameters.AddWithValue(n, v ?? DBNull.Value);
+                cmd.ExecuteNonQuery();
+            }
+
+            foreach (var t in new[] { "zoo_setting", "zoo_room_point", "zoo_room", "zoo_animal", "zoo_reward", "zoo_blocked" })
+                Exec($"DELETE FROM {t}");
+
+            Exec("INSERT INTO zoo_setting (`key`, `value`) VALUES ('BigRadius', @v)",
+                ("@v", d.BigRadius.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+
+            foreach (var kv in d.Rooms)
+            {
+                Exec("INSERT INTO zoo_room (name, radius) VALUES (@n, @r)", ("@n", kv.Key), ("@r", kv.Value.Radius));
+                foreach (var p in kv.Value.Points)
+                    Exec("INSERT INTO zoo_room_point (room, cell, x, y, z, qz, qw) VALUES (@n, @c, @x, @y, @z, @qz, @qw)",
+                        ("@n", kv.Key), ("@c", p.Cell), ("@x", p.X), ("@y", p.Y), ("@z", p.Z), ("@qz", p.Qz), ("@qw", p.Qw));
+            }
+
+            foreach (var a in d.Animals)
+                Exec("INSERT INTO zoo_animal (wcid, shell_wcid, donor, donated_at, obj_desc, room, wake_on_approach) VALUES (@w, @s, @d, @t, @o, @r, @k)",
+                    ("@w", a.Wcid), ("@s", a.ShellWcid), ("@d", a.Donor), ("@t", a.DonatedAt), ("@o", a.ObjDesc), ("@r", a.Room), ("@k", a.WakeOnApproach));
+
+            foreach (var w in d.Rewards)
+                Exec("INSERT INTO zoo_reward (player, wcid, monster, for_donation, given_at, egg_guid) VALUES (@p, @w, @m, @f, @t, @g)",
+                    ("@p", w.Player), ("@w", w.Wcid), ("@m", w.Monster), ("@f", w.ForDonation), ("@t", w.GivenAt), ("@g", w.EggGuid));
+
+            foreach (var b in d.Blocked)
+                Exec("INSERT INTO zoo_blocked (wcid) VALUES (@w)", ("@w", b));
+
+            tx.Commit();
+        }
+
         private static void Save()
         {
+            if (loadFailed)
+            {
+                log.Error("PetZoo - not saving: the zoo failed to load from the shard DB (saving now would wipe it).");
+                return;
+            }
+
+            // snapshot under the lock (round-trip through JSON = cheap deep copy), write off-thread
+            string snapshot;
+            long version;
             lock (dataLock)
             {
-                try
-                {
-                    var tmp = FilePath + ".tmp";
-                    File.WriteAllText(tmp, JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
-                    File.Move(tmp, FilePath, true);
-                }
-                catch (Exception ex)
-                {
-                    log.Error($"PetZoo - failed to save {FilePath}: {ex.Message}");
-                }
+                snapshot = JsonSerializer.Serialize(data);
+                version = ++saveVersion;
             }
+
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                lock (saveLock)
+                {
+                    if (version <= writtenVersion)
+                        return;   // a newer save already went out
+                    try
+                    {
+                        WriteToDb(JsonSerializer.Deserialize<Data>(snapshot));
+                        writtenVersion = version;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"PetZoo - failed to save to the shard DB: {ex.Message}");
+                    }
+                }
+            });
         }
     }
 
