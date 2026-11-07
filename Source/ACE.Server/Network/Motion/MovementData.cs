@@ -200,7 +200,15 @@ namespace ACE.Server.Network.Structure
             }
 
             writer.Write((byte)motion.MovementType);
-            writer.Write((byte)motion.MotionFlags);
+            // The StickToObject guid is only sent with MovementType.Invalid (see MovementInvalid.Write).
+            // Leaving the flag set on MoveToObject etc. makes Decal's F74C template read a trailing
+            // targetid DWORD that is not in the packet (VTank parse-failure log spam).
+            // Cleared on the wire only; server-side Motion state is unchanged.
+            var motionFlags = motion.MotionFlags;
+            if (motion.MovementType != MovementType.Invalid)
+                motionFlags &= ~MotionFlags.StickToObject;
+
+            writer.Write((byte)motionFlags);
 
             writer.Write((ushort)motion.CurrentStyle);    // send MotionStance as ushort
 
