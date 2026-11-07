@@ -263,7 +263,10 @@ namespace ACE.Server.WorldObjects
                     wasPvP = topDamager.IsPlayer;
                 }
 
-                DatabaseManager.Shard.BaseDatabase.LogPlayerDeath(Account.AccountId, Guid.Full, Name, Level ?? 1, killerName, killerLevel, CurrentLandblock.Id.Raw >> 16, (int)GameplayMode, wasPvP, PlayerKillsPkl ?? 0, TotalExperience ?? 0, Age ?? 0, DateTime.Now, MonarchId);
+                // CurrentLandblock is null if the player was pulled from the landblock (logout / session drop) while a queued attack was still pending
+                var deathLandblock = (CurrentLandblock?.Id.Raw ?? Location?.LandblockId.Raw ?? 0) >> 16;
+
+                DatabaseManager.Shard.BaseDatabase.LogPlayerDeath(Account.AccountId, Guid.Full, Name, Level ?? 1, killerName, killerLevel, deathLandblock,(int)GameplayMode, wasPvP, PlayerKillsPkl ?? 0, TotalExperience ?? 0, Age ?? 0, DateTime.Now, MonarchId);
             }
 
             UpdateVital(Health, 0);

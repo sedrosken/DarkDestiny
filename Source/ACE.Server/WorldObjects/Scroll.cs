@@ -72,25 +72,44 @@ namespace ACE.Server.WorldObjects
             player.IsBusy = true;
 
             var actionChain = new ActionChain();
+            var chainTime = 0.0f;
 
             if (player.CombatMode != CombatMode.NonCombat)
             {
                 var stanceTime = player.SetCombatMode(CombatMode.NonCombat);
                 actionChain.AddDelaySeconds(stanceTime);
-
-                player.LastUseTime += stanceTime;
+                chainTime += stanceTime;
             }
 
-            var animTime = player.EnqueueMotion(actionChain, MotionCommand.Reading);
-            player.LastUseTime += animTime;
+            chainTime += player.EnqueueMotion(actionChain, MotionCommand.Reading);
 
             var readTime = 1.0f;
-
             actionChain.AddDelaySeconds(readTime);
-            player.LastUseTime += readTime;
+            chainTime += readTime;
+
+            // Trailing Ready motion.
+            // EnqueueMotion() resolves the stance when the chain is BUILT, not when it runs, so build it manually.
+            var readyStance = MotionStance.NonCombat; // SetCombatMode(NonCombat) above already put us here
+            var readyMotion = new ACE.Server.Entity.Motion(readyStance, MotionCommand.Ready);
+            readyMotion.MotionState.TurnSpeed = 2.25f;
+
+            var readyTime = ACE.Server.Physics.Animation.MotionTable.GetAnimationLength(player.MotionTableId, readyStance, MotionCommand.Ready);
 
             actionChain.AddAction(player, () =>
             {
+                // Ready is the LAST motion of the chain, so nothing can broadcast a stale stance after it.
+                if (player.CombatMode == CombatMode.NonCombat)
+                {
+                    player.CurrentMotionState = readyMotion;
+                    player.EnqueueBroadcastMotion(readyMotion);
+                }
+
+                // Release server busy + client busy (UseDone) BEFORE the result messages go out.
+                // Clients/plugins chain the next use off the spellbook update or result chat; if either
+                // busy state is still held when that arrives, the next use is rejected or dropped.
+                player.IsBusy = false;
+                player.SendUseDoneEvent();
+
                 if (player.SpellIsKnown(Spell.Id))
                 {
                     // verify unknown spell
@@ -106,7 +125,7 @@ namespace ACE.Server.WorldObjects
                     var skillName = scrollMagicSkill == playerSkill.Skill ? playerSkill.Skill.ToSentence() : "any magic skills";
                     var msg = "";
                     if (playerSkill.AdvancementClass < SkillAdvancementClass.Trained)
-                        msg = $"You are not trained in {skillName}!";
+                        msg = $"You are not skilled enough in {skillName} to learn this spell. You are not trained in it!";
                     else
                         msg = $"You are not skilled enough in {skillName} to learn this spell.";
 
@@ -122,37 +141,12 @@ namespace ACE.Server.WorldObjects
                 }
             });
 
-
-            // Trailing Ready motion.
-            // EnqueueMotion() resolves the stance when the chain is BUILT, not when it runs, so it would
-            // broadcast a stale NonCombat stance if a (deferred) combat-mode change fired mid-chain.
-            // Build it manually and skip it if the player has re-entered combat in the meantime.
-            var readyStance = MotionStance.NonCombat; // SetCombatMode(NonCombat) above already put us here
-            var readyMotion = new ACE.Server.Entity.Motion(readyStance, MotionCommand.Ready);
-            readyMotion.MotionState.TurnSpeed = 2.25f;
-
-            var readyTime = ACE.Server.Physics.Animation.MotionTable.GetAnimationLength(player.MotionTableId, readyStance, MotionCommand.Ready);
-
-            actionChain.AddAction(player, () =>
-            {
-                if (player.CombatMode != CombatMode.NonCombat)
-                    return;
-
-                player.CurrentMotionState = readyMotion;
-                player.EnqueueBroadcastMotion(readyMotion);
-            });
-            actionChain.AddDelaySeconds(readyTime);
-
-            // LastUseTime (-> NextUseTime) must cover the ENTIRE chain, or a queued combat-mode
-            // request fires before the chain finishes. This was missing readyTime.
-            player.LastUseTime += readyTime;
-            player.LastUseTime += animTime;     // trailing delay below
-
-            actionChain.AddDelaySeconds(animTime);
-
-            actionChain.AddAction(player, () => player.IsBusy = false);
-
             actionChain.EnqueueChain();
+
+            // UseDone is sent from the chain above, so take TryUseItem's timer out of the picture.
+            // NextUseTime still covers the Ready animation, so a queued combat-mode change waits for it.
+            player.NextUseTime = DateTime.UtcNow + TimeSpan.FromSeconds(chainTime + readyTime);
+            player.LastUseTime = float.MinValue;
         }
     }
 }

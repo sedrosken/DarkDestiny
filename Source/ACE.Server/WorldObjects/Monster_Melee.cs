@@ -90,7 +90,7 @@ namespace ACE.Server.WorldObjects
 
                 actionChain.AddAction(this, () =>
                 {
-                    if (AttackTarget == null || IsDead || targetCreature.IsDead)
+                    if (AttackTarget == null || IsDead || targetCreature.IsDead || targetCreature.CurrentLandblock == null)
                     {
                         EndAttack();
                         return;
