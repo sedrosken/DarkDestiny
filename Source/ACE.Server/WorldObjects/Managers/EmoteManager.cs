@@ -70,6 +70,14 @@ namespace ACE.Server.WorldObjects.Managers
 
             var text = emote.Message;
 
+            // Quest-keyed emotes with no quest name in Message would otherwise NRE inside QuestManager
+            // (and take the whole world thread down with it). Log the bad content and skip the action.
+            if (EmoteRequiresQuestName(emoteType) && string.IsNullOrWhiteSpace(text))
+            {
+                log.Warn($"[EMOTE] 0x{WorldObject.Guid}:{WorldObject.Name} ({WorldObject.WeenieClassId}) {emoteType} has null/empty quest name in Message; skipped. EmoteSet: {emoteSet?.Category} '{emoteSet?.Quest}'");
+                return delay;
+            }
+
             switch ((EmoteType)emote.Type)
             {
                 case EmoteType.Act:
@@ -1856,6 +1864,43 @@ namespace ACE.Server.WorldObjects.Managers
                     if (Nested == 0)
                         IsBusy = false;
                 }
+            }
+        }
+
+        private static bool EmoteRequiresQuestName(EmoteType emoteType)
+        {
+            switch (emoteType)
+            {
+                case EmoteType.UpdateQuest:
+                case EmoteType.InqQuest:
+                case EmoteType.StampQuest:
+                case EmoteType.InqQuestSolves:
+                case EmoteType.EraseQuest:
+                case EmoteType.DecrementQuest:
+                case EmoteType.IncrementQuest:
+                case EmoteType.InqFellowQuest:
+                case EmoteType.UpdateFellowQuest:
+                case EmoteType.StampFellowQuest:
+                case EmoteType.SetQuestCompletions:
+                case EmoteType.UpdateMyQuest:
+                case EmoteType.InqMyQuest:
+                case EmoteType.StampMyQuest:
+                case EmoteType.InqMyQuestSolves:
+                case EmoteType.EraseMyQuest:
+                case EmoteType.DecrementMyQuest:
+                case EmoteType.IncrementMyQuest:
+                case EmoteType.SetMyQuestCompletions:
+                case EmoteType.InqQuestBitsOn:
+                case EmoteType.InqQuestBitsOff:
+                case EmoteType.InqMyQuestBitsOn:
+                case EmoteType.InqMyQuestBitsOff:
+                case EmoteType.SetQuestBitsOn:
+                case EmoteType.SetQuestBitsOff:
+                case EmoteType.SetMyQuestBitsOn:
+                case EmoteType.SetMyQuestBitsOff:
+                    return true;
+                default:
+                    return false;
             }
         }
 

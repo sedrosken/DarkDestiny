@@ -532,6 +532,14 @@ namespace ACE.Server.WorldObjects
             c.Tolerance = Tolerance.Target;      // locked onto the dismisser -- won't go after bystanders
             c.NoCorpse = true;                   // no corpse / no loot
             c.TimeToRot = -1;
+
+            // The companion weenies are cosmetic follower templates, so they can carry flags/data
+            // that make a real monster unkillable. Admin /smite skips DamageEvent entirely, which is
+            // why an admin could kill her when the dismissing player couldn't.
+            c.Invincible = false;                // DamageEvent returns 0 damage for Invincible defenders
+            c.Ethereal = false;                  // missiles fly through ethereal objects
+            EnsureScornedBodyParts(c);           // no body table -> every melee/missile hit is "Evaded"
+
             c.SetMonsterState();                 // re-evaluate now that she's attackable + not a pet
 
             if (!c.EnterWorld())
@@ -550,6 +558,39 @@ namespace ACE.Server.WorldObjects
             cleanup.AddDelaySeconds(ScornedLifetimeSeconds);
             cleanup.AddAction(c, () => { if (!c.IsDestroyed && c.IsAlive) c.Destroy(); });
             cleanup.EnqueueChain();
+        }
+
+        /// <summary>
+        /// DamageEvent.GetBodyPart() rolls a body part for every melee/missile hit on a monster. If the
+        /// weenie has no body part table, the roll returns Undefined and the hit is flagged Evaded, so
+        /// the attacker can never land a blow. Monster_Melee.GetAttackPart() also needs a part with
+        /// DVal &gt; 0 for her own swings. If the weenie already has body parts, they are left alone.
+        /// </summary>
+        private static void EnsureScornedBodyParts(Creature c)
+        {
+            if (c.Biota.PropertiesBodyPart != null && c.Biota.PropertiesBodyPart.Count > 0)
+                return;
+
+            // one catch-all part, hittable from all 12 attack quadrants, no armor
+            c.Biota.PropertiesBodyPart = new Dictionary<CombatBodyPart, PropertiesBodyPart>
+            {
+                [CombatBodyPart.Chest] = new PropertiesBodyPart
+                {
+                    DType = DamageType.Bludgeon,
+                    DVal = 5,               // her slap -- tune freely
+                    DVar = 0.5f,
+                    BaseArmor = 0,
+                    BH = 2,
+                    HLF = 1.0f, MLF = 1.0f, LLF = 1.0f,
+                    HRF = 1.0f, MRF = 1.0f, LRF = 1.0f,
+                    HLB = 1.0f, MLB = 1.0f, LLB = 1.0f,
+                    HRB = 1.0f, MRB = 1.0f, LRB = 1.0f,
+                }
+            };
+
+            // GetBodyParts() normally reads a per-WCID cache built from the weenie (empty here);
+            // IsModified makes it build from this biota instead.
+            c.IsModified = true;
         }
 
         // =====================================================================

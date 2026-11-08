@@ -531,6 +531,9 @@ namespace ACE.Server.Managers
         /// <param name="questFormat">A quest name with an optional @comment on the end</param>
         public static string GetQuestName(string questFormat)
         {
+            if (string.IsNullOrEmpty(questFormat))
+                return string.Empty;
+
             var idx = questFormat.IndexOf('@');     // strip comment
             if (idx == -1)
                 return questFormat;
