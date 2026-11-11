@@ -101,8 +101,8 @@ namespace ACE.Server.WorldObjects
 
             // creature pet system: keep a combat pet awake and pointed at its owner
             // (see PetFollowOwner_Prepare at the bottom of this file)
-            if (this is CombatPet)
-                PetFollowOwner_Prepare();
+            if (this is CombatPet && PetFollowOwner_Prepare())
+                return;
 
             if (!IsAwake)
             {
@@ -217,6 +217,7 @@ namespace ACE.Server.WorldObjects
                     if (((Pet)this).PetTryAcquireTarget())
                         return;   // engage it next tick
 
+                    PetTryPeaceStance(currentUnixTime);
                     PetFollowOwner_Move(currentUnixTime);
                     return;
                 }
@@ -232,6 +233,9 @@ namespace ACE.Server.WorldObjects
                 FindNextTarget();
                 return;
             }
+
+            if (combatPet != null)
+                petLastFightTime = currentUnixTime;
 
             if (firstUpdate)
             {
@@ -570,17 +574,56 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Runs each tick for a combat pet, before the AI's sleep / return-home logic.
         /// </summary>
-        private void PetFollowOwner_Prepare()
+        private bool PetFollowOwner_Prepare()
         {
             // A monster normally forgets a dead target as part of going home (MoveToHome nulls
             // it out). A pet never takes that trip, so without this it stays locked onto the
             // corpse: the "my target is dead" check further down bails out of the tick every
             // time and the pet never follows again once the fighting stops.
+            // pets never fight players (or other pets outside a /pet battle) -- drop such a
+            // target if one ever gets set (e.g. via the LastDamager targeting tactic)
+            if (AttackTarget is Player || (AttackTarget is Creature petTarget && !CanDamage(petTarget)))
+            {
+                AttackTarget = null;
+                CurrentAttackType = null;
+            }
+
             if (AttackTarget is Creature deadTarget && deadTarget.IsDead)
             {
                 AttackTarget = null;
                 CurrentAttackType = null;
             }
+
+            var petSelf = (Pet)this;
+            var petOwner = petSelf.P_PetOwner;
+
+            // team-play rule: never keep fighting a monster the owner hasn't damaged (covers a
+            // monster that hit the pet first, and one that healed back to full). /pet battle
+            // opponents are pets and are exempt.
+            // a stuck-switch target stays exempt only while it's still the target
+            if (petSelf.StuckOverrideTarget != null && AttackTarget != petSelf.StuckOverrideTarget)
+                petSelf.StuckOverrideTarget = null;
+
+            if (AttackTarget is Creature fightTarget && !(fightTarget is Pet) && fightTarget != petSelf.StuckOverrideTarget && !petSelf.OwnerHasHurt(fightTarget))
+            {
+                AttackTarget = null;
+                CurrentAttackType = null;
+            }
+
+            // 25m+ from the owner (or another landblock) -> warp back, even mid-fight and even
+            // on /pet stay. Pets in a /pet battle are exempt (warp rebuilds the pet object).
+            if (petOwner?.PhysicsObj != null && Location != null && petOwner.Location != null && !PetBattle.IsInBattle(petOwner))
+            {
+                var diffLb = Location.LandblockId.Landblock != petOwner.Location.LandblockId.Landblock;
+                if (diffLb || GetCylinderDistance(petOwner) >= Pet.PetWarpDistance)
+                {
+                    petSelf.PetWarpToOwner(petOwner);
+                    return true;   // this pet object is destroyed -- stop the tick
+                }
+            }
+
+            // swarm: melee pet blocked from its target -> switch to the nearest monster
+            petSelf.PetCheckStuck(Time.GetUnixTime());
 
             // a sleeping monster does nothing at all (Monster_Tick returns early), so a pet
             // that dozed off would never move or find a target again -- keep it awake
@@ -597,6 +640,8 @@ namespace ACE.Server.WorldObjects
                 IsMovingToHome = false;
                 PendingEndMoveToHome = false;
             }
+
+            return false;
         }
 
         /// <summary>

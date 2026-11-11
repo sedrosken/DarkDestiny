@@ -113,5 +113,6 @@ namespace ACE.Entity.Enum.Properties
 
         DamageOverTimeLog               = 9021,
         HealOverTimeLog                 = 9022,
+        PetNickname                     = 9023,   // creature pet system: owner-chosen pet name (/pet rename), stored on the egg
     }
 }

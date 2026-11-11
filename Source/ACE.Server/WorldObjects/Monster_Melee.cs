@@ -39,6 +39,13 @@ namespace ACE.Server.WorldObjects
             var targetPet = AttackTarget as CombatPet;
             var combatPet = this as CombatPet;
 
+            // creature pet system: a pet never swings at a player
+            if (combatPet != null && targetPlayer != null)
+            {
+                EndAttack();
+                return;
+            }
+
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsBlockedByDoor(AttackTarget))
             {
                 EndAttack();

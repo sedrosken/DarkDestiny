@@ -636,6 +636,7 @@ namespace ACE.Entity.Enum.Properties
         VisualClothingPriority                   = 9013,
         SquelchGlobal                            = 9014,
         InventoryOrder                           = 9015,
+        PetCombatStyle                           = 9016,   // creature pet system: saved /pet auto|magic|melee|missile, on the egg
 
         // CustomDM
         TacticAndTechniqueId                     = 10000,

@@ -81,6 +81,40 @@ namespace ACE.Server.WorldObjects
                         }
                     }
                 }
+                else if (sourceCreature is CombatPet missilePet)
+                {
+                    // creature pet system: a pet's thrown/fired missile -- same treatment as a pet
+                    // melee hit (Monster_Melee): never hurts players, never hurts other pets outside
+                    // a /pet battle, scaled by pet level, "/pet damage" readout, and the struck
+                    // monster is provoked into fighting the pet. Doesn't depend on the pet's
+                    // AttackTarget still being set when the projectile lands.
+                    if (targetCreature is Player || !missilePet.CanDamage(targetCreature))
+                    {
+                        // pass harmlessly
+                    }
+                    else
+                    {
+                        damageEvent = DamageEvent.CalculateDamage(missilePet, targetCreature, worldObject);
+
+                        targetCreature.OnAttackReceived(missilePet, CombatType.Missile, damageEvent.IsCritical, damageEvent.Evaded);
+
+                        if (damageEvent.HasDamage)
+                        {
+                            var petDmg = damageEvent.Damage * missilePet.PetPowerFactor();
+
+                            targetCreature.TakeDamage(missilePet, damageEvent.DamageType, petDmg);
+                            Pet.TryReportPetDamage(missilePet, targetCreature, petDmg, damageEvent.DamageType, damageEvent.IsCritical, worldObject.Name);
+                            missilePet.EmitSplatter(targetCreature, petDmg);
+
+                            if (missilePet.GetCreatureSkill(Skill.DirtyFighting).AdvancementClass >= SkillAdvancementClass.Trained)
+                                missilePet.FightDirty(targetCreature, damageEvent.Weapon);
+                        }
+                        else
+                            targetCreature.OnEvade(missilePet, CombatType.Missile);
+
+                        missilePet.PetOnAttackMonster(targetCreature);
+                    }
+                }
                 else if (sourceCreature != null && sourceCreature.AttackTarget != null)
                 {
                     // todo: clean this up

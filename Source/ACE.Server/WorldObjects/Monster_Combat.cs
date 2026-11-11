@@ -126,8 +126,21 @@ namespace ACE.Server.WorldObjects
                         }
                         break;
                     case ACE.Server.WorldObjects.Pet.PetCombatStyle.Melee:
-                        // never cast: go straight to a physical attack
-                        return IsRanged ? CombatType.Missile : CombatType.Melee;
+                        // never cast, fight up close: if a ranged weapon is out, ask for the swap
+                        // (melee weapon if carried, else unarmed) and throw this one last shot
+                        if (IsRanged)
+                        {
+                            PetRequestMelee();
+                            return CombatType.Missile;
+                        }
+                        return CombatType.Melee;
+                    case ACE.Server.WorldObjects.Pet.PetCombatStyle.Missile:
+                        // never cast, fight at range: swap to a carried ranged weapon if needed.
+                        // No ranged weapon at all -> plain melee.
+                        if (IsRanged)
+                            return CombatType.Missile;
+                        PetRequestMissile();
+                        return CombatType.Melee;
                     // Auto: fall through to stock behavior
                 }
             }

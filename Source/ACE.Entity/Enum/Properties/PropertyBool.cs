@@ -206,6 +206,7 @@ namespace ACE.Entity.Enum.Properties
         BlockSpellExtraction              = 9029,
         WeaponUsesClothingBase            = 9030,   // weapon's ClothingBase paints the wielder's body (claws)
         UniversalTailoringKit             = 9031,   // look kit: applies its ClothingBase onto ANY armor/clothing slot
+        PetDamageMessages                 = 9033,   // creature pet system: player's saved /pet damage toggle
         ZooGiftPet                        = 9032,   // pet egg handed out by the pet zoo -- the zoo will never accept it as a donation
     }
 }

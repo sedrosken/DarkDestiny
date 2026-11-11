@@ -44,6 +44,7 @@ namespace ACE.Server.WorldObjects
         {
             SetEphemeralValues();
             StripClonedWorldData();
+            PetEnsureWeapon();   // wielded treasure is a random roll per summon -- re-roll an empty-handed clone
         }
 
         /// <summary>
@@ -53,6 +54,7 @@ namespace ACE.Server.WorldObjects
         {
             SetEphemeralValues();
             StripClonedWorldData();
+            PetEnsureWeapon();   // wielded treasure is a random roll per summon -- re-roll an empty-handed clone
         }
 
         private void SetEphemeralValues()
@@ -112,7 +114,9 @@ namespace ACE.Server.WorldObjects
             if (success == null || !success.Value)
                 return success;
 
-            SetCombatMode(CombatMode.Melee);
+            // pets summon in peace stance; Monster_Tick's firstUpdate DoAttackStance() raises the
+            // right stance (missile for a thrower, else melee) only when there's something to
+            // fight, and the pet drops back to peace when idle (see PetFollowOwner_Move)
             MonsterState = State.Awake;
             IsAwake = true;
 

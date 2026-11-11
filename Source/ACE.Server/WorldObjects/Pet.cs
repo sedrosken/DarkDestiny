@@ -102,13 +102,15 @@ namespace ACE.Server.WorldObjects
         // How a combat pet chooses between casting and swinging each attack:
         //   Auto  : stock behavior -- roll the creature's normal spellcast chance (default)
         //   Magic : prefer spells -- cast whenever able, fall back to melee only when it can't
-        //   Melee : never cast -- always make a physical attack
+        //   Melee : never cast -- fight up close (puts a ranged weapon away; unarmed if no melee weapon)
+        //   Missile : never cast -- fight with a carried ranged weapon (melee if it has none)
         // Ephemeral like Mode: a fresh summon resets to Auto.
         public enum PetCombatStyle
         {
-            Auto  = 0,
-            Magic = 1,
-            Melee = 2,
+            Auto    = 0,
+            Magic   = 1,
+            Melee   = 2,
+            Missile = 3,
         }
 
         public PetCombatStyle CombatStyle = PetCombatStyle.Auto;
@@ -136,11 +138,100 @@ namespace ACE.Server.WorldObjects
         // How aggressively an idle pet looks for something nearby to attack (squared meters).
         private const float PetAcquireRangeSq = 25f * 25f;
 
-        // How far from the OWNER a pet will roam to pick a fight. Keeps it near you instead of
-        // bolting across the zone after a distant mob. (Applies to auto-acquire only -- an
-        // explicit "/pet attack" order ignores the leash.)
-        public const float PetLeashFromOwner = 30f;
+        // How far from the OWNER a monster may be for the pet to START a fight with it. Applies
+        // to auto-acquire AND "/pet attack" orders. (Team-play rule, 2026-11-09.)
+        public const float PetLeashFromOwner = 10f;
         private const float PetLeashFromOwnerSq = PetLeashFromOwner * PetLeashFromOwner;
+
+        // Owner-set engage range ("/pet range 1-10"): can only NARROW the leash above. Ephemeral
+        // like Mode, but carried across a warp (PetWarpToOwner).
+        public float LeashRange = PetLeashFromOwner;
+        private float LeashRangeSq => LeashRange * LeashRange;
+
+        public const int MaxNicknameLength = 20;
+
+        /// <summary>
+        /// "/pet rename [name]": store a nickname on the egg (empty = clear it), then re-summon the
+        /// pet at the owner so the new name shows. Returns an error string, or null on success.
+        /// </summary>
+        public string CommandRename(Player owner, string nickname)
+        {
+            var egg = P_PetDevice;
+            if (egg == null)
+                return "Your pet can't be renamed.";
+            if (PetBattle.IsInBattle(owner))
+                return "You can't rename your pet during a pet battle.";
+
+            nickname = nickname?.Trim() ?? "";
+            if (nickname.Length > MaxNicknameLength)
+                return $"Pet names can be at most {MaxNicknameLength} characters.";
+            foreach (var ch in nickname)
+            {
+                if (!char.IsLetter(ch) && ch != ' ' && ch != '\'' && ch != '-')
+                    return "Pet names may only use letters, spaces, apostrophes and hyphens.";
+            }
+
+            if (nickname.Length == 0)
+                egg.RemoveProperty(PropertyString.PetNickname);
+            else
+                egg.SetProperty(PropertyString.PetNickname, nickname);
+
+            egg.SaveBiotaToDatabase();
+            PetWarpToOwner(owner);   // instant re-summon picks up the name (keeps style + range)
+            return null;
+        }
+
+        public void CommandRange(float meters)
+        {
+            LeashRange = Math.Clamp(meters, 1f, PetLeashFromOwner);
+
+            // persist on the egg (survives unsummon / relog / restart)
+            var egg = P_PetDevice;
+            if (egg != null)
+            {
+                egg.SetProperty(PropertyFloat.PetLeashRange, LeashRange);
+                egg.SaveBiotaToDatabase();
+            }
+        }
+
+        // How recently the owner must have damaged a monster for the pet to fight it.
+        public const double OwnerHitWindowSeconds = 20.0;
+
+        /// <summary>
+        /// Team-play rule (2026-11-09): a pet only fights a monster its OWNER has damaged
+        /// (>= 1 point) within the last OwnerHitWindowSeconds; a full heal also wipes the credit.
+        /// Reads the monster's DamageHistory log directly -- the log's own 3-min prune is global
+        /// (loot/xp credit) and is NOT changed. Stops "lvl 1 turns pet loose in a crowd and
+        /// stands back for free xp".
+        /// </summary>
+        public bool OwnerHasHurt(Creature target)
+        {
+            var owner = P_PetOwner;
+            var history = target?.DamageHistory;
+            if (owner == null || history == null || !history.HasDamager(owner, true))
+                return false;
+
+            var cutoff = DateTime.UtcNow.AddSeconds(-OwnerHitWindowSeconds);
+            var log = history.Log;
+            for (var i = log.Count - 1; i >= 0; i--)
+            {
+                var e = log[i];
+                if (e.Time < cutoff)
+                    break;   // log is in time order -- nothing newer left to check
+                if (e.Amount < 0 && e.Attacker == owner.Guid)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>Owner has hurt it AND it's within PetLeashFromOwner of the owner.</summary>
+        public bool OwnerCanEngage(Creature target)
+        {
+            var ownerPhysics = P_PetOwner?.PhysicsObj;
+            if (ownerPhysics == null || target?.PhysicsObj == null || !OwnerHasHurt(target))
+                return false;
+            return (float)ownerPhysics.get_distance_sq_to_object(target.PhysicsObj, true) <= LeashRangeSq;
+        }
 
         // If an idle pet ends up further than this from its owner (or on a different
         // landblock, e.g. after a portal/recall), it is warped back to the owner instead of
@@ -242,6 +333,76 @@ namespace ACE.Server.WorldObjects
         public static double PetAcquireInterval = 1.0;
 
         /// <summary>Points the pet at a target and wakes it. Shared by the idle scan and /pet attack.</summary>
+        // ---- swarm "stuck" handling (2026-11-09) ----
+        // A melee pet chasing its target that makes no progress (blocked by other monsters)
+        // switches to the nearest monster instead. That switch WAIVES the owner-hit rule (user
+        // choice); the 10m leash / "/pet range" still apply.
+        private const double StuckCheckSeconds = 2.0;
+        private const float StuckProgressMeters = 0.5f;
+        private Creature stuckWatchTarget;
+        private float stuckBestDist;
+        private double stuckSince;
+
+        /// <summary>Target picked by the stuck switch -- exempt from the owner-hit rule while it's the AttackTarget.</summary>
+        public Creature StuckOverrideTarget;
+
+        /// <summary>Called every tick from PetFollowOwner_Prepare. Returns true if it switched targets.</summary>
+        public bool PetCheckStuck(double now)
+        {
+            var target = AttackTarget as Creature;
+            if (target == null || target is Pet || CurrentAttackType != CombatType.Melee || IsAttackRange())
+            {
+                stuckWatchTarget = null;
+                return false;
+            }
+
+            var dist = GetDistanceToTarget();
+            if (target != stuckWatchTarget || dist < stuckBestDist - StuckProgressMeters)
+            {
+                // new target, or still closing in -- (re)start the clock
+                stuckWatchTarget = target;
+                stuckBestDist = dist;
+                stuckSince = now;
+                return false;
+            }
+            if (now - stuckSince < StuckCheckSeconds)
+                return false;
+
+            stuckSince = now;   // whatever happens, don't rescan again for another window
+
+            var ownerPhysics = P_PetOwner?.PhysicsObj;
+            if (PhysicsObj?.ObjMaint == null || ownerPhysics == null)
+                return false;
+
+            Creature nearest = null;
+            var nearestSq = float.MaxValue;
+            foreach (var c in PhysicsObj.ObjMaint.GetVisibleTargetsValuesOfTypeCreature())
+            {
+                if (c == null || c == target || c.IsDead || !c.Attackable || c is Player || c is Pet)
+                    continue;
+                if ((float)ownerPhysics.get_distance_sq_to_object(c.PhysicsObj, true) > LeashRangeSq)
+                    continue;
+                var dsq = (float)PhysicsObj.get_distance_sq_to_object(c.PhysicsObj, true);
+                if (dsq < nearestSq)
+                {
+                    nearestSq = dsq;
+                    nearest = c;
+                }
+            }
+
+            if (nearest == null || nearestSq >= dist * dist || !IsDirectVisible(nearest))
+                return false;   // nothing closer than the current target
+
+            if (HasPendingMovement)
+                CancelMoveTo(WeenieError.ObjectGone);
+            CommandedTarget = null;
+            StuckOverrideTarget = nearest;
+            CurrentAttackType = null;
+            stuckWatchTarget = null;
+            EngageTarget(nearest);
+            return true;
+        }
+
         private void EngageTarget(Creature target)
         {
             AttackTarget = target;
@@ -276,13 +437,20 @@ namespace ACE.Server.WorldObjects
             // idle scan re-target something closer out from under the owner's order.
             if (CommandedTarget != null)
             {
-                if (!CommandedTarget.IsDead && CommandedTarget.Attackable && IsDirectVisible(CommandedTarget))
+                if (!CommandedTarget.IsDead && CommandedTarget.Attackable && !CommandedTarget.IsDestroyed)
                 {
                     var cdsq = (float)PhysicsObj.get_distance_sq_to_object(CommandedTarget.PhysicsObj, true);
                     if (cdsq <= PetAcquireRangeSq)
                     {
-                        EngageTarget(CommandedTarget);
-                        return true;
+                        // order stands, but the pet waits until the owner is within the leash
+                        // and has landed a hit (cheap checks first -- raycast last)
+                        if (!OwnerCanEngage(CommandedTarget))
+                            return false;
+                        if (IsDirectVisible(CommandedTarget))
+                        {
+                            EngageTarget(CommandedTarget);
+                            return true;
+                        }
                     }
                 }
                 CommandedTarget = null;   // dead or out of range -- order fulfilled/abandoned
@@ -320,12 +488,15 @@ namespace ACE.Server.WorldObjects
                     continue;
 
                 // owner leash: don't wander off to grab something far from the owner
-                if (ownerPhysics != null)
-                {
-                    var ownerDsq = (float)ownerPhysics.get_distance_sq_to_object(c.PhysicsObj, true);
-                    if (ownerDsq > PetLeashFromOwnerSq)
-                        continue;
-                }
+                if (ownerPhysics == null)
+                    continue;
+                var ownerDsq = (float)ownerPhysics.get_distance_sq_to_object(c.PhysicsObj, true);
+                if (ownerDsq > LeashRangeSq)
+                    continue;
+
+                // team-play rule: only monsters the owner has actually damaged
+                if (!OwnerHasHurt(c))
+                    continue;
 
                 // is this the monster the owner is fighting?
                 if (ownerTargetGuid != 0 && c.Guid.Full == ownerTargetGuid)
@@ -381,7 +552,11 @@ namespace ACE.Server.WorldObjects
 
             Mode = PetMode.Follow;      // so it will chase the target and resume following after
             CommandedTarget = target;
-            EngageTarget(target);
+
+            if (OwnerCanEngage(target))
+                EngageTarget(target);
+            else
+                error = $"Your pet will attack {target.Name} once you've hit it and are within {LeashRange:0.#}m of it.";   // order kept; PetTryAcquireTarget engages when allowed
             return true;
         }
 
@@ -422,6 +597,14 @@ namespace ACE.Server.WorldObjects
         {
             CombatStyle = style;
             CurrentAttackType = null;   // re-pick on the next swing so the change takes effect now
+
+            // persist on the egg (survives unsummon / relog / restart)
+            var egg = P_PetDevice;
+            if (egg != null)
+            {
+                egg.SetProperty(PropertyInt.PetCombatStyle, (int)style);
+                egg.SaveBiotaToDatabase();
+            }
         }
 
         /// <summary>"/pet status" -- a one-line readout for the owner.</summary>
@@ -430,11 +613,12 @@ namespace ACE.Server.WorldObjects
             var level = P_PetDevice != null ? GetPetLevel(P_PetDevice) : GetPetLevel(0);
             var modeText = Mode == PetMode.Stay ? "staying" : "following";
             var styleText = CombatStyle == PetCombatStyle.Magic ? ", magic-focused"
-                          : CombatStyle == PetCombatStyle.Melee ? ", melee-only" : "";
+                          : CombatStyle == PetCombatStyle.Melee ? ", melee-only"
+                          : CombatStyle == PetCombatStyle.Missile ? ", missile-only" : "";
             var targetText = AttackTarget is Creature t && !t.IsDead ? $", attacking {t.Name}" : "";
             var rating = P_PetDevice != null ? GetPetRatingType(P_PetDevice) : PetRatingType.None;
             var ratingText = rating != PetRatingType.None ? $" | grants +{level} {PetRatingName(rating)}" : "";
-            return $"Level {level}/{MaxPetLevel}, {modeText}{styleText}{targetText}{ratingText}.";
+            return $"Level {level}/{MaxPetLevel}, {modeText}{styleText}, range {LeashRange:0.#}m{targetText}{ratingText}.";
         }
 
         /// <summary>
@@ -452,6 +636,9 @@ namespace ACE.Server.WorldObjects
             if (owner.CurrentActivePet == this)
                 owner.CurrentActivePet = null;
 
+            var keepStyle = CombatStyle;   // carry "/pet magic|melee|missile" across the warp
+            var keepRange = LeashRange;    // ...and "/pet range"
+
             var chain = new ActionChain();
             chain.AddAction(owner, () =>
             {
@@ -460,6 +647,12 @@ namespace ACE.Server.WorldObjects
                 if (owner.GetInventoryItem(egg.Guid.Full) == null) return;
 
                 egg.SummonCreature(owner, shellWcid);
+
+                if (owner.CurrentActivePet is Pet newPet)
+                {
+                    newPet.CombatStyle = keepStyle;
+                    newPet.LeashRange = keepRange;
+                }
             });
             chain.EnqueueChain();
 
@@ -996,30 +1189,26 @@ namespace ACE.Server.WorldObjects
 
         // ---- "/pet damage" combat readout ----------------------------------
         // Owners can toggle a chat line for every hit their pet lands (melee + spells), like the
-        // EoR summoner "/pet damage" command. The toggle is session-scoped (a set of owner GUIDs),
-        // so it clears on relog / server restart -- no DB column, no Player-file edit. The two
+        // EoR summoner "/pet damage" command. The toggle is saved on the PLAYER as custom
+        // PropertyBool.PetDamageMessages (9033), so it survives relog / restart. The
         // damage sites (Monster_Melee for melee, SpellProjectile for spells) each call
         // TryReportPetDamage, which is a no-op unless the pet's owner has it switched on.
-        private static readonly HashSet<uint> PetDamageMsgOwners = new HashSet<uint>();
-
         /// <summary>Flip "/pet damage" for this owner. Returns the new state (true = on).</summary>
         public static bool TogglePetDamageMessages(Player owner)
         {
             if (owner == null)
                 return false;
 
-            if (PetDamageMsgOwners.Contains(owner.Guid.Full))
-            {
-                PetDamageMsgOwners.Remove(owner.Guid.Full);
-                return false;
-            }
-
-            PetDamageMsgOwners.Add(owner.Guid.Full);
-            return true;
+            var on = !PetDamageMessagesOn(owner);
+            if (on)
+                owner.SetProperty(PropertyBool.PetDamageMessages, true);
+            else
+                owner.RemoveProperty(PropertyBool.PetDamageMessages);
+            return on;
         }
 
         public static bool PetDamageMessagesOn(Player owner)
-            => owner != null && PetDamageMsgOwners.Contains(owner.Guid.Full);
+            => owner != null && (owner.GetProperty(PropertyBool.PetDamageMessages) ?? false);
 
         /// <summary>
         /// If the attacker is a pet whose owner has "/pet damage" on, shows the owner a combat
@@ -1031,7 +1220,7 @@ namespace ACE.Server.WorldObjects
                 return;
 
             var owner = pet.P_PetOwner;
-            if (owner?.Session == null || !PetDamageMsgOwners.Contains(owner.Guid.Full))
+            if (owner?.Session == null || !PetDamageMessagesOn(owner))
                 return;
 
             // trim the "<owner>'s " prefix so it reads "Fluffy hits ..." not "Bob's Fluffy hits ..."
@@ -1222,7 +1411,8 @@ namespace ACE.Server.WorldObjects
                     // Guarded so each only sends its client update once (on the transition).
                     if (!string.IsNullOrEmpty(creatureName))
                     {
-                        var hatchedName = creatureName + " Pet";
+                        var nick = petDevice.GetProperty(PropertyString.PetNickname);
+                        var hatchedName = string.IsNullOrEmpty(nick) ? creatureName + " Pet" : $"{nick} ({creatureName} Pet)";
                         var hatchedUse = $"Use this to summon or dismiss your {creatureName} Pet";
 
                         if (petDevice.Name != hatchedName)
@@ -1244,6 +1434,19 @@ namespace ACE.Server.WorldObjects
                 petFullScale = fullScale;
                 ObjScale = rootedCreature ? fullScale : ScaleForLevel(petLevel, fullScale);
             }
+
+            // saved per-pet settings (on the egg): attack style + engage range
+            var savedStyle = petDevice.GetProperty(PropertyInt.PetCombatStyle);
+            if (savedStyle != null && Enum.IsDefined(typeof(PetCombatStyle), savedStyle.Value))
+                CombatStyle = (PetCombatStyle)savedStyle.Value;
+            var savedRange = petDevice.GetProperty(PropertyFloat.PetLeashRange);
+            if (savedRange != null)
+                LeashRange = Math.Clamp((float)savedRange.Value, 1f, PetLeashFromOwner);
+
+            // /pet rename: the owner's nickname replaces the creature/egg name
+            var nickname = petDevice.GetProperty(PropertyString.PetNickname);
+            if (!string.IsNullOrEmpty(nickname))
+                Name = player.Name + "'s " + nickname;
             // scale attributes + skills to this level (native at 7, weaker below, stronger at 8-10).
             // Must run before EnterWorld so the pet spawns with the correct vitals. No-op for
             // legacy shell pets (guarded inside ApplyPetStatScaling).

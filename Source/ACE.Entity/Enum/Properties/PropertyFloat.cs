@@ -221,6 +221,7 @@ namespace ACE.Entity.Enum.Properties
         PCAPRecordeOmegaX              = 8016,
         PCAPRecordeOmegaY              = 8017,
         PCAPRecordeOmegaZ              = 8018,
+        PetLeashRange                  = 9001,   // creature pet system: saved /pet range (1-10m), on the egg
 
         // CustomDM
         LeyLineTriggerChance           = 10001,

@@ -590,6 +590,9 @@ namespace ACE.Server.WorldObjects
         {
             if (Invincible || IsDead || IsOnNoDamageLandblock) return 0;
 
+            // creature pet system: safety net -- no pet (yours or anyone's) ever damages a player
+            if (source is Pet) return 0;
+
             var creatureAttacker = source as Creature;
 
             if (creatureAttacker != null)

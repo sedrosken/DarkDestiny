@@ -18,6 +18,7 @@ namespace ACE.Server.Command.Handlers
         ///   /pet damage   -- toggle a chat line for every hit your pet lands
         ///   /pet magic    -- focus on casting spells (falls back to melee when it can't)
         ///   /pet melee    -- focus on melee, never cast
+        ///   /pet missile  -- focus on ranged attacks (thrown/bow), never cast
         ///   /pet auto     -- choose attacks automatically (default)
         ///   /pet battle <name> -- challenge another player's pet (or accept their challenge)
         ///   /pet accept   -- accept a pet battle challenge
@@ -25,7 +26,7 @@ namespace ACE.Server.Command.Handlers
         /// </summary>
         [CommandHandler("pet", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, 1,
             "Commands your summoned pet.",
-            "<attack | follow | stay | stop | come | status | damage | magic | melee | auto | battle <name> | accept | forfeit>\n" +
+            "<attack | follow | stay | stop | come | status | damage | magic | melee | missile | auto | range <1-10> | rename [name] | battle <name> | accept | forfeit>\n" +
             "Example: select a monster, then /pet attack")]
         public static void HandlePet(Session session, params string[] parameters)
         {
@@ -54,6 +55,39 @@ namespace ACE.Server.Command.Handlers
             }
 
             var sub = parameters[0].ToLowerInvariant();
+
+            // ---- nickname: "/pet rename Fluffy" ("/pet rename" alone clears it) ----
+            if (sub == "rename" || sub == "name")
+            {
+                var newName = parameters.Length >= 2 ? string.Join(" ", parameters, 1, parameters.Length - 1) : "";
+                var renameError = pet.CommandRename(player, newName);
+                CommandHandlerHelper.WriteOutputInfo(session, renameError
+                    ?? (newName.Trim().Length == 0 ? "Your pet's nickname has been cleared." : $"Your pet is now named {newName.Trim()}."));
+                return;
+            }
+
+            // ---- engage range: "/pet range 3", or combined "/pet melee range 3" ----
+            if (sub == "range" || (parameters.Length >= 3 && parameters[1].ToLowerInvariant() == "range"
+                && (sub == "melee" || sub == "magic" || sub == "missile" || sub == "ranged" || sub == "auto")))
+            {
+                var valueArg = sub == "range" ? (parameters.Length >= 2 ? parameters[1] : null) : parameters[2];
+                if (valueArg == null)
+                {
+                    CommandHandlerHelper.WriteOutputInfo(session, $"Your pet engages monsters within {pet.LeashRange:0.#}m of you. Usage: /pet range <1-{Pet.PetLeashFromOwner:0}>");
+                    return;
+                }
+                if (!float.TryParse(valueArg, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var meters) || meters < 1f || meters > Pet.PetLeashFromOwner)
+                {
+                    CommandHandlerHelper.WriteOutputInfo(session, $"Range must be a number from 1 to {Pet.PetLeashFromOwner:0}.");
+                    return;
+                }
+                pet.CommandRange(meters);
+                CommandHandlerHelper.WriteOutputInfo(session, $"Your pet will only engage monsters within {pet.LeashRange:0.#}m of you.");
+
+                if (sub == "range")
+                    return;
+                // combined form: fall through so the style part (melee/magic/missile/auto) applies too
+            }
 
             // ---- pet battles ----
             switch (sub)
@@ -99,7 +133,7 @@ namespace ACE.Server.Command.Handlers
                         target = player.FindObject(sel.Value, Player.SearchLocations.Everywhere) as Creature;
 
                     if (pet.CommandAttack(target, out var error))
-                        CommandHandlerHelper.WriteOutputInfo(session, $"Your pet attacks {target.Name}!");
+                        CommandHandlerHelper.WriteOutputInfo(session, error ?? $"Your pet attacks {target.Name}!");
                     else
                         CommandHandlerHelper.WriteOutputInfo(session, error);
                     break;
@@ -141,7 +175,18 @@ namespace ACE.Server.Command.Handlers
 
                 case "melee":
                     pet.CommandCombatStyle(Pet.PetCombatStyle.Melee);
-                    CommandHandlerHelper.WriteOutputInfo(session, "Your pet will focus on melee and won't cast.");
+                    CommandHandlerHelper.WriteOutputInfo(session, "Your pet will focus on melee and won't cast (it puts away any ranged weapon).");
+                    break;
+
+                case "missile":
+                case "ranged":
+                    if (!pet.IsRanged && !pet.PetHasUsableRangedInInventory())
+                    {
+                        CommandHandlerHelper.WriteOutputInfo(session, "Your pet has no ranged weapon.");
+                        break;
+                    }
+                    pet.CommandCombatStyle(Pet.PetCombatStyle.Missile);
+                    CommandHandlerHelper.WriteOutputInfo(session, "Your pet will focus on ranged attacks and won't cast.");
                     break;
 
                 case "auto":
@@ -151,7 +196,7 @@ namespace ACE.Server.Command.Handlers
 
                 default:
                     CommandHandlerHelper.WriteOutputInfo(session,
-                        "Usage: /pet <attack | follow | stay | stop | come | status | damage | magic | melee | auto | battle <name> | accept | forfeit>");
+                        "Usage: /pet <attack | follow | stay | stop | come | status | damage | magic | melee | missile | auto | range <1-10> | rename [name] | battle <name> | accept | forfeit>");
                     break;
             }
         }

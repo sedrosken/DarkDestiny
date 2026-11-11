@@ -317,7 +317,9 @@ namespace ACE.Server.WorldObjects
             IsSwitchWeaponsPending = false;
             IsSwitchingWeapons = true;
 
-            if (IsDead || !HasMeleeWeapon)
+            // creature pet system: a combat pet with no melee weapon (e.g. a rock-only lugian)
+            // may still switch -- it puts the rock away and fights unarmed
+            if (IsDead || (!HasMeleeWeapon && !(this is CombatPet)))
             {
                 EndSwitchWeapons();
                 return;

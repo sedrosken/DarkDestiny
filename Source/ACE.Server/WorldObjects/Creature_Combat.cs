@@ -1584,6 +1584,11 @@ namespace ACE.Server.WorldObjects
         {
             if (target is Player)
             {
+                // creature pet system: pets (anyone's) can never damage a player -- covers
+                // war/life spell projectiles via SpellProjectile's CanDamage check
+                if (this is Pet)
+                    return false;
+
                 // monster attacking player
                 return true;    // other checks handled elsewhere
             }
