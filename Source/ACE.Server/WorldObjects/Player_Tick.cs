@@ -1171,7 +1171,7 @@ namespace ACE.Server.WorldObjects
         {
             //Console.WriteLine($"{Name}.HandleMotionDone({(MotionCommand)motionID}, {success})");
 
-            if (!FastTick) return;
+            if (!FastTick || SuppressMotionDone) return;
 
             if (FoodState.IsChugging)
                 HandleMotionDone_UseConsumable(motionID, success);

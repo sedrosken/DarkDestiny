@@ -226,6 +226,7 @@ namespace ACE.Server.Managers
                     if (change > 0 && def.DailyGainCap > 0)
                         change = Math.Max(0, Math.Min(change, def.DailyGainCap - mem.GainToday));
                     if (change > 0) mem.GainToday += change;
+                    else if (change < 0) mem.GainToday = Math.Max(0, mem.GainToday + change);   // losses free up room under the daily cap, so lost points can be won back
 
                     mem.Lines.Add(new AiNpcLine { Role = "user", Text = $"{playerName}: {message}" });
                     mem.Lines.Add(new AiNpcLine { Role = "assistant", Text = reply });
@@ -612,6 +613,13 @@ namespace ACE.Server.Managers
         private static readonly Dictionary<uint, Wanderer> wanderers = new();
         private static bool wanderStarted;
         private static readonly Random rng = new();
+
+        /// <summary>True for npcs this manager spawns itself (SpawnLocs set) - they must never be saved to the shard, or each restart adds a copy.</summary>
+        public static bool IsWanderer(uint wcid)
+        {
+            var cfg = Config;
+            return cfg != null && cfg.Npcs.TryGetValue(wcid.ToString(), out var d) && d.SpawnLocs != null && d.SpawnLocs.Count > 0;
+        }
 
         /// <summary>Called once from WorldManager.Initialize (world thread is about to start).</summary>
         public static void StartWanderers()

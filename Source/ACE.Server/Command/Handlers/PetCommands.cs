@@ -26,7 +26,7 @@ namespace ACE.Server.Command.Handlers
         /// </summary>
         [CommandHandler("pet", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, 1,
             "Commands your summoned pet.",
-            "<attack | follow | stay | stop | come | status | damage | magic | melee | missile | auto | range <1-10> | rename [name] | battle <name> | accept | forfeit>\n" +
+            "<attack | follow | stay | stop | come | status | damage | magic | melee | missile | auto | range <1-15> | rename [name] | battle <name> | accept | forfeit>\n" +
             "Example: select a monster, then /pet attack")]
         public static void HandlePet(Session session, params string[] parameters)
         {
@@ -196,7 +196,7 @@ namespace ACE.Server.Command.Handlers
 
                 default:
                     CommandHandlerHelper.WriteOutputInfo(session,
-                        "Usage: /pet <attack | follow | stay | stop | come | status | damage | magic | melee | missile | auto | range <1-10> | rename [name] | battle <name> | accept | forfeit>");
+                        "Usage: /pet <attack | follow | stay | stop | come | status | damage | magic | melee | missile | auto | range <1-15> | rename [name] | battle <name> | accept | forfeit>");
                     break;
             }
         }

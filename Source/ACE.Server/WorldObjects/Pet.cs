@@ -138,13 +138,17 @@ namespace ACE.Server.WorldObjects
         // How aggressively an idle pet looks for something nearby to attack (squared meters).
         private const float PetAcquireRangeSq = 25f * 25f;
 
-        // How far from the OWNER a monster may be for the pet to START a fight with it. Applies
-        // to auto-acquire AND "/pet attack" orders. (Team-play rule, 2026-11-09.)
-        public const float PetLeashFromOwner = 10f;
+        // How far from the OWNER a monster may be for the pet to START a fight with it on its
+        // own (auto-acquire; narrowed by /pet range).
+        public const float PetLeashFromOwner = 15f;   // auto-acquire limit (2026-11-12)
+
+        // "/pet attack" orders reach further than auto-acquire. Not narrowed by /pet range.
+        public const float PetCommandLeash = 25f;
+        private const float PetCommandLeashSq = PetCommandLeash * PetCommandLeash;
         private const float PetLeashFromOwnerSq = PetLeashFromOwner * PetLeashFromOwner;
 
-        // Owner-set engage range ("/pet range 1-10"): can only NARROW the leash above. Ephemeral
-        // like Mode, but carried across a warp (PetWarpToOwner).
+        // Owner-set engage range ("/pet range 1-15"): can only NARROW the leash above. Saved on
+        // the egg (PropertyFloat.PetLeashRange 9001) and carried across a warp.
         public float LeashRange = PetLeashFromOwner;
         private float LeashRangeSq => LeashRange * LeashRange;
 
@@ -194,49 +198,19 @@ namespace ACE.Server.WorldObjects
             }
         }
 
-        // How recently the owner must have damaged a monster for the pet to fight it.
-        public const double OwnerHitWindowSeconds = 20.0;
-
-        /// <summary>
-        /// Team-play rule (2026-11-09): a pet only fights a monster its OWNER has damaged
-        /// (>= 1 point) within the last OwnerHitWindowSeconds; a full heal also wipes the credit.
-        /// Reads the monster's DamageHistory log directly -- the log's own 3-min prune is global
-        /// (loot/xp credit) and is NOT changed. Stops "lvl 1 turns pet loose in a crowd and
-        /// stands back for free xp".
-        /// </summary>
-        public bool OwnerHasHurt(Creature target)
-        {
-            var owner = P_PetOwner;
-            var history = target?.DamageHistory;
-            if (owner == null || history == null || !history.HasDamager(owner, true))
-                return false;
-
-            var cutoff = DateTime.UtcNow.AddSeconds(-OwnerHitWindowSeconds);
-            var log = history.Log;
-            for (var i = log.Count - 1; i >= 0; i--)
-            {
-                var e = log[i];
-                if (e.Time < cutoff)
-                    break;   // log is in time order -- nothing newer left to check
-                if (e.Amount < 0 && e.Attacker == owner.Guid)
-                    return true;
-            }
-            return false;
-        }
-
-        /// <summary>Owner has hurt it AND it's within PetLeashFromOwner of the owner.</summary>
+        /// <summary>"/pet attack" target is within PetCommandLeash (25m) of the owner.</summary>
         public bool OwnerCanEngage(Creature target)
         {
             var ownerPhysics = P_PetOwner?.PhysicsObj;
-            if (ownerPhysics == null || target?.PhysicsObj == null || !OwnerHasHurt(target))
+            if (ownerPhysics == null || target?.PhysicsObj == null)
                 return false;
-            return (float)ownerPhysics.get_distance_sq_to_object(target.PhysicsObj, true) <= LeashRangeSq;
+            return (float)ownerPhysics.get_distance_sq_to_object(target.PhysicsObj, true) <= PetCommandLeashSq;
         }
 
         // If an idle pet ends up further than this from its owner (or on a different
         // landblock, e.g. after a portal/recall), it is warped back to the owner instead of
         // walking. Kept generous so ordinary following is walked, not teleported.
-        public const float PetWarpDistance = 25f;
+        public const float PetWarpDistance = 40f;
 
         // Cumulative XP required to BE at each pet level (index = level; level 1 = 0).
         // Per-level costs: L2 1k, L3 +2k, L4 +10k, L5 +100k, L6 +500k, L7 +1M, L8 +5M,
@@ -335,16 +309,13 @@ namespace ACE.Server.WorldObjects
         /// <summary>Points the pet at a target and wakes it. Shared by the idle scan and /pet attack.</summary>
         // ---- swarm "stuck" handling (2026-11-09) ----
         // A melee pet chasing its target that makes no progress (blocked by other monsters)
-        // switches to the nearest monster instead. That switch WAIVES the owner-hit rule (user
-        // choice); the 10m leash / "/pet range" still apply.
+        // switches to the nearest monster instead. The owner leash / "/pet range" still apply.
         private const double StuckCheckSeconds = 2.0;
         private const float StuckProgressMeters = 0.5f;
         private Creature stuckWatchTarget;
         private float stuckBestDist;
         private double stuckSince;
 
-        /// <summary>Target picked by the stuck switch -- exempt from the owner-hit rule while it's the AttackTarget.</summary>
-        public Creature StuckOverrideTarget;
 
         /// <summary>Called every tick from PetFollowOwner_Prepare. Returns true if it switched targets.</summary>
         public bool PetCheckStuck(double now)
@@ -396,7 +367,6 @@ namespace ACE.Server.WorldObjects
             if (HasPendingMovement)
                 CancelMoveTo(WeenieError.ObjectGone);
             CommandedTarget = null;
-            StuckOverrideTarget = nearest;
             CurrentAttackType = null;
             stuckWatchTarget = null;
             EngageTarget(nearest);
@@ -440,10 +410,10 @@ namespace ACE.Server.WorldObjects
                 if (!CommandedTarget.IsDead && CommandedTarget.Attackable && !CommandedTarget.IsDestroyed)
                 {
                     var cdsq = (float)PhysicsObj.get_distance_sq_to_object(CommandedTarget.PhysicsObj, true);
-                    if (cdsq <= PetAcquireRangeSq)
+                    if (cdsq <= PetWarpDistance * PetWarpDistance)   // ordered target: anything short of warp range
                     {
-                        // order stands, but the pet waits until the owner is within the leash
-                        // and has landed a hit (cheap checks first -- raycast last)
+                        // order stands, but the pet waits until the target is within the
+                        // owner leash (cheap check first -- raycast last)
                         if (!OwnerCanEngage(CommandedTarget))
                             return false;
                         if (IsDirectVisible(CommandedTarget))
@@ -494,9 +464,6 @@ namespace ACE.Server.WorldObjects
                 if (ownerDsq > LeashRangeSq)
                     continue;
 
-                // team-play rule: only monsters the owner has actually damaged
-                if (!OwnerHasHurt(c))
-                    continue;
 
                 // is this the monster the owner is fighting?
                 if (ownerTargetGuid != 0 && c.Guid.Full == ownerTargetGuid)
@@ -556,7 +523,7 @@ namespace ACE.Server.WorldObjects
             if (OwnerCanEngage(target))
                 EngageTarget(target);
             else
-                error = $"Your pet will attack {target.Name} once you've hit it and are within {LeashRange:0.#}m of it.";   // order kept; PetTryAcquireTarget engages when allowed
+                error = $"Your pet will attack {target.Name} once it's within {PetCommandLeash:0}m of you.";   // order kept; PetTryAcquireTarget engages when allowed
             return true;
         }
 

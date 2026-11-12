@@ -819,20 +819,72 @@ namespace ACE.Server.WorldObjects
                 return;
 
             var physicsObj = PhysicsObj;
+            var seq = physicsObj?.PartArray?.Sequence;
+
+            // timing diagnostics: tells us whether server physics is stalled, playing slow, or started the anims late
+            var physicsAge = physicsObj != null ? ACE.Server.Physics.Common.PhysicsTimer.CurrentTime - physicsObj.UpdateTime : -1.0;
+            var sinceCastStart = (DateTime.UtcNow - MagicState.StartTime).TotalSeconds;
+            var sinceGesture = MagicState.CastGestureStartTime != DateTime.MinValue ? (DateTime.UtcNow - MagicState.CastGestureStartTime).TotalSeconds : -1.0;
+            var gestureExpected = Physics.Animation.MotionTable.GetAnimationLength(MotionTableId, MotionStance.Magic, MagicState.CastGesture, CastSpeed);
+            var frameInfo = seq?.CurrAnim != null ? $"{seq.FrameNumber:N1}/{seq.CurrAnim.Value.get_high_frame()}@{seq.CurrAnim.Value.Framerate:N1}fps" : "n/a";
+
             log.Warn($"[CAST WATCHDOG] {Name} (0x{Guid}) cast #{castNum} {MagicState.CastSpellParams?.Spell?.Name} ({MagicState.CastSpellParams?.Spell?.Id}): " +
                 $"no OnMotionDone for {MagicState.CastGesture} -- forcing release. " +
                 $"CombatMode={CombatMode} Stance={CurrentMotionState?.Stance} IsCombatCasting={MagicState.IsCombatCasting} " +
                 $"IsMovingOrAnimating={physicsObj?.IsMovingOrAnimating} IsAnimating={physicsObj?.IsAnimating} " +
                 $"InterpActions={physicsObj?.MovementManager?.MotionInterpreter?.InterpretedState?.GetNumActions()} " +
                 $"PendingMotions={physicsObj?.MovementManager?.MotionInterpreter?.PendingMotions?.Count} " +
-                $"CurrAnim={physicsObj?.PartArray?.Sequence?.CurrAnim?.Value?.Anim?.ID:X8} " +
+                $"CurrAnim={seq?.CurrAnim?.Value?.Anim?.ID:X8} Frame={frameInfo} " +
+                $"SinceCastStart={sinceCastStart:N2}s SinceGesture={sinceGesture:N2}s GestureExpected={gestureExpected:N2}s PhysicsAge={physicsAge:N2}s CastSpeed={CastSpeed:N2} " +
                 $"AnimQueue={DescribeAnimQueue()}");
 
             // same thing HandleMotionDone_Magic would have done
             MagicState.CastMotionDone = true;
             MagicState.AlwaysTurn = true;
 
+            // Server physics is behind the cast timeline. If we release the cast but leave the backlog in place,
+            // the next cast's windup/gesture queues behind it and gets watchdogged too (the repeated #2242, #2243, ... runs).
+            // Drop the leftover link animations and drain the completion queue so the next cast starts clean.
+            // The client plays its own animations from the broadcasts, so this only resyncs the server's copy.
+            ResyncStrandedAnimations("watchdog");
+
             DoCastSpell(MagicState);
+        }
+
+        /// <summary>
+        /// TRUE while ResyncStrandedAnimations is draining the motion table queue.
+        /// OnMotionDone handlers are suppressed so the drain can't re-enter cast / consumable logic.
+        /// </summary>
+        public bool SuppressMotionDone;
+
+        /// <summary>
+        /// Removes all pending link animations from the server-side sequence and completes every queued
+        /// animation-completion entry (same drain the physics engine uses on HandleEnterWorld).
+        /// </summary>
+        public int ResyncStrandedAnimations(string source)
+        {
+            var partArray = PhysicsObj?.PartArray;
+            var mtm = partArray?.MotionTableManager;
+
+            if (mtm == null || partArray.Sequence == null || mtm.PendingAnimations.Count == 0)
+                return 0;
+
+            var count = mtm.PendingAnimations.Count;
+
+            SuppressMotionDone = true;
+            try
+            {
+                mtm.HandleEnterWorld(partArray.Sequence);
+            }
+            finally
+            {
+                SuppressMotionDone = false;
+            }
+
+            if (LogStrandedAnimations)
+                log.Warn($"[ANIM RESYNC] {Name} (0x{Guid}) ({source}) drained {count} entries, PendingMotions now {PhysicsObj?.MovementManager?.MotionInterpreter?.PendingMotions?.Count}");
+
+            return count;
         }
 
         /// <summary>
