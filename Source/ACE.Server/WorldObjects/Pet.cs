@@ -435,6 +435,7 @@ namespace ACE.Server.WorldObjects
                             return false;
                         if (IsDirectVisible(CommandedTarget))
                         {
+                            StuckOverrideTarget = CommandedTarget;   // owner's explicit order is exempt from the owner-has-hurt rule
                             EngageTarget(CommandedTarget);
                             return true;
                         }
