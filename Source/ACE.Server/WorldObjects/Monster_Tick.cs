@@ -597,18 +597,6 @@ namespace ACE.Server.WorldObjects
             var petSelf = (Pet)this;
             var petOwner = petSelf.P_PetOwner;
 
-            // team-play rule: never keep fighting a monster the owner hasn't damaged (covers a
-            // monster that hit the pet first, and one that healed back to full). /pet battle
-            // opponents are pets and are exempt.
-            // a stuck-switch target stays exempt only while it's still the target
-            if (petSelf.StuckOverrideTarget != null && AttackTarget != petSelf.StuckOverrideTarget)
-                petSelf.StuckOverrideTarget = null;
-
-            if (AttackTarget is Creature fightTarget && !(fightTarget is Pet) && fightTarget != petSelf.StuckOverrideTarget && !petSelf.OwnerHasHurt(fightTarget))
-            {
-                AttackTarget = null;
-                CurrentAttackType = null;
-            }
 
             // 25m+ from the owner (or another landblock) -> warp back, even mid-fight and even
             // on /pet stay. Pets in a /pet battle are exempt (warp rebuilds the pet object).
