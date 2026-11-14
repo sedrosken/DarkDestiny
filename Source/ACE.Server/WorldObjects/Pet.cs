@@ -316,22 +316,6 @@ namespace ACE.Server.WorldObjects
         private float stuckBestDist;
         private double stuckSince;
 
-        /// <summary>
-        /// Target picked by PetCheckStuck. Exempt from the owner-has-hurt rule in Monster_Tick
-        /// for as long as it remains the pet's AttackTarget (Monster_Tick clears it otherwise).
-        /// </summary>
-        public Creature StuckOverrideTarget;
-
-        /// <summary>True if the owner (the player directly) has dealt non-zero damage to the target.</summary>
-        public bool OwnerHasHurt(Creature target)
-        {
-            var owner = P_PetOwner;
-            if (owner == null || target?.DamageHistory == null)
-                return false;
-
-            return target.DamageHistory.HasDamager(owner, true);
-        }
-
 
         /// <summary>Called every tick from PetFollowOwner_Prepare. Returns true if it switched targets.</summary>
         public bool PetCheckStuck(double now)
@@ -385,7 +369,6 @@ namespace ACE.Server.WorldObjects
             CommandedTarget = null;
             CurrentAttackType = null;
             stuckWatchTarget = null;
-            StuckOverrideTarget = nearest;   // swarm switch is exempt from the owner-has-hurt rule
             EngageTarget(nearest);
             return true;
         }
@@ -435,7 +418,6 @@ namespace ACE.Server.WorldObjects
                             return false;
                         if (IsDirectVisible(CommandedTarget))
                         {
-                            StuckOverrideTarget = CommandedTarget;   // owner's explicit order is exempt from the owner-has-hurt rule
                             EngageTarget(CommandedTarget);
                             return true;
                         }
