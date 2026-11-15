@@ -678,6 +678,11 @@ namespace ACE.Server.Factories
                 // robes
                 return ClothArmorCantrips.Roll();
             }
+            else if (roll.IsClothing && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
+            {
+                // clothing: just about any wearable cantrip; impen / banes only if the piece has AL
+                return ClothingCantrips.Roll((wo.ArmorLevel ?? 0) > 0);
+            }
             else if (roll.HasArmorLevel(wo) || roll.IsClothing)
             {
                 // armor / clothing cantrip
