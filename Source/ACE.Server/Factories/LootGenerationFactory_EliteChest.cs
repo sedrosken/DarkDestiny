@@ -14,7 +14,7 @@ namespace ACE.Server.Factories
     /// <summary>
     /// Custom "elite" treasure profile (ClassicACE custom content).
     /// Any treasure_death row whose treasure_Type == EliteChestTreasureType gets:
-    ///   - magic items only, 40% weapon / 40% armor / 20% jewelry
+    ///   - magic items only, 40% weapon / 30% armor / 10% clothing / 20% jewelry
     ///   - weapons: 70% melee / 15% missile / 15% caster, at the top wield difficulty (melee 400 / missile 360 / caster 355)
     ///   - armor: 20-40 AL above the max that piece could normally roll at tier 6
     ///   - workmanship 3-5
@@ -103,10 +103,12 @@ namespace ACE.Server.Factories
             var rng = ThreadSafeRandom.Next(0.0f, 1.0f);
 
             if (rng < 0.4f)
-                return TreasureItemType_Orig.Weapon;
+                return TreasureItemType_Orig.Weapon;     // 40%
+            if (rng < 0.7f)
+                return TreasureItemType_Orig.Armor;      // 30%
             if (rng < 0.8f)
-                return TreasureItemType_Orig.Armor;
-            return TreasureItemType_Orig.Jewelry;
+                return TreasureItemType_Orig.Clothing;   // 10%
+            return TreasureItemType_Orig.Jewelry;        // 20%
         }
 
         private static TreasureWeaponType RollEliteWeaponType()

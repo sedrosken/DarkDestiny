@@ -35,7 +35,7 @@ namespace ACE.Server.Factories
                 spells.AddRange(roll.LifeCreatureEnchantments);
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR
-                || (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration && roll.IsJewelry)
+                || (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration && (roll.IsJewelry || roll.IsClothing))
                 || (!roll.IsJewelry && !roll.IsClothing)
                 || IsEliteChestProfile(profile))
             {
@@ -589,7 +589,7 @@ namespace ACE.Server.Factories
 
             if (IsEliteChestProfile(profile))
                 numCantrips = RollEliteNumCantrips();
-            else if (roll.IsClothArmor) // robes
+            else if (UseRobeCantripTables(roll)) // robes
                 numCantrips = CantripChance.RollRobeNumCantrips(profile);
             else
                 numCantrips = CantripChance.RollNumCantrips(profile);
@@ -664,9 +664,16 @@ namespace ACE.Server.Factories
             return finalCantrips;
         }
 
+        // robe-specific cantrip tables (RobeNumCantrips / ClothArmorCantrips) are only populated for CustomDM;
+        // on Infiltration they're empty and indexing/rolling them throws, so robes use the armor/clothing tables instead
+        private static bool UseRobeCantripTables(TreasureRoll roll)
+        {
+            return roll.IsClothArmor && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM;
+        }
+
         private static SpellId RollCantrip(WorldObject wo, TreasureDeath profile, TreasureRoll roll)
         {
-            if (roll.IsClothArmor)
+            if (UseRobeCantripTables(roll))
             {
                 // robes
                 return ClothArmorCantrips.Roll();
