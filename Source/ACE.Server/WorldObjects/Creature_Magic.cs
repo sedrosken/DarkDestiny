@@ -169,7 +169,7 @@ namespace ACE.Server.WorldObjects
 
                 case MagicSchool.ItemEnchantment:
 
-                    if (spell.HasItemCategory || spell.IsPortalSpell)
+                    if (CastsOnWielder(spell, item) || spell.IsPortalSpell)
                         HandleCastSpell(spell, this, item, item, equip: true);
                     else
                         HandleCastSpell(spell, item, item, item, equip: true);
@@ -178,6 +178,40 @@ namespace ACE.Server.WorldObjects
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Returns TRUE if an equipped item's ItemEnchantment spell should land on the wielder (as a weapon aura) instead of on the item itself.
+        /// Must stay in sync between CreateItemSpell and RemoveItemSpell, or the enchantment can't be found on unequip.
+        /// </summary>
+        private static bool CastsOnWielder(Spell spell, WorldObject item)
+        {
+            if (spell.HasItemCategory)
+                return true;
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset > Common.Ruleset.Infiltration)
+                return false;
+
+            // Infiltration: weapons / casters keep their innate weapon buffs on themselves
+            if ((item.ItemType & ItemType.WeaponOrCaster) != 0)
+                return false;
+
+            // weapon buffs (Blood Drinker, Heart Seeker, Defender, Swift Killer, Hermetic Link, Spirit Drinker) on a
+            // non-weapon item (jewelry, clothing, armor, trinkets) would otherwise land on that item and do nothing.
+            // Cast them on the wielder instead; the weapon damage / attack / defense / speed / mana conversion / elemental
+            // calcs already add wielder auras for enchantable weapons.
+            switch (spell.Category)
+            {
+                case SpellCategory.AttackModRaising:
+                case SpellCategory.DamageRaising:
+                case SpellCategory.DefenseModRaising:
+                case SpellCategory.WeaponTimeRaising:
+                case SpellCategory.ManaConversionModRaising:
+                case SpellCategory.SpellDamageRaising:
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -198,7 +232,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            var target = spell.School == MagicSchool.ItemEnchantment && !spell.HasItemCategory ? item : this;
+            var target = spell.School == MagicSchool.ItemEnchantment && !CastsOnWielder(spell, item) ? item : this;
 
             // Retrieve enchantment on target and remove it, if present
             var propertiesEnchantmentRegistry = target.EnchantmentManager.GetEnchantment(spellId, item.Guid.Full);
