@@ -156,6 +156,9 @@ namespace ACE.Server.WorldObjects.Managers
             // check for existing spell in this category
             var entries = GetEnchantments(spell.Category);
 
+            // weapon buffs compete with the same category on the linked registry (weapon <-> wielder aura)
+            var linkedEntries = GetLinkedWeaponBuffs(spell);
+
             // if none, add new record
             if (entries.Count == 0)
             {
@@ -166,6 +169,10 @@ namespace ACE.Server.WorldObjects.Managers
 
                 result.Enchantment = newEntry;
                 result.StackType = StackType.Initial;
+
+                if (linkedEntries.Count > 0)
+                    result.ApplyLinkedStack(linkedEntries, spell, equip);
+
                 return result;
             }
             else if (spell.Flags.HasFlag(SpellFlags.Unsurpassable))
@@ -177,6 +184,10 @@ namespace ACE.Server.WorldObjects.Managers
             }
 
             result.BuildStack(entries, spell, caster, equip, isWeaponSpell);
+
+            // linked entries only affect the surpass / surpassed message, never refresh (they live in another registry)
+            if (linkedEntries.Count > 0)
+                result.ApplyLinkedStack(linkedEntries, spell, equip);
 
             // handle cases:
             // surpassing: new spell is written to next layer
@@ -228,6 +239,24 @@ namespace ACE.Server.WorldObjects.Managers
             // which is the largest of the combined StackTypes
 
             return result;
+        }
+
+        /// <summary>
+        /// For weapon buff categories (Blood Drinker, Heart Seeker, etc.), returns the same-category enchantments
+        /// from the linked registry: the wielder's auras when this is a weapon, or the primary weapon's buffs when this is a creature.
+        /// Only the top spell per category across both registries applies (see WeaponEnchantments).
+        /// </summary>
+        private List<PropertiesEnchantmentRegistry> GetLinkedWeaponBuffs(Spell spell)
+        {
+            if (!WeaponEnchantments.IsWeaponBuffCategory(spell.Category))
+                return new List<PropertiesEnchantmentRegistry>();
+
+            var linked = WeaponEnchantments.GetLinkedRegistryOwner(WorldObject);
+
+            if (linked?.EnchantmentManager == null || linked == WorldObject)
+                return new List<PropertiesEnchantmentRegistry>();
+
+            return linked.EnchantmentManager.GetEnchantments(spell.Category) ?? new List<PropertiesEnchantmentRegistry>();
         }
 
         /// <summary>

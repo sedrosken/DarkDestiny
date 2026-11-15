@@ -5,6 +5,7 @@ using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using ACE.Server.Managers;
 using ACE.Server.WorldObjects;
+using ACE.Server.WorldObjects.Managers;
 
 namespace ACE.Server.Network.Structure
 {
@@ -81,9 +82,8 @@ namespace ACE.Server.Network.Structure
         public uint GetDamage(WorldObject weapon)
         {
             var baseDamage = weapon.GetProperty(PropertyInt.Damage) ?? 0;
-            var damageBonus = weapon.EnchantmentManager.GetDamageBonus();
-            var auraDamageBonus = weapon.Wielder != null && (weapon.WeenieType != WeenieType.Ammunition || PropertyManager.GetBool("show_ammo_buff").Item) ? weapon.Wielder.EnchantmentManager.GetDamageBonus() : 0;
-            Enchantment_Damage = weapon.IsEnchantable ? damageBonus + auraDamageBonus : damageBonus;
+            var showAura = weapon.IsEnchantable && weapon.Wielder != null && (weapon.WeenieType != WeenieType.Ammunition || PropertyManager.GetBool("show_ammo_buff").Item);
+            Enchantment_Damage = WeaponEnchantments.GetDamageBonus(weapon, showAura ? weapon.Wielder : null);
             return (uint)Math.Max(0, baseDamage + Enchantment_Damage);
         }
 
@@ -93,18 +93,17 @@ namespace ACE.Server.Network.Structure
         public uint GetWeaponSpeed(WorldObject weapon)
         {
             var baseSpeed = weapon.GetProperty(PropertyInt.WeaponTime) ?? 0;   // safe to assume defaults here?
-            var speedMod = weapon.EnchantmentManager.GetWeaponSpeedMod();
-            var auraSpeedMod = weapon.Wielder != null ? weapon.Wielder.EnchantmentManager.GetWeaponSpeedMod() : 0;
+            var speedMod = WeaponEnchantments.GetWeaponSpeedMod(weapon, weapon.IsEnchantable ? weapon.Wielder : null);
 
             if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
             {
                 var multSpeedMod = weapon.EnchantmentManager.GetWeaponMultiplicativeSpeedMod();
 
                 int multSpeedBonus = -(int)Math.Round(baseSpeed - (baseSpeed * multSpeedMod));
-                Enchantment_WeaponTime = weapon.IsEnchantable ? speedMod + auraSpeedMod + multSpeedBonus : speedMod + multSpeedBonus;
+                Enchantment_WeaponTime = speedMod + multSpeedBonus;
             }
             else
-                Enchantment_WeaponTime = weapon.IsEnchantable ? speedMod + auraSpeedMod : speedMod;
+                Enchantment_WeaponTime = speedMod;
 
             return (uint)Math.Max(0, baseSpeed + Enchantment_WeaponTime);
         }
@@ -116,9 +115,7 @@ namespace ACE.Server.Network.Structure
         {
             // are there any spells which modify damage variance?
             var baseVariance = weapon.GetProperty(PropertyFloat.DamageVariance) ?? 0.0f;   // safe to assume defaults here?
-            var varianceMod = weapon.EnchantmentManager.GetVarianceMod();
-            var auraVarianceMod = weapon.Wielder != null ? weapon.Wielder.EnchantmentManager.GetVarianceMod() : 1.0f;
-            Enchantment_DamageVariance = weapon.IsEnchantable ? varianceMod * auraVarianceMod : varianceMod;
+            Enchantment_DamageVariance = WeaponEnchantments.GetVarianceMod(weapon, weapon.IsEnchantable ? weapon.Wielder : null);
             return (float)(baseVariance * Enchantment_DamageVariance);
         }
 
@@ -128,9 +125,7 @@ namespace ACE.Server.Network.Structure
         public float GetDamageMultiplier(WorldObject weapon)
         {
             var baseMultiplier = weapon.GetProperty(PropertyFloat.DamageMod) ?? 1.0f;
-            var damageMod = weapon.EnchantmentManager.GetDamageMod();
-            var auraDamageMod = weapon.Wielder != null ? weapon.Wielder.EnchantmentManager.GetDamageMod() : 0.0f;
-            Enchantment_DamageMod = weapon.IsEnchantable ? damageMod + auraDamageMod : damageMod;
+            Enchantment_DamageMod = WeaponEnchantments.GetDamageMod(weapon, weapon.IsEnchantable ? weapon.Wielder : null);
             return (float)(baseMultiplier + Enchantment_DamageMod);
         }
 
@@ -142,9 +137,7 @@ namespace ACE.Server.Network.Structure
             if (weapon is Ammunition) return 1.0f;
 
             var baseOffense = weapon.GetProperty(PropertyFloat.WeaponOffense) ?? 1.0f;
-            var offenseMod = (!weapon.IsRanged || weapon.IsThrownWeapon)? weapon.EnchantmentManager.GetAttackMod(): 0.0f;
-            var auraOffenseMod = weapon.Wielder != null && (!weapon.IsRanged || weapon.IsThrownWeapon) ? weapon.Wielder.EnchantmentManager.GetAttackMod() : 0.0f;
-            Enchantment_WeaponOffense = weapon.IsEnchantable ? offenseMod + auraOffenseMod : offenseMod;
+            Enchantment_WeaponOffense = (!weapon.IsRanged || weapon.IsThrownWeapon) ? WeaponEnchantments.GetAttackMod(weapon, weapon.IsEnchantable ? weapon.Wielder : null) : 0.0f;
             return (float)(baseOffense + Enchantment_WeaponOffense);
         }
 
@@ -164,9 +157,7 @@ namespace ACE.Server.Network.Structure
             if (weapon.WeaponDefense.HasValue && weapon.WeaponDefense.Value > 0 && weapon.WeaponDefense.Value < 1 && ((weapon.GetProperty(PropertyInt.ImbueStackingBits) ?? 0) & 4) != 0)
                 baseDefense += 1;
 
-            var defenseMod = weapon.EnchantmentManager.GetDefenseMod();
-            var auraDefenseMod = weapon.Wielder != null ? weapon.Wielder.EnchantmentManager.GetDefenseMod() : 0.0f;
-            Enchantment_WeaponDefense = weapon.IsEnchantable ? defenseMod + auraDefenseMod : defenseMod;
+            Enchantment_WeaponDefense = WeaponEnchantments.GetDefenseMod(weapon, weapon.IsEnchantable ? weapon.Wielder : null);
             return (float)(baseDefense + Enchantment_WeaponDefense);
         }
     }

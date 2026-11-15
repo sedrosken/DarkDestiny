@@ -9,6 +9,7 @@ using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects.Entity;
+using ACE.Server.WorldObjects.Managers;
 
 namespace ACE.Server.WorldObjects
 {
@@ -130,10 +131,8 @@ namespace ACE.Server.WorldObjects
             if (weapon.WeaponDefense > 0 && weapon.WeaponDefense < 1 && ((weapon.GetProperty(PropertyInt.ImbueStackingBits) ?? 0) & 4) != 0)
                 baseWepDef += 1;
 
-            var defenseMod = baseWepDef + weapon.EnchantmentManager.GetDefenseMod();
-
-            if (weapon.IsEnchantable)
-                defenseMod += wielder.EnchantmentManager.GetDefenseMod();
+            // weapon buffs + wielder auras (enchantable weapons only): top spell per category across both
+            var defenseMod = baseWepDef + WeaponEnchantments.GetDefenseMod(weapon, weapon.IsEnchantable ? wielder : null);
 
             return defenseMod;
         }
@@ -222,10 +221,8 @@ namespace ACE.Server.WorldObjects
             if (weapon == null || (weapon.IsRanged && !weapon.IsThrownWeapon) /* see note above */)
                 return defaultModifier;
 
-            var offenseMod = (float)(weapon.WeaponOffense ?? defaultModifier) + weapon.EnchantmentManager.GetAttackMod();
-
-            if (weapon.IsEnchantable)
-                offenseMod += wielder.EnchantmentManager.GetAttackMod();
+            // weapon buffs + wielder auras (enchantable weapons only): top spell per category across both
+            var offenseMod = (float)(weapon.WeaponOffense ?? defaultModifier) + WeaponEnchantments.GetAttackMod(weapon, weapon.IsEnchantable ? wielder : null);
 
             return offenseMod;
         }
@@ -248,14 +245,8 @@ namespace ACE.Server.WorldObjects
                 var baseMod = (float)(weapon.ManaConversionMod ?? 0.0f);
 
                 // enchantments are multiplicative, so they are only effective if there is a base mod
-                var manaConvMod = weapon.EnchantmentManager.GetManaConvMod();
-
-                var auraManaConvMod = 1.0f;
-
-                if (weapon.IsEnchantable)
-                    auraManaConvMod = wielder?.EnchantmentManager.GetManaConvMod() ?? 1.0f;
-
-                var enchantmentMod = manaConvMod * auraManaConvMod;
+                // weapon buffs + wielder auras (enchantable weapons only): top spell per category across both
+                var enchantmentMod = WeaponEnchantments.GetManaConvMod(weapon, weapon.IsEnchantable ? wielder : null);
 
                 return 1.0f + baseMod * enchantmentMod;
             }
@@ -276,17 +267,17 @@ namespace ACE.Server.WorldObjects
 
             var baseSpeed = weapon?.WeaponTime ?? (int)defaultSpeed;
 
-            var speedMod = weapon != null ? weapon.EnchantmentManager.GetWeaponSpeedMod() : 0;
-            var auraSpeedMod = wielder != null ? wielder.EnchantmentManager.GetWeaponSpeedMod() : 0;
+            // weapon buffs + wielder auras: top spell per category across both (wielder auras still apply unarmed)
+            var speedMod = WeaponEnchantments.GetWeaponSpeedMod(weapon, wielder);
 
             if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
             {
                 var multSpeedMod = weapon != null ? weapon.EnchantmentManager.GetWeaponMultiplicativeSpeedMod() : 1.0f;
 
-                return (uint)Math.Max(0, Math.Round((baseSpeed * multSpeedMod) + speedMod + auraSpeedMod));
+                return (uint)Math.Max(0, Math.Round((baseSpeed * multSpeedMod) + speedMod));
             }
 
-            return (uint)Math.Max(0, baseSpeed + speedMod + auraSpeedMod);
+            return (uint)Math.Max(0, baseSpeed + speedMod);
         }
 
         /// <summary>
@@ -540,10 +531,8 @@ namespace ACE.Server.WorldObjects
             var elementalDamageMod = weapon.ElementalDamageMod ?? 1.0f;
 
             // additive to base multiplier
-            var wielderEnchantments = wielder.EnchantmentManager.GetElementalDamageMod();
-            var weaponEnchantments = weapon.EnchantmentManager.GetElementalDamageMod();
-
-            var enchantments = wielderEnchantments + weaponEnchantments;
+            // weapon buffs + wielder auras: top spell per category across both
+            var enchantments = WeaponEnchantments.GetElementalDamageMod(weapon, wielder);
 
             var modifier = (float)(elementalDamageMod + enchantments);
 

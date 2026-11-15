@@ -2,6 +2,7 @@ using System;
 
 using ACE.Entity.Enum;
 using ACE.Server.WorldObjects;
+using ACE.Server.WorldObjects.Managers;
 
 namespace ACE.Server.Network.Enum
 {
@@ -126,20 +127,20 @@ namespace ACE.Server.Network.Enum
 
         public static float GetManaConversionMod(WorldObject weapon)
         {
-            var wielderManaConvMod = weapon?.Wielder != null && weapon.IsEnchantable ? weapon.Wielder.EnchantmentManager.GetManaConvMod() : 1.0f;
-            var weaponManaConvMod = weapon != null ? weapon.EnchantmentManager.GetManaConvMod() : 1.0f;
+            if (weapon == null)
+                return 1.0f;
 
-            var manaConversionMod = wielderManaConvMod * weaponManaConvMod;
+            var manaConversionMod = WeaponEnchantments.GetManaConvMod(weapon, weapon.IsEnchantable ? weapon.Wielder : null);
 
             return manaConversionMod;
         }
 
         public static float GetElementalDamageBonus(WorldObject weapon)
         {
-            var wielderElementalDamageMod = weapon?.Wielder != null && weapon.IsEnchantable ? weapon.Wielder.EnchantmentManager.GetElementalDamageMod() : 0.0f;
-            var weaponElementalDamageMod = weapon != null ? weapon.EnchantmentManager.GetElementalDamageMod() : 0.0f;
+            if (weapon == null)
+                return 0.0f;
 
-            var elementalDamageMod = wielderElementalDamageMod + weaponElementalDamageMod;
+            var elementalDamageMod = WeaponEnchantments.GetElementalDamageMod(weapon, weapon.IsEnchantable ? weapon.Wielder : null);
 
             return elementalDamageMod;
         }

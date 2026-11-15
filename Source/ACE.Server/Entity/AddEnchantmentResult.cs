@@ -150,6 +150,46 @@ namespace ACE.Server.Entity
                 SetRefreshCaster(caster);
         }
 
+        /// <summary>
+        /// Folds in same-category enchantments from the linked registry (weapon <-> wielder aura),
+        /// so the cast message reflects which one actually applies.
+        /// Uses the same rules as the combined top-layer pick in WeaponEnchantments:
+        /// higher power wins, and at equal power a timed buff beats a gear (equip) buff.
+        /// These are never added to Refresh, since they can't be refreshed from this registry.
+        /// </summary>
+        public void ApplyLinkedStack(List<PropertiesEnchantmentRegistry> linkedEntries, Spell spell, bool equip)
+        {
+            Surpass ??= new List<PropertiesEnchantmentRegistry>();
+            Refresh ??= new List<PropertiesEnchantmentRegistry>();
+            Surpassed ??= new List<PropertiesEnchantmentRegistry>();
+
+            var powerLevel = spell.Power;
+
+            foreach (var entry in linkedEntries)
+            {
+                if (powerLevel > entry.PowerLevel)
+                    Surpass.Add(entry);
+                else if (powerLevel < entry.PowerLevel)
+                    Surpassed.Add(entry);
+                else
+                {
+                    var entryIsGear = entry.Duration == -1;
+
+                    if (equip && !entryIsGear)
+                        Surpassed.Add(entry);       // gear aura vs timed weapon buff: timed wins
+                    else
+                        Surpass.Add(entry);         // timed vs gear, or same kind: new one takes the message
+                }
+            }
+
+            // strongest first, so SetSpell() names the right spell
+            Surpass = Surpass.OrderByDescending(i => i.PowerLevel).ToList();
+            Surpassed = Surpassed.OrderByDescending(i => i.PowerLevel).ToList();
+
+            SetStackType();
+            SetSpell();
+        }
+
         public void SetStackType()
         {
             if (Surpassed.Count > 0)

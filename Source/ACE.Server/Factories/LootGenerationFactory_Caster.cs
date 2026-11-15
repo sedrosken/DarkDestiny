@@ -99,7 +99,8 @@ namespace ACE.Server.Factories
                 // new method - mutation scripts
 
                 // mutate ManaConversionMod
-                var mutationFilter = MutationCache.GetMutation("Casters.caster.txt");
+                // Infiltration / CustomDM have their own caster.txt
+                var mutationFilter = MutationCache.GetMutation(GetRulesetScript("Casters", "caster.txt"));
                 mutationFilter.TryMutate(wo, profile.Tier, profile.LootQualityMod);
 
                 // mutate ElementalDamageMod / WieldRequirements
@@ -119,7 +120,8 @@ namespace ACE.Server.Factories
                 }
 
                 // mutate WeaponDefense
-                mutationFilter = MutationCache.GetMutation("Casters.weapon_defense.txt");
+                // Infiltration / CustomDM have their own weapon_defense.txt (which also contains missile / magic defense)
+                mutationFilter = MutationCache.GetMutation(GetRulesetScript("Casters", "weapon_defense.txt"));
                 mutationFilter.TryMutate(wo, profile.Tier, profile.LootQualityMod);
             }
 

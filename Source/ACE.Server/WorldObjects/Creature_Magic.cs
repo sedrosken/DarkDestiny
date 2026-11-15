@@ -198,20 +198,8 @@ namespace ACE.Server.WorldObjects
 
             // weapon buffs (Blood Drinker, Heart Seeker, Defender, Swift Killer, Hermetic Link, Spirit Drinker) on a
             // non-weapon item (jewelry, clothing, armor, trinkets) would otherwise land on that item and do nothing.
-            // Cast them on the wielder instead; the weapon damage / attack / defense / speed / mana conversion / elemental
-            // calcs already add wielder auras for enchantable weapons.
-            switch (spell.Category)
-            {
-                case SpellCategory.AttackModRaising:
-                case SpellCategory.DamageRaising:
-                case SpellCategory.DefenseModRaising:
-                case SpellCategory.WeaponTimeRaising:
-                case SpellCategory.ManaConversionModRaising:
-                case SpellCategory.SpellDamageRaising:
-                    return true;
-            }
-
-            return false;
+            // Cast them on the wielder instead; the weapon calcs combine wielder auras with the weapon's own buffs (WeaponEnchantments).
+            return ACE.Server.WorldObjects.Managers.WeaponEnchantments.IsWeaponBuffCategory(spell.Category);
         }
 
         /// <summary>

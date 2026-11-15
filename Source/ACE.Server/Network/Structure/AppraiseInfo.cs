@@ -10,6 +10,7 @@ using ACE.Server.Entity;
 using ACE.Server.Managers;
 using ACE.Server.Network.Enum;
 using ACE.Server.WorldObjects;
+using ACE.Server.WorldObjects.Managers;
 
 namespace ACE.Server.Network.Structure
 {
@@ -502,10 +503,7 @@ namespace ACE.Server.Network.Structure
 
             if (PropertiesFloat.ContainsKey(PropertyFloat.WeaponDefense) && !(wo is Ammunition))
             {
-                var defenseMod = wo.EnchantmentManager.GetDefenseMod();
-                var auraDefenseMod = wo.Wielder != null && wo.IsEnchantable ? wo.Wielder.EnchantmentManager.GetDefenseMod() : 0.0f;
-
-                PropertiesFloat[PropertyFloat.WeaponDefense] += defenseMod + auraDefenseMod;
+                PropertiesFloat[PropertyFloat.WeaponDefense] += WeaponEnchantments.GetDefenseMod(wo, wo.IsEnchantable ? wo.Wielder : null);
             }
 
             if (PropertiesFloat.TryGetValue(PropertyFloat.ManaConversionMod, out var manaConvMod))

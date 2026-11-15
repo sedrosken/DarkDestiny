@@ -120,12 +120,26 @@ namespace ACE.Server.Factories
             return success;
         }
 
+        /// <summary>
+        /// Returns "{folder}.Infiltration.{file}" / "{folder}.CustomDM.{file}" for those rulesets, otherwise the EoR "{folder}.{file}"
+        /// </summary>
+        private static string GetRulesetScript(string folder, string file)
+        {
+            if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
+            {
+                string ruleset = Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration ? "Infiltration" : "CustomDM";
+                return $"{folder}.{ruleset}.{file}";
+            }
+            return $"{folder}.{file}";
+        }
+
         private static string GetMutationScript_ArmorLevel(WorldObject wo, TreasureRoll roll)
         {
             if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
             {
                 string ruleset = Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration ? "Infiltration" : "CustomDM";
-                if (roll.ArmorType == TreasureArmorType.Covenant)
+                // Olthoi armor (ace37191 etc.) has no Infiltration script of its own, it rolls like covenant
+                if (roll.ArmorType == TreasureArmorType.Covenant || roll.ArmorType == TreasureArmorType.Olthoi)
                 {
                     if (wo.IsShield)
                         return $"ArmorLevel.{ruleset}.covenant_shield_level.txt";

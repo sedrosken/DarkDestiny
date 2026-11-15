@@ -2,6 +2,7 @@ using System;
 
 using ACE.Entity.Enum.Properties;
 using ACE.Server.WorldObjects;
+using ACE.Server.WorldObjects.Managers;
 
 namespace ACE.Server.Entity
 {
@@ -46,19 +47,14 @@ namespace ACE.Server.Entity
             if (weapon == null)
                 return;
 
-            DamageBonus += weapon.EnchantmentManager.GetDamageBonus();
-            VarianceMod *= weapon.EnchantmentManager.GetVarianceMod();
+            // factor in wielder auras for enchantable weapons
+            // weapon buffs + wielder auras: only the top spell per category counts across both
+            var auraSource = weapon.IsEnchantable ? wielder : null;
 
-            DamageMod = (float)(weapon.GetProperty(PropertyFloat.DamageMod) ?? 1.0f) + weapon.EnchantmentManager.GetDamageMod();
+            DamageBonus += WeaponEnchantments.GetDamageBonus(weapon, auraSource);
+            VarianceMod *= WeaponEnchantments.GetVarianceMod(weapon, auraSource);
 
-            if (weapon.IsEnchantable)
-            {
-                // factor in wielder auras for enchantable weapons
-                DamageBonus += wielder.EnchantmentManager.GetDamageBonus();
-                VarianceMod *= wielder.EnchantmentManager.GetVarianceMod();
-
-                DamageMod += wielder.EnchantmentManager.GetDamageMod();
-            }
+            DamageMod = (float)(weapon.GetProperty(PropertyFloat.DamageMod) ?? 1.0f) + WeaponEnchantments.GetDamageMod(weapon, auraSource);
         }
     }
 }

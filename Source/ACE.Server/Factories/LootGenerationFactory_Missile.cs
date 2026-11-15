@@ -73,7 +73,8 @@ namespace ACE.Server.Factories
             mutationFilter.TryMutate(wo, profile.Tier, EliteDamageQualityMod(profile, EliteMissileDamageQualityMod));
 
             // mutate WeaponDefense
-            mutationFilter = MutationCache.GetMutation("MissileWeapons.weapon_defense.txt");
+            // Infiltration / CustomDM have their own weapon_defense.txt (which also contains missile / magic defense)
+            mutationFilter = MutationCache.GetMutation(GetRulesetScript("MissileWeapons", "weapon_defense.txt"));
 
             mutationFilter.TryMutate(wo, profile.Tier, profile.LootQualityMod);
 

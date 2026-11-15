@@ -1574,6 +1574,7 @@ namespace ACE.Server.Factories
             allCantrips.AddRange(MeleeCantrips.GetSpellIdList());
             allCantrips.AddRange(MissileCantrips.GetSpellIdList());
             allCantrips.AddRange(ClothArmorCantrips.GetSpellIdList());
+            allCantrips.AddRange(ClothingCantrips.GetSpellIdList());
 
             allCantrips = allCantrips.Distinct().ToList();
 
