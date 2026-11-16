@@ -432,7 +432,7 @@ namespace ACE.Server.Physics.Common
 
         public static bool InitialClamp = true;
 
-        public static float InitialClamp_Dist = 112.5f;
+        public static float InitialClamp_Dist = 300f;
         public static float InitialClamp_DistSq = InitialClamp_Dist * InitialClamp_Dist;
 
         /// <summary>
