@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+using log4net;
+
 using ACE.Common;
 using ACE.Common.Extensions;
 using ACE.Entity.Enum;
@@ -29,6 +31,8 @@ namespace ACE.Server.WorldObjects.Managers
 
     public class EnchantmentManager
     {
+        private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         public WorldObject WorldObject { get; }
         public Player Player { get; }
 
@@ -223,6 +227,17 @@ namespace ACE.Server.WorldObjects.Managers
 
                 duration *= GetApprenticeDurationMod(spell, caster, isWeaponSpell); // Dark Destiny: Apprentice perks
 
+                // Dark Destiny: a refresh used to keep the old registry value and only extend the duration, so a buff
+                // first cast without the specialization upgrade stayed at its old strength when recast with it.
+                // The refreshing cast replaces the value (non-DoT, non-equip only).
+                if (!equip && spell.DotDuration == 0 && !refreshSpell.StatModValue.Equals(spell.StatModVal))
+                {
+                    if (ACE.Server.WorldObjects.Player.LogSpecUpgrade)
+                        log.Warn($"[SPEC UPGRADE] refresh of {spell.Name} ({spell.Id}) on {WorldObject.Name}: StatModValue {refreshSpell.StatModValue:N1} -> {spell.StatModVal:N1}");
+
+                    refreshSpell.StatModValue = spell.StatModVal;
+                }
+
                 var timeRemaining = refreshSpell.Duration + refreshSpell.StartTime;
 
                 if (duration > timeRemaining)
@@ -325,6 +340,9 @@ namespace ACE.Server.WorldObjects.Managers
             entry.StatModType = spell.StatModType;
             entry.StatModKey = spell.StatModKey;
             entry.StatModValue = spell.StatModVal;
+
+            if (ACE.Server.WorldObjects.Player.LogSpecUpgrade && spell.IsSpecializationUpgraded)
+                log.Warn($"[SPEC UPGRADE] enchantment entry for {spell.Name} ({spell.Id}) on {WorldObject.Name}: StatModValue={entry.StatModValue:N1} Duration={entry.Duration:N0} powerSpell={(uint)spell.PowerSpellId}");
 
             if (spell.IsBeneficial) // should "server" data be fixed or is this the better way to do this?
                 entry.StatModType |= EnchantmentTypeFlags.Beneficial;
