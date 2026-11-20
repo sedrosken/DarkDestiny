@@ -315,7 +315,7 @@ namespace ACE.Server.Entity
             {
                 target.DefaultCombatStyle = source.DefaultCombatStyle;  // unused currently, keeping this around in case its needed..
                 target.W_AttackType = source.W_AttackType;
-                target.W_WeaponType = source.W_WeaponType;
+                target.W_WeaponType = GetWeaponTypeOrSkill(source);
             }
             else if (source is MissileLauncher)
                 target.DefaultCombatStyle = source.DefaultCombatStyle;
@@ -380,7 +380,7 @@ namespace ACE.Server.Entity
                 return;
             }
 
-            if (target is MeleeWeapon && target.W_WeaponType == WeaponType.Undef)
+            if (target is MeleeWeapon && GetWeaponTypeOrSkill(target) == WeaponType.Undef)
             {
                 // 'difficult to master' weapons were not tailorable
                 player.SendUseDoneEvent(WeenieError.YouDoNotPassCraftingRequirements);
@@ -575,13 +575,12 @@ namespace ACE.Server.Entity
         {
             //Console.WriteLine($"WeaponApply({player.Name}, {source.Name}, {target.Name})");
 
-            // verify weapon type
+            // verify weapon type (custom: damage type no longer has to match)
             switch (source.TargetType)
             {
                 case ItemType.MeleeWeapon:
 
-                    if (source.W_WeaponType != target.W_WeaponType ||
-                        source.W_DamageType != target.W_DamageType)
+                    if (GetWeaponTypeOrSkill(source) != GetWeaponTypeOrSkill(target))
                     {
                         player.SendUseDoneEvent(WeenieError.YouDoNotPassCraftingRequirements);
                         return;
@@ -590,8 +589,7 @@ namespace ACE.Server.Entity
 
                 case ItemType.MissileWeapon:
 
-                    if (source.DefaultCombatStyle != target.DefaultCombatStyle ||
-                        source.W_DamageType != DamageType.Undef && source.W_DamageType != target.W_DamageType)
+                    if (source.DefaultCombatStyle != target.DefaultCombatStyle)
                     {
                         player.SendUseDoneEvent(WeenieError.YouDoNotPassCraftingRequirements);
                         return;
@@ -599,12 +597,6 @@ namespace ACE.Server.Entity
                     break;
 
                 case ItemType.Caster:
-
-                    if (source.W_DamageType != DamageType.Undef && source.W_DamageType != target.W_DamageType)
-                    {
-                        player.SendUseDoneEvent(WeenieError.YouDoNotPassCraftingRequirements);
-                        return;
-                    }
                     break;
 
                 default:
@@ -679,6 +671,29 @@ namespace ACE.Server.Entity
 
             player.UpdateProperty(target, PropertyInt.HookType, source.HookType);
             player.UpdateProperty(target, PropertyInt.HookPlacement, source.HookPlacement);
+        }
+
+        // custom: classic weapons have no PropertyInt 353 WeaponType -> fall back to WeaponSkill
+        public static WeaponType GetWeaponTypeOrSkill(WorldObject wo)
+        {
+            if (wo.W_WeaponType != WeaponType.Undef)
+                return wo.W_WeaponType;
+
+            switch (wo.WeaponSkill)
+            {
+                case Skill.Sword:           return WeaponType.Sword;
+                case Skill.Axe:             return WeaponType.Axe;
+                case Skill.Mace:            return WeaponType.Mace;
+                case Skill.Spear:           return WeaponType.Spear;
+                case Skill.Dagger:          return WeaponType.Dagger;
+                case Skill.Staff:           return WeaponType.Staff;
+                case Skill.UnarmedCombat:   return WeaponType.Unarmed;
+                case Skill.Bow:             return WeaponType.Bow;
+                case Skill.Crossbow:        return WeaponType.Crossbow;
+                case Skill.ThrownWeapon:    return WeaponType.Thrown;
+                case Skill.TwoHandedCombat: return WeaponType.TwoHanded;
+            }
+            return WeaponType.Undef;
         }
 
         public static uint? GetArmorWCID(EquipMask validLocations)
