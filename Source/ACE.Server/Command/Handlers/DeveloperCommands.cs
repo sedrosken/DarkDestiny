@@ -422,11 +422,36 @@ namespace ACE.Server.Command.Handlers
         /// <summary>
         /// Debug command to print out all of the active players connected too the server.
         /// </summary>
-        [CommandHandler("listplayers", AccessLevel.Player, CommandHandlerFlag.None, 0, "Displays all of the active players connected too the server.")]
+        [CommandHandler("listplayers", AccessLevel.Player, CommandHandlerFlag.None, 0, "Displays all of the active players connected too the server.", "[accesslevel] [ip]\nAppend 'ip' (admin only) to group online characters by connected IP address, largest groups first.")]
         public static void HandleListPlayers(Session session, params string[] parameters)
         {
             string message = "";
             uint playerCounter = 0;
+
+            // console (session == null) and staff see everything; regular players only see names of non-staff characters
+            var callerIsStaff = session == null || session.AccessLevel > AccessLevel.Player;
+
+            // "ip" / "-ip" switch can appear anywhere in the parameters; strip it before access level parsing
+            var groupByIp = false;
+            if (parameters?.Length > 0)
+            {
+                var remaining = new List<string>();
+                foreach (var p in parameters)
+                {
+                    if (p.Equals("ip", StringComparison.OrdinalIgnoreCase) || p.Equals("-ip", StringComparison.OrdinalIgnoreCase))
+                        groupByIp = true;
+                    else
+                        remaining.Add(p);
+                }
+                parameters = remaining.ToArray();
+            }
+
+            // IP listing is restricted to admins (and the server console)
+            if (groupByIp && session != null && session.AccessLevel < AccessLevel.Admin)
+            {
+                CommandHandlerHelper.WriteOutputInfo(session, "You do not have permission to list by IP.", ChatMessageType.Broadcast);
+                return;
+            }
 
             AccessLevel? targetAccessLevel = null;
             if (parameters?.Length > 0)
@@ -453,8 +478,7 @@ namespace ACE.Server.Command.Handlers
             if (targetAccessLevel.HasValue)
                 message += $"Listing only {targetAccessLevel.Value.ToString()}s:\n";
 
-            // console (session == null) and staff see everything; regular players only see names of non-staff characters
-            var callerIsStaff = session == null || session.AccessLevel > AccessLevel.Player;
+            var filtered = new List<Player>();
 
             foreach (var player in PlayerManager.GetAllOnline())
             {
@@ -464,8 +488,43 @@ namespace ACE.Server.Command.Handlers
                 if (!callerIsStaff && player.Account.AccessLevel > (uint)AccessLevel.Player)
                     continue; // don't reveal staff (including hidden admins) to players
 
-                message += callerIsStaff ? $"{player.Name} : {player.Session.AccountId}\n" : $"{player.Name}\n";
+                filtered.Add(player);
                 playerCounter++;
+            }
+
+            if (groupByIp)
+            {
+                var groups = filtered
+                    .GroupBy(p => p.Session?.EndPointC2S?.Address?.ToString() ?? "unknown")
+                    .OrderByDescending(g => g.Count())
+                    .ThenBy(g => g.Key);
+
+                var uniqueIps = 0;
+                foreach (var group in groups)
+                {
+                    uniqueIps++;
+                    var accountCount = group.Select(p => p.Session?.AccountId).Distinct().Count();
+                    var flag = group.Count() > 1 ? " [MULTI]" : "";
+
+                    message += $"{group.Key} - {group.Count()} character(s), {accountCount} account(s){flag}\n";
+                    foreach (var player in group.OrderBy(p => p.Name))
+                        message += $"    {player.Name} : {player.Session?.AccountId} ({player.Session?.Account})\n";
+                }
+
+                message += $"Unique IPs: {uniqueIps}\n";
+            }
+            else
+            {
+                foreach (var player in filtered)
+                    message += callerIsStaff ? $"{player.Name} : {player.Session.AccountId}\n" : $"{player.Name}\n";
+
+                // count only, never the addresses themselves (filtered list already excludes staff for regular players)
+                var uniqueIpCount = filtered
+                    .Select(p => p.Session?.EndPointC2S?.Address?.ToString() ?? "unknown")
+                    .Distinct()
+                    .Count();
+
+                message += $"Unique IPs: {uniqueIpCount}\n";
             }
 
             message += $"Total connected Players: {playerCounter}\n";
