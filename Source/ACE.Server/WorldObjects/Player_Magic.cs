@@ -738,7 +738,45 @@ namespace ACE.Server.WorldObjects
             }
 
             if (FastTick)
+            {
+                var diagCastNum = MagicState.CastNum;
+
+                // diagnostics: when does the windup physics motion actually get applied, relative to cast start
+                castChain.AddAction(this, () =>
+                {
+                    DiagCastNum = diagCastNum;
+                    DiagWindupApplyTime = DateTime.UtcNow;
+                });
+
                 windupTime = EnqueueMotionAction(castChain, spell.Formula.WindupGestures, CastSpeed, MotionStance.Magic, checkCasting: true);
+                DiagWindupExpected = windupTime;
+            }
+        }
+
+        // cast watchdog diagnostics (see CastGestureWatchdog)
+        private int DiagCastNum;
+        private DateTime DiagWindupApplyTime = DateTime.MinValue;
+        private float DiagWindupExpected;
+        private string DiagGestureSeq = "n/a";
+        private double DiagGestureSinceWindup = -1.0;
+
+        /// <summary>
+        /// Dumps the server-side Sequence: every anim node as id:low-high@fps, * = CurrAnim, ^ = FirstCyclic, plus FrameNumber
+        /// </summary>
+        public string DescribeSequence()
+        {
+            var seq = PhysicsObj?.PartArray?.Sequence;
+            if (seq?.AnimList == null)
+                return "n/a";
+
+            var nodes = new List<string>();
+            for (var n = seq.AnimList.First; n != null; n = n.Next)
+            {
+                var a = n.Value;
+                var mark = (n == seq.CurrAnim ? "*" : "") + (n == seq.FirstCyclic ? "^" : "");
+                nodes.Add($"{a.Anim?.ID:X8}:{a.get_low_frame()}-{a.get_high_frame()}@{a.Framerate:N1}{mark}");
+            }
+            return $"frame={seq.FrameNumber:N1} [{string.Join(", ", nodes)}]";
         }
 
         public void DoCastGesture(Spell spell, WorldObject casterItem, ActionChain castChain)
@@ -768,6 +806,10 @@ namespace ACE.Server.WorldObjects
                 if (!MagicState.IsCasting) return;
 
                 MagicState.CastGestureStartTime = DateTime.UtcNow;
+
+                // diagnostics: where is the server physics when the timeline thinks the windup is over
+                DiagGestureSeq = DescribeSequence();
+                DiagGestureSinceWindup = DiagCastNum == MagicState.CastNum && DiagWindupApplyTime != DateTime.MinValue ? (DateTime.UtcNow - DiagWindupApplyTime).TotalSeconds : -1.0;
 
                 if (FastTick)
                     PhysicsObj.StopCompletely(false);
@@ -836,7 +878,10 @@ namespace ACE.Server.WorldObjects
                 $"PendingMotions={physicsObj?.MovementManager?.MotionInterpreter?.PendingMotions?.Count} " +
                 $"CurrAnim={seq?.CurrAnim?.Value?.Anim?.ID:X8} Frame={frameInfo} " +
                 $"SinceCastStart={sinceCastStart:N2}s SinceGesture={sinceGesture:N2}s GestureExpected={gestureExpected:N2}s PhysicsAge={physicsAge:N2}s CastSpeed={CastSpeed:N2} " +
-                $"AnimQueue={DescribeAnimQueue()}");
+                $"AnimQueue={DescribeAnimQueue()} " +
+                $"WindupApplyAfterCastStart={(DiagCastNum == castNum && DiagWindupApplyTime != DateTime.MinValue ? (DiagWindupApplyTime - MagicState.StartTime).TotalSeconds : -1.0):N2}s " +
+                $"WindupExpected={DiagWindupExpected:N2}s GestureSinceWindupApply={DiagGestureSinceWindup:N2}s " +
+                $"SeqAtGesture={DiagGestureSeq} SeqNow={DescribeSequence()}");
 
             // same thing HandleMotionDone_Magic would have done
             MagicState.CastMotionDone = true;
