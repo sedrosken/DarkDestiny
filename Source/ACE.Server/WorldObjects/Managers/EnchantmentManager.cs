@@ -33,6 +33,11 @@ namespace ACE.Server.WorldObjects.Managers
     {
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        /// <summary>
+        /// Logs [SPEC UPGRADE] lines when a specialization-upgraded spell is written to, or refreshes, the enchantment registry
+        /// </summary>
+        public static bool LogSpecUpgrade = true;
+
         public WorldObject WorldObject { get; }
         public Player Player { get; }
 
@@ -232,7 +237,7 @@ namespace ACE.Server.WorldObjects.Managers
                 // The refreshing cast replaces the value (non-DoT, non-equip only).
                 if (!equip && spell.DotDuration == 0 && !refreshSpell.StatModValue.Equals(spell.StatModVal))
                 {
-                    if (ACE.Server.WorldObjects.Player.LogSpecUpgrade)
+                    if (LogSpecUpgrade)
                         log.Warn($"[SPEC UPGRADE] refresh of {spell.Name} ({spell.Id}) on {WorldObject.Name}: StatModValue {refreshSpell.StatModValue:N1} -> {spell.StatModVal:N1}");
 
                     refreshSpell.StatModValue = spell.StatModVal;
@@ -341,7 +346,7 @@ namespace ACE.Server.WorldObjects.Managers
             entry.StatModKey = spell.StatModKey;
             entry.StatModValue = spell.StatModVal;
 
-            if (ACE.Server.WorldObjects.Player.LogSpecUpgrade && spell.IsSpecializationUpgraded)
+            if (LogSpecUpgrade && spell.IsSpecializationUpgraded)
                 log.Warn($"[SPEC UPGRADE] enchantment entry for {spell.Name} ({spell.Id}) on {WorldObject.Name}: StatModValue={entry.StatModValue:N1} Duration={entry.Duration:N0} powerSpell={(uint)spell.PowerSpellId}");
 
             if (spell.IsBeneficial) // should "server" data be fixed or is this the better way to do this?
