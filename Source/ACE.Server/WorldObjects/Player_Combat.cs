@@ -76,7 +76,7 @@ namespace ACE.Server.WorldObjects
 
             var skill = ConvertToMoASkill(weapon.WeaponSkill);
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Ruleset.EoR || Common.ConfigManager.Config.Server.WorldRuleset == Ruleset.Infiltration)
+           
             {
                 // DualWieldAlternate will be TRUE if *next* attack is offhand
                 if (IsDualWieldAttack && !DualWieldAlternate)
@@ -589,9 +589,6 @@ namespace ACE.Server.WorldObjects
         public int TakeDamage(WorldObject source, DamageType damageType, float _amount, BodyPart bodyPart, bool crit = false, AttackConditions attackConditions = AttackConditions.None, bool blocked = false, int damageBlocked = 0, bool perfectblock = false, bool sourceStunned = false)
         {
             if (Invincible || IsDead || IsOnNoDamageLandblock) return 0;
-
-            // creature pet system: safety net -- no pet (yours or anyone's) ever damages a player
-            if (source is Pet) return 0;
 
             var creatureAttacker = source as Creature;
 
