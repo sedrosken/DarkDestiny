@@ -209,7 +209,7 @@ namespace ACE.Server.WorldObjects
 
         public bool WorldEntryCollision { get; set; }
 
-        public void ProjectileImpact()
+        public void ProjectileImpact(bool explode = true)
         {
             //Console.WriteLine($"{Name}.ProjectileImpact()");
 
@@ -225,12 +225,14 @@ namespace ACE.Server.WorldObjects
             if (PhysicsObj.entering_world)
             {
                 // this path should only happen if spell_projectile_ethereal = false
-                EnqueueBroadcast(new GameMessageScript(Guid, PlayScript.Launch, GetProjectileScriptIntensity(SpellType)));
+                if (explode)
+                    EnqueueBroadcast(new GameMessageScript(Guid, PlayScript.Launch, GetProjectileScriptIntensity(SpellType)));
                 WorldEntryCollision = true;
             }
 
             EnqueueBroadcast(new GameMessageSetState(this, PhysicsObj.State));
-            EnqueueBroadcast(new GameMessageScript(Guid, PlayScript.Explode, GetProjectileScriptIntensity(SpellType)));
+            if (explode)
+                EnqueueBroadcast(new GameMessageScript(Guid, PlayScript.Explode, GetProjectileScriptIntensity(SpellType)));
 
             // this should only be needed for spell_projectile_ethereal = true,
             // however it can also fix a display issue on client in default mode,
@@ -264,58 +266,143 @@ namespace ACE.Server.WorldObjects
         }
 
         /// <summary>
-        /// Max distance from the caster -> target line at which a closed door / wall object is considered to be in the way
+        /// Max horizontal distance from the projectile's path at which a closed door / wall object is considered to be in the way
         /// </summary>
         private const float DoorBlockRadius = 1.5f;
 
         /// <summary>
-        /// Returns TRUE if a closed door (or wall object) sits on the line between the projectile's source and the target.
-        /// Open doors never block. Doors behind the caster or behind the target are ignored.
+        /// How far an untargeted projectile is traced along its heading when looking for a closed door
         /// </summary>
-        private bool IsBlockedByClosedDoor(Creature target)
+        private const float UntargetedDoorCheckRange = 40.0f;
+
+        /// <summary>
+        /// How far in front of the door's origin an intercepted projectile explodes
+        /// </summary>
+        private const float DoorImpactBackoff = 0.4f;
+
+        /// <summary>
+        /// Finds the closest closed door (or wall object) on the straight path from the caster along 'path'.
+        /// path is an offset from the caster. t is the door's position along it (0 = caster, 1 = end of path).
+        /// Open doors never block. Doors behind the caster or past the end of the path are ignored.
+        /// </summary>
+        private WorldObject FindClosedDoorOnPath(Position from, Vector3 path, WorldObject ignore, out float t)
         {
+            t = 0.0f;
+
             if (!PropertyManager.GetBool("spell_projectile_door_block").Item)
-                return false;
+                return null;
 
-            if (target.Location == null)
-                return false;
-
-            // doors are looked up in the caster's landblock (falling back to the target's), so this applies to monsters and pets as well as players
-            var landblock = ProjectileSource?.CurrentLandblock ?? target.CurrentLandblock;
+            var landblock = ProjectileSource?.CurrentLandblock ?? ignore?.CurrentLandblock;
 
             if (landblock == null)
-                return false;
+                return null;
 
-            var from = ProjectileSource?.Location ?? SpawnPos;
+            // doors are tall: measure horizontally, and only use height to rule out doors on other floors
+            var flat = new Vector3(path.X, path.Y, 0.0f);
+            var flatLenSq = flat.LengthSquared();
 
-            if (from == null)
-                return false;
+            if (flatLenSq <= 0.0f)
+                return null;
 
-            var end = from.GetOffset(target.Location);
-            var lenSq = end.LengthSquared();
+            WorldObject closest = null;
+            var closestT = float.MaxValue;
 
-            if (lenSq <= 0.0f)
-                return false;
-
-            var doors = landblock.GetClosedDoorsAndWalls();
-
-            foreach (var door in doors)
+            foreach (var door in landblock.GetDoorsAndWalls())
             {
-                if (door.Location == null || door == target)
+                if (door.IsOpen || door.Location == null || door == ignore)
                     continue;
 
                 var p = from.GetOffset(door.Location);
 
-                // position of the door along the caster -> target line (0 = caster, 1 = target)
-                var t = Vector3.Dot(p, end) / lenSq;
+                var doorT = (p.X * flat.X + p.Y * flat.Y) / flatLenSq;
 
-                if (t <= 0.0f || t >= 1.0f)
+                if (doorT <= 0.0f || doorT >= 1.0f || doorT >= closestT)
                     continue;
 
-                if (Vector3.Distance(p, end * t) < DoorBlockRadius)
-                    return true;
+                var dx = p.X - flat.X * doorT;
+                var dy = p.Y - flat.Y * doorT;
+
+                if (dx * dx + dy * dy >= DoorBlockRadius * DoorBlockRadius)
+                    continue;
+
+                if (Math.Abs(p.Z - path.Z * doorT) >= 3.0f)
+                    continue;
+
+                closest = door;
+                closestT = doorT;
             }
-            return false;
+
+            t = closestT;
+            return closest;
+        }
+
+        /// <summary>
+        /// Returns TRUE if a closed door sits between the projectile's source and the target
+        /// </summary>
+        public bool IsBlockedByClosedDoor(Creature target)
+        {
+            var from = ProjectileSource?.Location ?? SpawnPos;
+
+            if (from == null || target.Location == null)
+                return false;
+
+            return FindClosedDoorOnPath(from, from.GetOffset(target.Location), target, out _) != null;
+        }
+
+        /// <summary>
+        /// Called once, right after launch. If a closed door is on this projectile's path (to its target, or along its heading if untargeted),
+        /// the projectile flies normally on the client and is detonated against the door when it gets there, like a wall.
+        /// Server physics is stopped so it can't carry on through the door.
+        /// Returns TRUE if the projectile was intercepted.
+        /// </summary>
+        public bool InterceptAtClosedDoor(WorldObject target)
+        {
+            var from = ProjectileSource?.Location;
+
+            if (from == null || SpawnPos == null || PhysicsObj == null)
+                return false;
+
+            var velocity = PhysicsObj.Velocity;
+            var speed = velocity.Length();
+
+            if (speed <= 0.0f)
+                return false;
+
+            Vector3 path;
+
+            if (target?.Location != null)
+                path = from.GetOffset(target.Location);
+            else
+                path = Vector3.Normalize(velocity) * UntargetedDoorCheckRange;
+
+            var door = FindClosedDoorOnPath(from, path, target, out var t);
+
+            if (door == null)
+                return false;
+
+            // distance travelled from the spawn point to just short of the door
+            var spawnDist = from.GetOffset(SpawnPos).Length();
+            var travel = Math.Max(0.0f, path.Length() * t - DoorImpactBackoff - spawnDist);
+
+            var player = ProjectileSource as Player;
+
+            if (player != null && player.DebugSpell)
+                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"{Name}: closed door {door.Name} ({door.Guid}) in path, detonating after {travel:0.00}m", ChatMessageType.Broadcast));
+
+            PhysicsObj.set_active(false);
+
+            var chain = new ActionChain();
+            chain.AddDelaySeconds(travel / speed);
+            chain.AddAction(this, () =>
+            {
+                if (IsDestroyed)
+                    return;
+
+                ProjectileImpact();
+            });
+            chain.EnqueueChain();
+
+            return true;
         }
 
         public override void OnCollideObject(WorldObject target)
@@ -330,21 +417,26 @@ namespace ACE.Server.WorldObjects
                 player.Session.Network.EnqueueSend(new GameMessageSystemChat(Info.ToString(), ChatMessageType.Broadcast));
             }
 
-            ProjectileImpact();
-
-            // ensure valid creature target
             var creatureTarget = target as Creature;
-            if (creatureTarget == null || target == ProjectileSource)
-                return;
 
-            // custom: a closed door between the caster and the target stops the spell
-            if (IsBlockedByClosedDoor(creatureTarget))
+            // custom: a closed door between the caster and the target stops the spell.
+            // vanishes quietly (no explosion on the target) as a backstop for doors that close mid-flight
+            if (creatureTarget != null && creatureTarget != ProjectileSource && IsBlockedByClosedDoor(creatureTarget))
             {
+                ProjectileImpact(false);
+
+
                 if (player != null && player.DebugSpell)
                     player.Session.Network.EnqueueSend(new GameMessageSystemChat($"{Name}: blocked by closed door before reaching {creatureTarget.Name}", ChatMessageType.Broadcast));
 
                 return;
             }
+
+            ProjectileImpact();
+
+            // ensure valid creature target
+            if (creatureTarget == null || target == ProjectileSource)
+                return;
 
             if (Spell.IsDudProjectile)
                 return;

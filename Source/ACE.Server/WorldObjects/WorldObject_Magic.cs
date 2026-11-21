@@ -2330,6 +2330,10 @@ namespace ACE.Server.WorldObjects
                     continue;
                 }
 
+                // custom: closed doors stop spell projectiles. the projectile flies as normal and explodes against the door
+                // (target is only passed for the primary projectile, side projectiles are untargeted and checked along their heading)
+                sp.InterceptAtClosedDoor(i == 0 ? target : null);
+
                 spellProjectiles.Add(sp);
             }
 

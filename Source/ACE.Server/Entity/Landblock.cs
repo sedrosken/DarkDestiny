@@ -1030,6 +1030,9 @@ namespace ACE.Server.Entity
                 {
                     worldObjects[kvp.Key] = kvp.Value;
 
+                    if (IsDoorOrWall(kvp.Value))
+                        doorsAndWalls = null;
+
                     if (kvp.Value is Player player)
                         players.Add(player);
                     else if (kvp.Value is Creature creature)
@@ -1052,6 +1055,9 @@ namespace ACE.Server.Entity
                 {
                     if (worldObjects.Remove(objectGuid, out var wo))
                     {
+                        if (IsDoorOrWall(wo))
+                            doorsAndWalls = null;
+
                         if (wo is Player player)
                             players.Remove(player);
                         else if (wo is Creature creature)
@@ -1420,13 +1426,32 @@ namespace ACE.Server.Entity
             return worldObjects.Values;
         }
 
-        /// <summary>
-        /// Returns the closed doors and wall objects in this landblock.
-        /// Read-only snapshot: does not process pending additions / removals, so it is safe to call from within physics handling.
-        /// </summary>
-        public List<WorldObject> GetClosedDoorsAndWalls()
+        private static bool IsDoorOrWall(WorldObject wo)
         {
-            return worldObjects.Values.Where(wo => !wo.IsOpen && (wo.WeenieType == WeenieType.Door || wo.CreatureType == CreatureType.Wall)).ToList();
+            return wo.WeenieType == WeenieType.Door || wo.CreatureType == CreatureType.Wall;
+        }
+
+        /// <summary>
+        /// Cached list of every door and wall object in this landblock. Rebuilt lazily after one is added or removed.
+        /// Open / closed state is NOT cached, callers must check IsOpen.
+        /// </summary>
+        private List<WorldObject> doorsAndWalls;
+
+        /// <summary>
+        /// Returns the doors and wall objects in this landblock (use IsOpen to filter to closed ones).
+        /// Read-only: does not process pending additions / removals, so it is safe to call from within physics handling.
+        /// The returned list must not be modified.
+        /// </summary>
+        public List<WorldObject> GetDoorsAndWalls()
+        {
+            var cached = doorsAndWalls;
+
+            if (cached == null)
+            {
+                cached = worldObjects.Values.Where(IsDoorOrWall).ToList();
+                doorsAndWalls = cached;
+            }
+            return cached;
         }
 
         public List<WorldObject> GetAllWorldObjectsForDiagnostics()
