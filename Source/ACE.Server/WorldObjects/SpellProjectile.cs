@@ -263,6 +263,61 @@ namespace ACE.Server.WorldObjects
             ProjectileImpact();
         }
 
+        /// <summary>
+        /// Max distance from the caster -> target line at which a closed door / wall object is considered to be in the way
+        /// </summary>
+        private const float DoorBlockRadius = 1.5f;
+
+        /// <summary>
+        /// Returns TRUE if a closed door (or wall object) sits on the line between the projectile's source and the target.
+        /// Open doors never block. Doors behind the caster or behind the target are ignored.
+        /// </summary>
+        private bool IsBlockedByClosedDoor(Creature target)
+        {
+            if (!PropertyManager.GetBool("spell_projectile_door_block").Item)
+                return false;
+
+            if (target.Location == null)
+                return false;
+
+            // doors are looked up in the caster's landblock (falling back to the target's), so this applies to monsters and pets as well as players
+            var landblock = ProjectileSource?.CurrentLandblock ?? target.CurrentLandblock;
+
+            if (landblock == null)
+                return false;
+
+            var from = ProjectileSource?.Location ?? SpawnPos;
+
+            if (from == null)
+                return false;
+
+            var end = from.GetOffset(target.Location);
+            var lenSq = end.LengthSquared();
+
+            if (lenSq <= 0.0f)
+                return false;
+
+            var doors = landblock.GetClosedDoorsAndWalls();
+
+            foreach (var door in doors)
+            {
+                if (door.Location == null || door == target)
+                    continue;
+
+                var p = from.GetOffset(door.Location);
+
+                // position of the door along the caster -> target line (0 = caster, 1 = target)
+                var t = Vector3.Dot(p, end) / lenSq;
+
+                if (t <= 0.0f || t >= 1.0f)
+                    continue;
+
+                if (Vector3.Distance(p, end * t) < DoorBlockRadius)
+                    return true;
+            }
+            return false;
+        }
+
         public override void OnCollideObject(WorldObject target)
         {
             //Console.WriteLine($"{Name}.OnCollideObject({target.Name})");
@@ -281,6 +336,15 @@ namespace ACE.Server.WorldObjects
             var creatureTarget = target as Creature;
             if (creatureTarget == null || target == ProjectileSource)
                 return;
+
+            // custom: a closed door between the caster and the target stops the spell
+            if (IsBlockedByClosedDoor(creatureTarget))
+            {
+                if (player != null && player.DebugSpell)
+                    player.Session.Network.EnqueueSend(new GameMessageSystemChat($"{Name}: blocked by closed door before reaching {creatureTarget.Name}", ChatMessageType.Broadcast));
+
+                return;
+            }
 
             if (Spell.IsDudProjectile)
                 return;

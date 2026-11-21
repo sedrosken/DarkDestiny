@@ -1420,6 +1420,15 @@ namespace ACE.Server.Entity
             return worldObjects.Values;
         }
 
+        /// <summary>
+        /// Returns the closed doors and wall objects in this landblock.
+        /// Read-only snapshot: does not process pending additions / removals, so it is safe to call from within physics handling.
+        /// </summary>
+        public List<WorldObject> GetClosedDoorsAndWalls()
+        {
+            return worldObjects.Values.Where(wo => !wo.IsOpen && (wo.WeenieType == WeenieType.Door || wo.CreatureType == CreatureType.Wall)).ToList();
+        }
+
         public List<WorldObject> GetAllWorldObjectsForDiagnostics()
         {
             // We do not ProcessPending here, and we return ToList() to avoid cross-thread issues.
