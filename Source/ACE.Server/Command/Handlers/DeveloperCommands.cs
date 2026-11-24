@@ -1897,8 +1897,20 @@ namespace ACE.Server.Command.Handlers
                         if (wo == null || wo.IsDestroyed || wo.Guid == player.Guid)
                             continue;
 
-                        if (!allObjects && (!(wo is Creature) || wo is Player))
-                            continue;
+                        if (!allObjects)
+                        {
+                            // monsters/NPCs, plus any non-creature object that is currently moving or animating
+                            // (rolling balls of death, boulders, etc.)
+                            var isNpcOrMonster = wo is Creature && !(wo is Player);
+                            var po = wo.PhysicsObj;
+                            var isActivePhysics = !(wo is Creature) && po != null &&
+                                (po.Velocity != System.Numerics.Vector3.Zero || po.CachedVelocity != System.Numerics.Vector3.Zero ||
+                                 po.IsAnimating || po.is_active() ||
+                                 (po.PartArray != null && po.IsMovingOrAnimating));
+
+                            if (!isNpcOrMonster && !isActivePhysics)
+                                continue;
+                        }
 
                         if (radiusSquared.HasValue)
                         {
