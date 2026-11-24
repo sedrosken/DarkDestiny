@@ -4,7 +4,7 @@
 Gameplay is based on the Infiltration ruleset in ClassicACE, though the others (CustomDM, EoR) are included for completeness.
 
 **Required Data Files:**
-[https://mega.nz/file/qkxwFbrQ#v-vCY1MmQ5eYhjIT8CVPR9b3OyBKQNJYc39LenV-1_E](https://mega.nz/file/qkxwFbrQ#v-vCY1MmQ5eYhjIT8CVPR9b3OyBKQNJYc39LenV-1_E) - Dark Destiny Release 1.0 DATs/acclient
+https://mega.nz/file/rwxw2KaB#lZPYedDzh9JCy38yIS5u7XaNZ6PUUTUcfjqo9A7uS6g - Dark Destiny Release 1.2 DATs/acclient
 
 ## Disclaimer
 **This project is for educational and non-commercial purposes only, use of the game client is for interoperability with the emulated server.**
