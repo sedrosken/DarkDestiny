@@ -42,6 +42,8 @@ namespace ACE.Server.WorldObjects.Managers
         public bool IsBusy { get; set; }
         public int Nested { get; set; }
 
+        private const int MaxEmoteNesting = 100;
+
         public bool Debug = false;
 
         public EmoteManager(WorldObject worldObject)
@@ -1755,6 +1757,18 @@ namespace ACE.Server.WorldObjects.Managers
             if (rootEmoteSet == null)
                 rootEmoteSet = emoteSet;
 
+            // Hard recursion cap. The Quest==Message check in Enqueue only catches a set that branches to itself;
+            // an A -> B -> A loop (or a loop starting from a Use/Generation set with no quest name) recurses
+            // synchronously until the stack overflows, which cannot be caught and aborts the whole process.
+            if (Nested >= MaxEmoteNesting)
+            {
+                var rootInfo = rootEmoteSet != null ? $"{(EmoteCategory)rootEmoteSet.Category} '{rootEmoteSet.Quest}'" : "-";
+                log.Error($"[EMOTE] {WorldObject?.Name} 0x{WorldObject?.Guid}:{WorldObject?.WeenieClassId} emote nesting hit {MaxEmoteNesting}, loop aborted. " +
+                          $"root set: {rootInfo}; set that would recurse: {(EmoteCategory)emoteSet.Category} '{emoteSet.Quest}'; " +
+                          $"target={targetObject?.Name ?? "null"}. Fix the looping emote content on this weenie.");
+                return false;
+            }
+
             // start action chain
             Nested++;
             Enqueue(emoteSet, targetObject, 0, 0.0f, campBonus, rootEmoteSet);
@@ -1835,7 +1849,28 @@ namespace ACE.Server.WorldObjects.Managers
             if (ColoTraceOn(emoteSet))
                 ColoTraceLog($"  ACTION [{emoteIdx}] {(EmoteType)emote.Type}{(string.IsNullOrEmpty(emote.Message) ? "" : $" '{emote.Message}'")} (from {(EmoteCategory)emoteSet.Category} '{emoteSet.Quest}')");
 
-            var nextDelay = ExecuteEmote(emoteSet, emote, targetObject, campBonus, rootEmoteSet);
+            float nextDelay;
+            try
+            {
+                nextDelay = ExecuteEmote(emoteSet, emote, targetObject, campBonus, rootEmoteSet);
+            }
+            catch (Exception ex)
+            {
+                // A bad emote must never take down the world thread. Log which one it was so the content can be fixed.
+                log.Error($"[EMOTE] 0x{WorldObject?.Guid}:{WorldObject?.Name} ({WorldObject?.WeenieClassId}) " +
+                          $"{(EmoteType)emote.Type} idx={emoteIdx} msg='{emote.Message}' " +
+                          $"set={(EmoteCategory)emoteSet.Category} quest='{emoteSet.Quest}' " +
+                          $"target={targetObject?.Name ?? "null"}\n{ex}");
+
+                // abort the rest of this set and release the busy state the same way a finished set does
+                Nested--;
+                if (Nested <= 0)
+                {
+                    Nested = 0;
+                    IsBusy = false;
+                }
+                return;
+            }
 
             if (Debug)
                 Console.WriteLine($" - { nextDelay}");

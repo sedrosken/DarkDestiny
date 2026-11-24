@@ -53,6 +53,10 @@ namespace ACE.Server.WorldObjects
         public const int MaxPetLevel = 10;   // pet is full size at this level
         public const int HatchLevel  = 2;    // egg turns into the creature here
 
+        // Only the creature-pet egg (PetZoo.EggWcid, the one creatures drop) uses the egg/XP/rating
+        // system. Any other PetDevice (e.g. the GDLE Couch Potato 9123000) is a plain retail pet.
+        public static bool IsCreatureEgg(WorldObject device) => device != null && device.WeenieClassId == PetZoo.EggWcid;
+
         // Size of the un-hatched egg follower. (0.1 -- the old level-1 scale -- looked
         // jellybean-sized, so the egg gets its own, bigger, fixed size.) Tune freely.
         public const float EggFollowerScale = 2.0f;
@@ -316,6 +320,22 @@ namespace ACE.Server.WorldObjects
         private float stuckBestDist;
         private double stuckSince;
 
+        /// <summary>
+        /// Target picked by PetCheckStuck. Exempt from the owner-has-hurt rule in Monster_Tick
+        /// for as long as it remains the pet's AttackTarget (Monster_Tick clears it otherwise).
+        /// </summary>
+        public Creature StuckOverrideTarget;
+
+        /// <summary>True if the owner (the player directly) has dealt non-zero damage to the target.</summary>
+        public bool OwnerHasHurt(Creature target)
+        {
+            var owner = P_PetOwner;
+            if (owner == null || target?.DamageHistory == null)
+                return false;
+
+            return target.DamageHistory.HasDamager(owner, true);
+        }
+
 
         /// <summary>Called every tick from PetFollowOwner_Prepare. Returns true if it switched targets.</summary>
         public bool PetCheckStuck(double now)
@@ -369,6 +389,7 @@ namespace ACE.Server.WorldObjects
             CommandedTarget = null;
             CurrentAttackType = null;
             stuckWatchTarget = null;
+            StuckOverrideTarget = nearest;   // swarm switch is exempt from the owner-has-hurt rule
             EngageTarget(nearest);
             return true;
         }
@@ -418,6 +439,7 @@ namespace ACE.Server.WorldObjects
                             return false;
                         if (IsDirectVisible(CommandedTarget))
                         {
+                            StuckOverrideTarget = CommandedTarget;   // owner's explicit order is exempt from the owner-has-hurt rule
                             EngageTarget(CommandedTarget);
                             return true;
                         }
@@ -703,7 +725,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public int GetOwnerRatingBonus(PetRatingType type)
         {
-            if (P_PetDevice == null || type == PetRatingType.None)
+            if (P_PetDevice == null || type == PetRatingType.None || !IsCreatureEgg(P_PetDevice))
                 return 0;
 
             if (GetPetRatingType(P_PetDevice) != type)
@@ -1269,6 +1291,46 @@ namespace ACE.Server.WorldObjects
             Destroy();
         }
 
+        /// <summary>
+        /// Spawn fallback: the normal spot (in front of the owner) can be blocked by a wall,
+        /// doorway or crowd, and a failed EnterWorld used to = pet dismissed (worst on warps).
+        /// Tries the normal spot, then 7 other directions around the owner, then the same at half
+        /// distance, then the owner's own spot. A failed attempt leaves nothing behind
+        /// (AddPhysicsObj destroys the physics obj + clears CurrentLandblock), so retrying is safe.
+        /// </summary>
+        private bool EnterWorldNearOwner(Player player, float spawnDist)
+        {
+            if (EnterWorld())
+                return true;
+
+            float[] angles = { 0f, 180f, 90f, -90f, 45f, -45f, 135f, -135f };
+            float[] dists = { spawnDist, spawnDist * 0.5f };
+
+            foreach (var dist in dists)
+            {
+                foreach (var angle in angles)
+                {
+                    if (dist == spawnDist && angle == 0f)
+                        continue;   // that's the spot that already failed
+
+                    var basePos = new Position(player.Location);
+                    basePos.Rotation = basePos.Rotation * Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle * MathF.PI / 180f);
+
+                    Location = basePos.InFrontOf(dist, IsPassivePet);
+                    Location.LandblockId = new LandblockId(Location.GetCell());
+
+                    if (EnterWorld())
+                        return true;
+                }
+            }
+
+            // last resort: the owner's own spot
+            Location = new Position(player.Location);
+            Location.LandblockId = new LandblockId(Location.GetCell());
+
+            return EnterWorld();
+        }
+
         public virtual bool? Init(Player player, PetDevice petDevice)
         {
             var result = HandleCurrentActivePet(player);
@@ -1307,6 +1369,28 @@ namespace ACE.Server.WorldObjects
 
             // All pets don't leave corpses, this maybe should have been in data, but isn't so lets make sure its true.
             NoCorpse = true;
+
+            // plain (non-egg) pet devices, e.g. the Couch Potato: retail summon, no egg/XP/rating logic
+            if (!IsCreatureEgg(petDevice))
+            {
+                if (!EnterWorldNearOwner(player, spawnDist))
+                {
+                    player.SendTransientError($"Couldn't spawn {Name}");
+                    return false;
+                }
+
+                ClaimSoleActivePet(player);
+                player.CurrentActivePet = this;
+
+                petDevice.Pet = Guid.Full;
+                PetDevice = petDevice.Guid.Full;
+                P_PetDevice = petDevice;
+
+                if (IsPassivePet)
+                    nextSlowTickTime = Time.GetUnixTime();
+
+                return true;
+            }
 
             // ===== creature pet system (prototype) ============================
             // Make sure the egg carries its level/XP display (and level-1 seed).
@@ -1420,7 +1504,7 @@ namespace ACE.Server.WorldObjects
             ApplyPetStatScaling(petLevel);
             // ===== end creature pet system ====================================
 
-            var success = EnterWorld();
+            var success = EnterWorldNearOwner(player, spawnDist);
 
             if (!success)
             {

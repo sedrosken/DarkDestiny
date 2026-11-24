@@ -859,6 +859,8 @@ namespace ACE.Server.WorldObjects
     /// </summary>
     public class ZooAnimal : Pet
     {
+        private static readonly ILog zooLog = LogManager.GetLogger(typeof(ZooAnimal));
+
         private PetZoo.Animal record;
         private double nextWanderTime;
         private double moveStartTime;
@@ -911,7 +913,17 @@ namespace ACE.Server.WorldObjects
             NoCorpse = true;
 
             if (!EnterWorld())
-                return false;
+            {
+                // some setups fail placement as an ethereal shell -> retry with solid physics like the wild creature
+                Ethereal = false;
+                IgnoreCollisions = false;
+                ReportCollisionsAsEnvironment = false;
+                Location = spawn.ToPosition();
+                Location.LandblockId = new LandblockId(Location.GetCell());
+                if (!EnterWorld())
+                    return false;
+                zooLog.Warn($"PetZoo - {Name} spawned only with solid physics");
+            }
 
             var now = Time.GetUnixTime();
             nextSlowTickTime = now;

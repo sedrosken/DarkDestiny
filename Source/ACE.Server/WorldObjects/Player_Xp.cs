@@ -1004,7 +1004,7 @@ namespace ACE.Server.WorldObjects
                 return;
 
             var egg = pet.P_PetDevice;
-            if (egg == null || egg.PetClass == null)
+            if (egg == null || egg.PetClass == null || !Pet.IsCreatureEgg(egg))
                 return;
 
             var oldXp = egg.GetProperty(PropertyInt64.ItemTotalXp) ?? 0;

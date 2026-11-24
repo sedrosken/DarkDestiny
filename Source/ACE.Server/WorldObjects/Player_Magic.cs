@@ -746,6 +746,20 @@ namespace ACE.Server.WorldObjects
                 {
                     DiagCastNum = diagCastNum;
                     DiagWindupApplyTime = DateTime.UtcNow;
+
+                    // snapshot the server anim queue/sequence shortly after the windup is applied
+                    if (!LogStrandedAnimations) return;
+                    foreach (var t in new[] { 0.05, 0.6, 1.2 })
+                    {
+                        var snap = new ActionChain();
+                        snap.AddDelaySeconds(t);
+                        snap.AddAction(this, () =>
+                        {
+                            if (MagicState.IsCasting && MagicState.CastNum == diagCastNum)
+                                log.Info($"[CAST DIAG] {Name} cast #{diagCastNum} t+{t:N2}s Queue={DescribeAnimQueue()} Seq={DescribeSequence()}");
+                        });
+                        snap.EnqueueChain();
+                    }
                 });
 
                 windupTime = EnqueueMotionAction(castChain, spell.Formula.WindupGestures, CastSpeed, MotionStance.Magic, checkCasting: true);
