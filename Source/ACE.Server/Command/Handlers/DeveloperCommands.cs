@@ -1906,7 +1906,10 @@ namespace ACE.Server.Command.Handlers
                             var isActivePhysics = !(wo is Creature) && po != null &&
                                 (po.Velocity != System.Numerics.Vector3.Zero || po.CachedVelocity != System.Numerics.Vector3.Zero ||
                                  po.IsAnimating || po.is_active() ||
-                                 (po.PartArray != null && po.IsMovingOrAnimating));
+                                 // null-safe equivalent of PhysicsObj.IsMovingOrAnimating (MovementManager / Sequence can be null on static objects)
+                                 (po.PartArray?.Sequence != null && !po.PartArray.Sequence.is_first_cyclic()) ||
+                                 (po.MovementManager?.MotionInterpreter?.InterpretedState != null && po.MovementManager.MotionInterpreter.InterpretedState.HasCommands()) ||
+                                 (po.MovementManager?.MoveToManager != null && po.MovementManager.MoveToManager.Initialized));
 
                             if (!isNpcOrMonster && !isActivePhysics)
                                 continue;
